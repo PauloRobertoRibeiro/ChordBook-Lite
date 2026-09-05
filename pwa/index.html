@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101820" />
+    <title>ChordBook Lite</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell home-active">
+      <aside class="sidebar" aria-label="Navegacao principal">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">CB</span>
+          <div>
+            <strong>ChordBook</strong>
+            <span>Repertorio pronto</span>
+          </div>
+        </div>
+        <nav class="nav-tabs" aria-label="Secoes">
+          <button class="nav-tab active" data-view="home">Inicio</button>
+          <button class="nav-tab" data-view="library">Biblioteca</button>
+          <button class="nav-tab" data-view="stage">Palco</button>
+          <button class="nav-tab" data-view="setlists">Setlists</button>
+          <button class="nav-tab" data-view="import">Arquivos</button>
+        </nav>
+        <div class="sidebar-actions">
+          <button id="newSongBtn" class="primary-action">Nova musica</button>
+          <button id="exportLibraryBtn">Exportar biblioteca</button>
+          <label class="file-button">
+            Importar arquivo
+            <input id="importFileInput" type="file" accept=".json,.chordbook,.chordbook-library,application/json" />
+          </label>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="toolbar">
+          <div class="search-box">
+            <span aria-hidden="true">Buscar</span>
+            <input id="searchInput" type="search" placeholder="Buscar por titulo, artista, tom ou trecho" />
+          </div>
+          <div class="toolbar-group">
+            <button id="themeToggle">Tema</button>
+            <button id="sampleBtn">Exemplo</button>
+          </div>
+        </section>
+
+        <section id="homeView" class="view active">
+          <div class="home-screen">
+            <section class="home-hero">
+              <div>
+                <h1>Sua musica</h1>
+                <p>Biblioteca, palco e setlists para tocar sem perder tempo.</p>
+              </div>
+              <div class="home-music-art" aria-hidden="true">
+                <span class="music-note">♪</span>
+                <span class="piano-key black"></span>
+                <span class="piano-key"></span>
+                <span class="piano-key black"></span>
+                <span class="piano-key"></span>
+              </div>
+            </section>
+
+            <section class="home-menu" aria-label="Menu principal">
+              <button class="home-card" data-go-view="library">
+                <span class="home-card-icon">♪</span>
+                <span>
+                  <strong>Biblioteca</strong>
+                  <small>Todas as cifras</small>
+                </span>
+              </button>
+              <button class="home-card" data-go-view="stage">
+                <span class="home-card-icon">▶</span>
+                <span>
+                  <strong>Palco</strong>
+                  <small>Tela para tocar</small>
+                </span>
+              </button>
+              <button class="home-card" data-go-view="setlists">
+                <span class="home-card-icon">≡</span>
+                <span>
+                  <strong>Setlists</strong>
+                  <small>Ordem do culto</small>
+                </span>
+              </button>
+              <button class="home-card" data-go-view="import">
+                <span class="home-card-icon">▣</span>
+                <span>
+                  <strong>Arquivos</strong>
+                  <small>Importar backup</small>
+                </span>
+              </button>
+            </section>
+
+            <button class="home-new-song primary-action" data-new-song-shortcut>+ Nova musica</button>
+
+            <section class="home-recents">
+              <div class="home-section-title">
+                <h2>Recentes</h2>
+                <button data-go-view="library">Ver todas</button>
+              </div>
+              <div id="homeRecentList" class="home-recent-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="libraryView" class="view">
+          <div class="library-layout">
+            <section class="song-list-panel">
+              <div class="panel-header">
+                <div>
+                  <h1>Biblioteca</h1>
+                  <p id="libraryCount">0 cifras</p>
+                </div>
+                <div class="library-tools">
+                  <select id="categoryFilter" aria-label="Filtrar categoria"></select>
+                  <button id="editSelectedBtn" type="button">Editar selecionada</button>
+                </div>
+              </div>
+              <div id="songList" class="song-list"></div>
+            </section>
+
+            <section class="editor-panel">
+              <form id="songForm" class="song-form">
+                <div class="editor-titlebar">
+                  <div>
+                    <h2>Editar musica</h2>
+                    <p>Preencha os dados e escreva a letra com os acordes.</p>
+                  </div>
+                  <button id="closeEditorBtn" type="button">Voltar</button>
+                </div>
+                <div class="form-grid">
+                  <label>Nome da musica <input id="titleInput" required placeholder="Ex.: Esperanca Viva" /></label>
+                  <label>Autor / artista <input id="artistInput" placeholder="Ex.: Demo ChordBook" /></label>
+                  <label>Categoria <input id="categoryInput" placeholder="Ex.: Louvor, Celebracao" /></label>
+                  <label>Capo <input id="capoInput" type="number" min="0" max="12" value="0" /></label>
+                </div>
+                <label>
+                  Letra e cifras
+                  <textarea id="linesInput" spellcheck="false" placeholder="{key: A}&#10;Intro:&#10;A | E | F#m | D&#10;&#10;Verso 1:&#10;A      E       F#m     D&#10;Aqui escrevo a primeira frase&#10;A      E       D&#10;Aqui continuo a letra"></textarea>
+                </label>
+                <div class="form-actions">
+                  <button type="submit" class="primary-action">Salvar</button>
+                  <button type="button" id="openStageFromEditorBtn">Abrir no palco</button>
+                  <button type="button" id="favoriteBtn">Favorito</button>
+                  <button type="button" id="duplicateBtn">Duplicar</button>
+                  <button type="button" id="deleteBtn" class="danger-action">Excluir</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <section id="stageView" class="view">
+          <div class="stage-shell">
+            <header class="mobile-stage-appbar" aria-label="Controles da cifra no celular">
+              <button id="mobileBackBtn" title="Escolher musica">Musicas</button>
+              <div class="mobile-stage-title">
+                <strong id="mobileStageTitle">Cancao</strong>
+                <span id="mobileStageTime">--:--</span>
+              </div>
+              <button id="mobileEditBtn" title="Acoes da musica">Acoes</button>
+              <button id="mobileMoreBtn" title="Baixar tom">Tom -</button>
+              <button id="mobileShareBtn" title="Subir tom">Tom +</button>
+              <button id="mobileFontDown" title="Diminuir letra">Letra -</button>
+              <button id="mobileClockBtn" title="Aumentar letra">Letra +</button>
+            </header>
+            <div id="mobileSongMenu" class="mobile-song-menu" hidden></div>
+            <div id="mobileActionMenu" class="mobile-action-menu" hidden></div>
+            <header class="stage-header">
+              <div>
+                <h1 id="stageTitle">Escolha uma cifra</h1>
+                <p id="stageMeta"></p>
+              </div>
+              <div class="stage-controls">
+                <button id="transposeDown" title="Descer meio tom">-</button>
+                <output id="transposeValue">0</output>
+                <button id="transposeUp" title="Subir meio tom">+</button>
+                <button id="fontDown" title="Diminuir fonte">A-</button>
+                <button id="fontUp" title="Aumentar fonte">A+</button>
+                <button id="shareStageBtn" title="Compartilhar cifra">Compartilhar</button>
+                <button id="youtubeStageBtn" title="Buscar no YouTube">YouTube</button>
+                <button id="spotifyStageBtn" title="Buscar no Spotify">Spotify</button>
+                <button id="editFromStageBtn" title="Editar cifra">Editar</button>
+              </div>
+            </header>
+            <div id="stageSetlistBar" class="stage-setlist-bar"></div>
+            <div class="mobile-stage-fabs" aria-label="Ajustes rapidos da cifra">
+              <button id="mobileTransposeDown" title="Descer meio tom">Eb</button>
+              <button id="mobileTransposeUp" title="Subir meio tom">E</button>
+              <button id="mobileFontUp" title="Aumentar fonte">A+</button>
+              <button id="mobileScrollDown" title="Descer na cifra">v</button>
+              <button id="mobileFileBtn" title="Arquivos">[]</button>
+            </div>
+            <article id="stageContent" class="stage-content"></article>
+          </div>
+        </section>
+
+        <section id="setlistsView" class="view">
+          <div class="setlist-layout">
+            <section class="setlist-panel">
+              <div class="panel-header">
+                <div>
+                  <h1>Setlists</h1>
+                  <p id="setlistCount">0 listas</p>
+                </div>
+                <button id="newSetlistBtn" class="primary-action">Nova lista</button>
+              </div>
+              <div id="setlistList" class="song-list"></div>
+            </section>
+            <section class="setlist-editor">
+              <div class="setlist-fields">
+                <label>Nome do setlist <input id="setlistTitleInput" /></label>
+                <label>Notas <input id="setlistNotesInput" /></label>
+              </div>
+              <div class="setlist-actions">
+                <button id="saveSetlistBtn" class="primary-action">Salvar setlist</button>
+                <button id="openSetlistBtn">Abrir no palco</button>
+                <button id="deleteSetlistBtn" class="danger-action">Excluir setlist</button>
+              </div>
+              <div class="setlist-board">
+                <section>
+                  <h2>No setlist</h2>
+                  <div id="setlistSongPicker" class="ordered-list"></div>
+                </section>
+                <section>
+                  <h2>Biblioteca</h2>
+                  <div id="setlistAvailableSongs" class="ordered-list"></div>
+                </section>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="importView" class="view">
+          <div class="files-panel">
+            <h1>Arquivos</h1>
+            <div class="file-grid">
+              <button id="exportSelectedBtn">Exportar cifra atual</button>
+              <button id="exportRepertoireBtn">Exportar repertorio completo</button>
+              <label class="file-button large">
+                Importar ChordBook
+                <input id="importFileInputAlt" type="file" accept=".json,.chordbook,.chordbook-library,application/json" />
+              </label>
+            </div>
+            <pre id="fileLog" class="file-log">Pronto.</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

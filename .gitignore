@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors
+.idea/
+*.swp
+*.swo
+
+# Android / script builds
+pwa-android/build/
+pwa-android/.gradle/
+*.apk
+*.aab
+*.apk.idsig
+*.class
+*.dex
+*.jar
+*.log
+
+# Machine-specific SDK path
+pwa-android/local.properties
