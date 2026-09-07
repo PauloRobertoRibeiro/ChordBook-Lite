@@ -3,8 +3,10 @@
   "short_name": "ChordBook Lite",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f6f8f7",
-  "theme_color": "#101820",
+  "background_color": "#f5f7fb",
+  "theme_color": "#2563eb",
+  "description": "Cifras, setlists e modo palco neste aparelho. Sem conta e sem nuvem.",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "./icons/Icon-192.png",

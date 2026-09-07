@@ -1,11 +1,12 @@
-const CACHE_NAME = "chordbook-lite-v32";
+const CACHE_NAME = "chordbook-lite-v33";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
-  "./styles.css?v=32",
-  "./app.js?v=32",
+  "./styles.css?v=33",
+  "./app.js?v=33",
+  "./privacy.html",
   "./manifest.webmanifest",
   "./icons/favicon.png",
   "./icons/Icon-192.png",

@@ -8,8 +8,8 @@ android {
         applicationId = "com.jairo.chordbookpwa"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 100
+        versionName = "1.0.0"
     }
 
     sourceSets {

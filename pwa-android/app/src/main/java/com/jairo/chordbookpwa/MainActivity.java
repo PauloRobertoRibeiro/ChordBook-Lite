@@ -3,6 +3,7 @@ package com.jairo.chordbookpwa;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -87,6 +88,17 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setStageKeys(boolean on) {
             stageKeys = on;
+        }
+
+        @JavascriptInterface
+        public String getVersionName() {
+            try {
+                PackageInfo info = MainActivity.this.getPackageManager()
+                    .getPackageInfo(MainActivity.this.getPackageName(), 0);
+                return info.versionName != null ? info.versionName : "1.0.0";
+            } catch (Exception ignored) {
+                return "1.0.0";
+            }
         }
     }
 

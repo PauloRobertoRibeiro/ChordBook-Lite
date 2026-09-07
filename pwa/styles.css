@@ -295,6 +295,21 @@ button:hover, .file-button:hover { border-color: var(--accent); }
   margin: 0;
 }
 
+.more-version,
+.more-legal {
+  color: var(--muted);
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.more-privacy {
+  margin: 10px 0 0;
+}
+
+.more-privacy a {
+  color: var(--accent);
+}
+
 .more-heading {
   color: var(--muted);
   font-size: 12px;

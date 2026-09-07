@@ -1,12 +1,15 @@
 <!doctype html>
-<html lang="pt">
+<html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#101820" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="Cifras, setlists e modo palco neste aparelho. Sem conta e sem nuvem." />
     <title>ChordBook Lite</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=32" />
+    <link rel="icon" href="./icons/favicon.png" />
+    <link rel="apple-touch-icon" href="./icons/Icon-192.png" />
+    <link rel="stylesheet" href="./styles.css?v=33" />
   </head>
   <body>
     <div class="app-shell library-active">
@@ -15,17 +18,17 @@
           <span class="brand-mark" aria-hidden="true">CB</span>
           <div>
             <strong>ChordBook Lite</strong>
-            <span data-i18n="brand.tagline">Suas musicas sempre com voce</span>
+            <span data-i18n="brand.tagline">Suas músicas sempre com você</span>
           </div>
         </div>
         <nav id="libraryRail" class="library-rail" aria-label="Filtro da biblioteca"></nav>
         <nav class="nav-tabs" aria-label="Secoes" data-i18n-aria="aria.sections">
-          <button class="nav-tab active" data-view="library" data-i18n="nav.songs">Musicas</button>
+          <button class="nav-tab active" data-view="library" data-i18n="nav.songs">Músicas</button>
           <button class="nav-tab" data-view="setlists" data-i18n="nav.setlists">Setlists</button>
           <button class="nav-tab" data-view="import" data-i18n="nav.more">Mais</button>
         </nav>
         <div class="sidebar-actions">
-          <button id="newSongBtn" class="primary-action" data-i18n="nav.newSong">Nova musica</button>
+          <button id="newSongBtn" class="primary-action" data-i18n="nav.newSong">Nova música</button>
         </div>
       </aside>
 
@@ -35,7 +38,7 @@
           <div class="search-panel">
             <div class="search-box">
               <span aria-hidden="true">⌕</span>
-              <input id="searchInput" type="search" placeholder="Buscar musicas, autor, tom..." data-i18n-placeholder="search.placeholder" />
+              <input id="searchInput" type="search" placeholder="Buscar músicas, autor, tom..." data-i18n-placeholder="search.placeholder" />
             </div>
             <div class="search-scope" role="tablist" aria-label="Onde buscar" data-i18n-aria="search.where">
               <button type="button" class="search-scope-btn active" data-search-scope="library" data-i18n="search.library">ChordBook</button>
@@ -54,7 +57,7 @@
             <section class="song-list-panel">
               <div class="panel-header">
                 <div>
-                  <h1 data-i18n="nav.songs">Musicas</h1>
+                  <h1 data-i18n="nav.songs">Músicas</h1>
                   <p id="libraryCount">0 cifras</p>
                 </div>
                 <div class="library-tools">
@@ -70,7 +73,7 @@
               <div id="categoryFilters" class="key-filters category-filters" role="listbox" aria-label="Filtrar categoria" data-i18n-aria="library.filterCategory"></div>
               <div id="keyFilters" class="key-filters" role="listbox" aria-label="Filtrar tom" data-i18n-aria="library.filterKey"></div>
               <div id="songList" class="song-list"></div>
-              <button id="libraryFab" class="library-fab" type="button" title="Nova musica" data-i18n-title="nav.newSong">+</button>
+              <button id="libraryFab" class="library-fab" type="button" title="Nova música" data-i18n-title="nav.newSong">+</button>
             </section>
 
             <section class="editor-panel">
@@ -273,14 +276,14 @@
 
         <section id="importView" class="view">
           <div class="files-panel more-panel">
-            <h1 data-i18n="nav.settings">Configuracoes</h1>
+            <h1 data-i18n="nav.settings">Configurações</h1>
             <h2 class="more-heading" data-i18n="more.shortcuts">Atalhos</h2>
             <div class="more-list more-shortcuts">
               <button type="button" data-more-go="library" data-i18n="home.library">Biblioteca</button>
               <button type="button" data-more-go="setlists" data-i18n="nav.setlists">Setlists</button>
               <button type="button" data-more-go="favorites" data-i18n="library.favorites">Favoritas</button>
               <button type="button" data-more-go="recent" data-i18n="library.recent">Recentes</button>
-              <button type="button" data-more-go="import-file" data-i18n="more.import">Importar musicas</button>
+              <button type="button" data-more-go="import-file" data-i18n="more.import">Importar músicas</button>
               <button type="button" data-more-go="export" data-i18n="more.exportAll">Exportar backup</button>
             </div>
             <div class="more-columns">
@@ -316,7 +319,7 @@
             <h2 class="more-heading" data-i18n="more.data">Dados</h2>
             <div class="more-list">
               <label class="file-button large">
-                <span data-i18n="more.import">Importar musicas</span>
+                <span data-i18n="more.import">Importar músicas</span>
                 <input id="importFileInputAlt" type="file" accept=".json,.txt,.chordpro,.chordbook,.chordbook-library,application/json,text/plain" />
               </label>
               <button id="exportRepertoireBtn" type="button" data-i18n="more.exportAll">Exportar backup</button>
@@ -347,7 +350,10 @@
               </div>
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
-            <p class="more-lead" data-i18n="more.aboutText">Sobre o ChordBook Lite</p>
+            <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta e sem nuvem.</p>
+            <p id="appVersion" class="more-version">Versão 1.0.0</p>
+            <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam só neste celular. Exporte um backup antes de desinstalar.</p>
+            <p class="more-privacy"><a href="./privacy.html" data-i18n="more.privacy">Política de privacidade</a></p>
             <pre id="fileLog" class="file-log">Pronto.</pre>
             </div>
             </div>
@@ -361,7 +367,7 @@
                   </div>
                   <div id="lookPreview" class="look-preview stage-content" aria-live="polite"></div>
                 </div>
-                <p id="lookHint" class="look-hint" data-i18n="look.hint">Mexe em baixo. A cifra em cima muda na hora. So grava se gostares.</p>
+                <p id="lookHint" class="look-hint" data-i18n="look.hint">Ajuste embaixo. A cifra em cima muda na hora. Só grava se você quiser.</p>
                 <p id="lookDirty" class="look-dirty" hidden data-i18n="look.dirty">Ainda nao gravado.</p>
                 <div class="look-block">
                   <span data-i18n="look.preset">Estilo</span>
@@ -395,17 +401,17 @@
                 </div>
                 <div class="look-actions">
                   <button type="button" id="lookCancel" data-i18n="look.discard">Descartar</button>
-                  <button type="button" id="lookSave" class="primary-action" data-i18n="look.save">Guardar visual</button>
+                  <button type="button" id="lookSave" class="primary-action" data-i18n="look.save">Salvar visual</button>
                 </div>
               </div>
             </details>
           </div>
         </section>
       </main>
-      <nav class="bottom-nav" aria-label="Navegacao do telemovel" data-i18n-aria="aria.mobileNav">
+      <nav class="bottom-nav" aria-label="Navegação do celular" data-i18n-aria="aria.mobileNav">
         <button type="button" class="bottom-nav-btn active" data-view="library">
           <span aria-hidden="true">♪</span>
-          <span data-i18n="nav.songs">Musicas</span>
+          <span data-i18n="nav.songs">Músicas</span>
         </button>
         <button type="button" class="bottom-nav-btn" data-view="setlists">
           <span aria-hidden="true">≡</span>
@@ -442,6 +448,6 @@
       </div>
     </div>
 
-    <script src="./app.js?v=32" defer></script>
+    <script src="./app.js?v=33" defer></script>
   </body>
 </html>

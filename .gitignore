@@ -21,3 +21,9 @@ pwa-android/.gradle/
 
 # Machine-specific SDK path
 pwa-android/local.properties
+
+# Release signing — never commit
+*.jks
+*.keystore
+keystore.properties
+pwa-android/release/
