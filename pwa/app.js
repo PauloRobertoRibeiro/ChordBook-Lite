@@ -39,7 +39,7 @@ const I18N = {
   pt: {
     "brand.tagline": "Suas musicas sempre com voce",
     "nav.songs": "Musicas",
-    "nav.setlists": "Culto",
+    "nav.setlists": "Setlists",
     "nav.chart": "Cifra",
     "nav.stage": "Palco",
     "nav.more": "Mais",
@@ -49,7 +49,7 @@ const I18N = {
     "nav.exportLibrary": "Exportar biblioteca",
     "nav.importFile": "Importar arquivo",
     "search.label": "Buscar",
-    "search.placeholder": "Buscar musica, artista ou tom...",
+    "search.placeholder": "Buscar musicas, autor, tom...",
     "search.sitesPlaceholder": "Nome da musica ou artista...",
     "search.library": "ChordBook",
     "search.sites": "Sites",
@@ -74,7 +74,7 @@ const I18N = {
     "home.seeAll": "Ver todas",
     "home.empty": "Nenhuma cifra ainda.",
     "home.open": "Abrir",
-    "library.favorites": "Favoritos",
+    "library.favorites": "Favoritas",
     "library.recent": "Recentes",
     "library.editSelected": "Editar selecionada",
     "library.filter": "Filtro da biblioteca",
@@ -144,7 +144,9 @@ const I18N = {
     "song.share": "Compartilhar",
     "song.stageMode": "Modo palco",
     "song.addToSetlist": "Adicionar ao setlist",
+    "song.tools": "Ajustes",
     "song.key": "Tom {key}",
+    "song.capoChip": "Capo {capo}",
     "song.sounds": "soa {key}",
     "stage.mode": "Modo Palco",
     "stage.menu": "Menu",
@@ -166,16 +168,16 @@ const I18N = {
     "stage.searchPh": "Buscar musicas...",
     "stage.noMatch": "Nenhuma musica encontrada.",
     "stage.noScroll": "A cifra ja cabe no ecran.",
-    "setlists.new": "Novo culto",
-    "setlists.mine": "Meus cultos",
+    "setlists.new": "Novo setlist",
+    "setlists.mine": "Meus setlists",
     "setlists.recent": "Recentes",
-    "setlists.filter": "Filtro de cultos",
-    "setlists.countOne": "{n} culto",
-    "setlists.countMany": "{n} cultos",
+    "setlists.filter": "Filtro de setlists",
+    "setlists.countOne": "{n} setlist",
+    "setlists.countMany": "{n} setlists",
     "setlists.recentOne": "{n} recente",
     "setlists.recentMany": "{n} recentes",
-    "setlists.empty": "Nenhum culto criado.",
-    "setlists.emptyRecent": "Abra um culto no palco para aparecer aqui.",
+    "setlists.empty": "Nenhum setlist criado.",
+    "setlists.emptyRecent": "Abra um setlist no palco para aparecer aqui.",
     "setlists.emptyList": "Sem musicas ainda",
     "setlists.edit": "Editar setlist",
     "setlists.editLead": "Ordem das musicas para o dia.",
@@ -192,7 +194,7 @@ const I18N = {
     "setlists.saved": "Programa salvo.",
     "setlists.added": "Adicionada a {title}.",
     "setlists.already": "Ja esta neste setlist.",
-    "setlists.deleteConfirm": "Excluir o culto \"{title}\"?",
+    "setlists.deleteConfirm": "Excluir o setlist \"{title}\"?",
     "service.title": "Programa de culto",
     "service.lead": "Preencha quem serve no domingo e as musicas. Depois envie a cada participante.",
     "service.name": "Nome do culto",
@@ -236,17 +238,21 @@ const I18N = {
     "more.features": "Funcionalidades",
     "more.data": "Dados",
     "more.clear": "Limpar dados",
-    "more.clearConfirm": "Apagar todas as musicas e cultos deste aparelho?",
+    "more.clearConfirm": "Apagar todas as musicas e setlists deste aparelho?",
     "more.about": "Sobre",
-    "more.aboutText": "ChordBook Lite — cifras para ver e tocar, sem perder tempo.",
+    "more.aboutText": "Sobre o ChordBook Lite",
     "more.font": "Tamanho da letra",
+    "more.fontDefault": "Tamanho da letra padrao",
+    "more.shortcuts": "Atalhos",
+    "more.other": "Outras opcoes",
+    "more.restore": "Restaurar backup",
     "more.language": "Idioma",
     "more.paste": "Trazer uma musica",
     "more.backups": "Copias de seguranca",
     "more.sample": "Carregar exemplo",
     "more.exportSong": "Exportar cifra atual",
-    "more.exportAll": "Exportar repertorio completo",
-    "more.import": "Importar ChordBook",
+    "more.exportAll": "Exportar backup",
+    "more.import": "Importar musicas",
     "more.ready": "Pronto.",
     "more.themeLight": "Tema claro",
     "more.themeDark": "Tema escuro",
@@ -300,7 +306,7 @@ const I18N = {
   es: {
     "brand.tagline": "Tus canciones siempre contigo",
     "nav.songs": "Canciones",
-    "nav.setlists": "Culto",
+    "nav.setlists": "Setlists",
     "nav.chart": "Cifra",
     "nav.stage": "Escenario",
     "nav.more": "Mas",
@@ -335,7 +341,7 @@ const I18N = {
     "home.seeAll": "Ver todas",
     "home.empty": "Todavia no hay cifras.",
     "home.open": "Abrir",
-    "library.favorites": "Favoritos",
+    "library.favorites": "Favoritas",
     "library.recent": "Recientes",
     "library.editSelected": "Editar seleccionada",
     "library.filter": "Filtro de la biblioteca",
@@ -405,7 +411,9 @@ const I18N = {
     "song.share": "Compartir",
     "song.stageMode": "Modo escenario",
     "song.addToSetlist": "Anadir al setlist",
+    "song.tools": "Ajustes",
     "song.key": "Tono {key}",
+    "song.capoChip": "Cejilla {capo}",
     "song.sounds": "suena {key}",
     "stage.mode": "Modo escenario",
     "stage.menu": "Menu",
@@ -427,16 +435,16 @@ const I18N = {
     "stage.searchPh": "Buscar canciones...",
     "stage.noMatch": "No se encontraron canciones.",
     "stage.noScroll": "La cifra ya cabe en pantalla.",
-    "setlists.new": "Nuevo culto",
-    "setlists.mine": "Mis cultos",
+    "setlists.new": "Nuevo setlist",
+    "setlists.mine": "Mis setlists",
     "setlists.recent": "Recientes",
-    "setlists.filter": "Filtro de cultos",
-    "setlists.countOne": "{n} culto",
-    "setlists.countMany": "{n} cultos",
+    "setlists.filter": "Filtro de setlists",
+    "setlists.countOne": "{n} setlist",
+    "setlists.countMany": "{n} setlists",
     "setlists.recentOne": "{n} reciente",
     "setlists.recentMany": "{n} recientes",
-    "setlists.empty": "Ningun culto creado.",
-    "setlists.emptyRecent": "Abre un culto en el escenario para verlo aqui.",
+    "setlists.empty": "Ningun setlist creado.",
+    "setlists.emptyRecent": "Abre un setlist en el escenario para verlo aqui.",
     "setlists.emptyList": "Todavia sin canciones",
     "setlists.edit": "Editar setlist",
     "setlists.editLead": "Orden de las canciones del dia.",
@@ -453,7 +461,7 @@ const I18N = {
     "setlists.saved": "Programa guardado.",
     "setlists.added": "Anadida a {title}.",
     "setlists.already": "Ya esta en este setlist.",
-    "setlists.deleteConfirm": "Eliminar el culto \"{title}\"?",
+    "setlists.deleteConfirm": "Eliminar el setlist \"{title}\"?",
     "service.title": "Programa de culto",
     "service.lead": "Complete quien sirve el domingo y las canciones. Luego envie a cada participante.",
     "service.name": "Nombre del culto",
@@ -497,17 +505,21 @@ const I18N = {
     "more.features": "Funciones",
     "more.data": "Datos",
     "more.clear": "Borrar datos",
-    "more.clearConfirm": "Borrar todas las canciones y cultos de este aparato?",
+    "more.clearConfirm": "Borrar todas las canciones y setlists de este aparato?",
     "more.about": "Acerca de",
-    "more.aboutText": "ChordBook Lite — cifras para ver y tocar, sin perder tiempo.",
+    "more.aboutText": "Acerca de ChordBook Lite",
     "more.font": "Tamano de letra",
+    "more.fontDefault": "Tamano de letra predeterminado",
+    "more.shortcuts": "Atajos",
+    "more.other": "Otras opciones",
+    "more.restore": "Restaurar copia",
     "more.language": "Idioma",
     "more.paste": "Traer una cancion",
     "more.backups": "Copias de seguridad",
     "more.sample": "Cargar ejemplo",
     "more.exportSong": "Exportar cifra actual",
-    "more.exportAll": "Exportar repertorio completo",
-    "more.import": "Importar ChordBook",
+    "more.exportAll": "Exportar copia de seguridad",
+    "more.import": "Importar canciones",
     "more.ready": "Listo.",
     "more.themeLight": "Tema claro",
     "more.themeDark": "Tema oscuro",
@@ -561,7 +573,7 @@ const I18N = {
   en: {
     "brand.tagline": "Your songs, always with you",
     "nav.songs": "Songs",
-    "nav.setlists": "Service",
+    "nav.setlists": "Setlists",
     "nav.chart": "Chart",
     "nav.stage": "Stage",
     "nav.more": "More",
@@ -666,7 +678,9 @@ const I18N = {
     "song.share": "Share",
     "song.stageMode": "Stage mode",
     "song.addToSetlist": "Add to setlist",
+    "song.tools": "Adjust",
     "song.key": "Key {key}",
+    "song.capoChip": "Capo {capo}",
     "song.sounds": "sounds {key}",
     "stage.mode": "Stage mode",
     "stage.menu": "Menu",
@@ -688,16 +702,16 @@ const I18N = {
     "stage.searchPh": "Search songs...",
     "stage.noMatch": "No songs found.",
     "stage.noScroll": "This chart already fits on screen.",
-    "setlists.new": "New service",
-    "setlists.mine": "My services",
+    "setlists.new": "New setlist",
+    "setlists.mine": "My setlists",
     "setlists.recent": "Recent",
-    "setlists.filter": "Service filter",
-    "setlists.countOne": "{n} service",
-    "setlists.countMany": "{n} services",
+    "setlists.filter": "Setlist filter",
+    "setlists.countOne": "{n} setlist",
+    "setlists.countMany": "{n} setlists",
     "setlists.recentOne": "{n} recent",
     "setlists.recentMany": "{n} recent",
-    "setlists.empty": "No services yet.",
-    "setlists.emptyRecent": "Open a service on stage to see it here.",
+    "setlists.empty": "No setlists yet.",
+    "setlists.emptyRecent": "Open a setlist on stage to see it here.",
     "setlists.emptyList": "No songs yet",
     "setlists.edit": "Edit setlist",
     "setlists.editLead": "Song order for the day.",
@@ -714,7 +728,7 @@ const I18N = {
     "setlists.saved": "Program saved.",
     "setlists.added": "Added to {title}.",
     "setlists.already": "Already in this setlist.",
-    "setlists.deleteConfirm": "Delete service \"{title}\"?",
+    "setlists.deleteConfirm": "Delete setlist \"{title}\"?",
     "service.title": "Sunday program",
     "service.lead": "Fill in who serves on Sunday and the songs. Then send it to each participant.",
     "service.name": "Service name",
@@ -758,17 +772,21 @@ const I18N = {
     "more.features": "Features",
     "more.data": "Data",
     "more.clear": "Clear data",
-    "more.clearConfirm": "Delete all songs and services on this device?",
+    "more.clearConfirm": "Delete all songs and setlists on this device?",
     "more.about": "About",
-    "more.aboutText": "ChordBook Lite — charts to see and play, fast.",
+    "more.aboutText": "About ChordBook Lite",
     "more.font": "Font size",
+    "more.fontDefault": "Default font size",
+    "more.shortcuts": "Shortcuts",
+    "more.other": "Other options",
+    "more.restore": "Restore backup",
     "more.language": "Language",
     "more.paste": "Bring in a song",
     "more.backups": "Backups",
     "more.sample": "Load sample",
     "more.exportSong": "Export current chart",
-    "more.exportAll": "Export full repertoire",
-    "more.import": "Import ChordBook",
+    "more.exportAll": "Export backup",
+    "more.import": "Import songs",
     "more.ready": "Ready.",
     "more.themeLight": "Light theme",
     "more.themeDark": "Dark theme",
@@ -863,6 +881,7 @@ function countLabel(n, oneKey, manyKey) {
 }
 
 const state = loadState();
+let activeView = "library";
 let libraryFilter = "all";
 let libraryKeyFilter = "";
 let setlistFilter = "all";
@@ -878,6 +897,7 @@ let isSongReadMenuOpen = false;
 let isSetlistPickerOpen = false;
 let isChordSheetOpen = false;
 let isStageFocus = false;
+let isSongToolsOpen = false;
 let isAutoScrolling = false;
 let autoScrollTimer = null;
 let autoScrollGuardUntil = 0;
@@ -888,7 +908,7 @@ const savedScrollSpeed = Number(localStorage.getItem("chordbook.scrollSpeed") ||
 let scrollSpeed = Math.min(100, Math.max(10, savedScrollSpeed || 30));
 const savedStageFont = localStorage.getItem("chordbook.stageFont");
 let stageFont = Number(savedStageFont || defaultStageFont());
-if (matchMedia("(max-width: 560px)").matches && stageFont < 22) {
+if (matchMedia("(max-width: 767px)").matches && stageFont < 22) {
   stageFont = 22;
   localStorage.setItem("chordbook.stageFont", String(stageFont));
 }
@@ -946,6 +966,9 @@ const el = {
   songReadMeta: document.querySelector("#songReadMeta"),
   songKeyBadge: document.querySelector("#songKeyBadge"),
   songFav: document.querySelector("#songFavBtn"),
+  songTomChip: document.querySelector("#songTomChip"),
+  songCapoChip: document.querySelector("#songCapoChip"),
+  songToolsToggle: document.querySelector("#songToolsToggle"),
   songMore: document.querySelector("#songMoreBtn"),
   songReadMenu: document.querySelector("#songReadMenu"),
   songReadContent: document.querySelector("#songReadContent"),
@@ -960,6 +983,7 @@ const el = {
   songCapoUp: document.querySelector("#songCapoUp"),
   songOpenStage: document.querySelector("#songOpenStageBtn"),
   songOpenStage2: document.querySelector("#songOpenStageBtn2"),
+  songEditTools: document.querySelector("#songEditToolsBtn"),
   songScroll: document.querySelector("#songScrollBtn"),
   songAutoScrollSwitch: document.querySelector("#songAutoScrollSwitch"),
   songFocusSwitch: document.querySelector("#songFocusSwitch"),
@@ -1020,12 +1044,14 @@ const el = {
   deleteSetlist: document.querySelector("#deleteSetlistBtn"),
   exportSelected: document.querySelector("#exportSelectedBtn"),
   exportRepertoire: document.querySelector("#exportRepertoireBtn"),
-  importInputs: [document.querySelector("#importFileInputAlt")],
+  importInputs: [document.querySelector("#importFileInputAlt"), document.querySelector("#restoreFileInput")],
   fileLog: document.querySelector("#fileLog"),
   toast: document.querySelector("#toast"),
   pasteChart: document.querySelector("#pasteChart"),
   pasteChartInput: document.querySelector("#pasteChartInput"),
   pasteChartLibraryBtn: document.querySelector("#pasteChartLibraryBtn"),
+  sitesSearchBtn: document.querySelector("#sitesSearchBtn"),
+  moreGo: document.querySelectorAll("[data-more-go]"),
   pasteChartClose: document.querySelector("#pasteChartClose"),
   pasteChartApply: document.querySelector("#pasteChartApply"),
   pasteChartClipboard: document.querySelector("#pasteChartClipboard"),
@@ -1057,6 +1083,7 @@ function bindEvents() {
   el.songCapoDown?.addEventListener("click", () => changeCapo(-1));
   el.songCapoUp?.addEventListener("click", () => changeCapo(1));
   el.songOpenStage2?.addEventListener("click", openStageMode);
+  el.songEditTools?.addEventListener("click", editSelectedFromStage);
   el.songAutoScrollSwitch?.addEventListener("change", (event) => setPreferAutoScroll(event.target.checked));
   el.songFocusSwitch?.addEventListener("change", (event) => setFocusChart(event.target.checked));
   el.songShowChordsSwitch?.addEventListener("change", (event) => setShowChords(event.target.checked));
@@ -1140,6 +1167,43 @@ function bindEvents() {
   el.exportRepertoire.addEventListener("click", exportRepertoire);
   el.importInputs.filter(Boolean).forEach((input) => input.addEventListener("change", importFile));
   el.pasteChartLibraryBtn?.addEventListener("click", () => openPasteChart(true));
+  document.querySelectorAll("[data-open-paste]").forEach((button) => {
+    if (button === el.pasteChartLibraryBtn) return;
+    button.addEventListener("click", () => openPasteChart(true));
+  });
+  el.sitesSearchBtn?.addEventListener("click", () => {
+    switchView("library");
+    setSearchScope("sites");
+  });
+  el.moreGo.forEach((button) => button.addEventListener("click", () => {
+    const go = button.dataset.moreGo;
+    if (go === "favorites") {
+      switchView("library");
+      setLibraryFilter("favorites");
+      return;
+    }
+    if (go === "recent") {
+      switchView("library");
+      setLibraryFilter("recent");
+      return;
+    }
+    if (go === "import-file") {
+      document.querySelector("#importFileInputAlt")?.click();
+      return;
+    }
+    if (go === "export") {
+      exportRepertoire();
+      return;
+    }
+    if (go === "about") {
+      document.querySelector("#moreAbout")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    switchView(go);
+  }));
+  el.songToolsToggle?.addEventListener("click", toggleSongTools);
+  el.songTomChip?.addEventListener("click", () => setSongToolsOpen(true));
+  el.songCapoChip?.addEventListener("click", () => setSongToolsOpen(true));
   el.pasteChartClose?.addEventListener("click", closePasteChart);
   el.pasteChartApply?.addEventListener("click", applyPastedChart);
   el.pasteChartClipboard?.addEventListener("click", pasteChartFromClipboard);
@@ -1164,7 +1228,7 @@ function render() {
 }
 
 function isStageRundownWide() {
-  return window.matchMedia("(min-width: 921px)").matches;
+  return window.matchMedia("(min-width: 768px)").matches;
 }
 
 function switchView(view) {
@@ -1183,8 +1247,13 @@ function switchView(view) {
     isMobileSongMenuOpen = false;
     stageMenuQuery = "";
     setStageFocus(false);
-  } else if (enteringStage && activeSetlist() && isStageRundownWide()) {
-    isMobileSongMenuOpen = true;
+  } else if (enteringStage) {
+    isMobileSongMenuOpen = false;
+    setStageFocus(true);
+  }
+  if (view !== "song") {
+    isSongToolsOpen = false;
+    el.appShell.classList.remove("tools-open");
   }
   if (view !== "song" && view !== "stage") stopAutoScroll();
   if (view !== "song") {
@@ -1192,11 +1261,13 @@ function switchView(view) {
     isSetlistPickerOpen = false;
     isChordSheetOpen = false;
   }
+  activeView = view;
   el.navTabs.forEach((button) => button.classList.toggle("active", button.dataset.view === view));
   el.bottomNav.forEach((button) => button.classList.toggle("active", button.dataset.view === view));
   el.views.forEach((section) => section.classList.toggle("active", section.id === `${view}View`));
   el.appShell.classList.toggle("library-active", view === "library");
   el.appShell.classList.toggle("setlists-active", view === "setlists");
+  el.appShell.classList.toggle("import-active", view === "import");
   el.appShell.classList.toggle("song-active", view === "song");
   el.appShell.classList.toggle("stage-active", view === "stage");
   el.appShell.classList.toggle("editing-song", view === "library" && isEditingSong);
@@ -1205,6 +1276,7 @@ function switchView(view) {
   else releaseStageWakeLock();
   renderSongReadMenu();
   renderMobileSongMenu();
+  renderLibraryRail();
   if (keepScroll) startAutoScroll();
 }
 
@@ -1398,17 +1470,20 @@ function renderLibraryRail() {
     keyMap[key] = (keyMap[key] || 0) + 1;
   });
   const keys = Object.keys(keyMap).sort(compareSongKeys);
+  const onLibrary = activeView === "library";
   el.libraryRail.innerHTML = `
-    <button type="button" class="rail-item ${libraryFilter === "all" ? "active" : ""}" data-rail="all">${t("library.allSongs")} <span>${counts.all}</span></button>
-    <button type="button" class="rail-item ${libraryFilter === "favorites" ? "active" : ""}" data-rail="favorites">${t("library.favorites")} <span>${counts.favorites}</span></button>
-    <button type="button" class="rail-item ${libraryFilter === "recent" ? "active" : ""}" data-rail="recent">${t("library.recent")} <span>${counts.recent}</span></button>
-    <button type="button" class="rail-item" data-rail-view="setlists">${t("nav.setlists")} <span>${counts.setlists}</span></button>
+    <button type="button" class="rail-item ${onLibrary && libraryFilter === "all" ? "active" : ""}" data-rail="all">${t("library.allSongs")} <span>${counts.all}</span></button>
+    <button type="button" class="rail-item ${onLibrary && libraryFilter === "favorites" ? "active" : ""}" data-rail="favorites">${t("library.favorites")} <span>${counts.favorites}</span></button>
+    <button type="button" class="rail-item ${onLibrary && libraryFilter === "recent" ? "active" : ""}" data-rail="recent">${t("library.recent")} <span>${counts.recent}</span></button>
+    <button type="button" class="rail-item ${activeView === "setlists" ? "active" : ""}" data-rail-view="setlists">${t("nav.setlists")} <span>${counts.setlists}</span></button>
     <p class="rail-label">${t("library.categories")}</p>
-    <button type="button" class="rail-item ${category === "Todas" ? "active" : ""}" data-rail-category="Todas">${t("library.allCategories")}</button>
-    ${categories.map((name) => `<button type="button" class="rail-item ${category === name ? "active" : ""}" data-rail-category="${escapeHtml(name)}">${escapeHtml(name)} <span>${state.songs.filter((song) => (song.category || "Geral") === name).length}</span></button>`).join("")}
+    <button type="button" class="rail-item ${onLibrary && category === "Todas" ? "active" : ""}" data-rail-category="Todas">${t("library.allCategories")}</button>
+    ${categories.map((name) => `<button type="button" class="rail-item ${onLibrary && category === name ? "active" : ""}" data-rail-category="${escapeHtml(name)}">${escapeHtml(name)} <span>${state.songs.filter((song) => (song.category || "Geral") === name).length}</span></button>`).join("")}
     <p class="rail-label">${t("library.keys")}</p>
-    <button type="button" class="rail-item ${libraryKeyFilter ? "" : "active"}" data-rail-key="">${t("library.allKeys")}</button>
-    ${keys.map((key) => `<button type="button" class="rail-item ${libraryKeyFilter === key ? "active" : ""}" data-rail-key="${escapeHtml(key)}">${escapeHtml(key)} <span>${keyMap[key]}</span></button>`).join("")}
+    <button type="button" class="rail-item ${onLibrary && !libraryKeyFilter ? "active" : ""}" data-rail-key="">${t("library.allKeys")}</button>
+    ${keys.map((key) => `<button type="button" class="rail-item ${onLibrary && libraryKeyFilter === key ? "active" : ""}" data-rail-key="${escapeHtml(key)}">${escapeHtml(key)} <span>${keyMap[key]}</span></button>`).join("")}
+    <p class="rail-label">${t("nav.more")}</p>
+    <button type="button" class="rail-item ${activeView === "import" ? "active" : ""}" data-rail-view="import">${t("nav.settings")}</button>
   `;
   el.libraryRail.querySelectorAll("[data-rail]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1560,7 +1635,6 @@ function songRow(song) {
   return `
     <article class="song-item ${song.id === selectedSongId ? "active" : ""}" data-song-wrap="${song.id}">
       <div class="song-row library-song-row">
-        <button type="button" class="song-fav ${song.isFavorite ? "on" : ""}" data-fav-id="${song.id}" aria-label="${song.isFavorite ? t("library.unfavorite") : t("library.favorite")}" title="${t("library.favorite")}">★</button>
         <button type="button" class="song-open-main" data-play-id="${song.id}">
           <span class="song-main">
             <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
@@ -1568,6 +1642,7 @@ function songRow(song) {
           </span>
         </button>
         ${written ? `<span class="song-key">${escapeHtml(written)}</span>` : `<span class="song-key muted">—</span>`}
+        <button type="button" class="song-fav ${song.isFavorite ? "on" : ""}" data-fav-id="${song.id}" aria-label="${song.isFavorite ? t("library.unfavorite") : t("library.favorite")}" title="${t("library.favorite")}">★</button>
       </div>
     </article>
   `;
@@ -1638,10 +1713,13 @@ function renderSongView() {
     el.songCueNote.textContent = song.cue || "";
   }
   el.songFav.classList.toggle("on", Boolean(song.isFavorite));
+  if (el.songTomChip) el.songTomChip.textContent = written ? t("song.key", { key: written }) : t("song.transpose");
+  if (el.songCapoChip) el.songCapoChip.textContent = song.capo ? t("song.capoChip", { capo: song.capo }) : t("editor.capo");
+  el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
-  if (el.songKeyValue) el.songKeyValue.textContent = written || "—";
+  if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
   if (el.songCapoValue) el.songCapoValue.textContent = String(song.capo || 0);
-  if (el.songFontValue) el.songFontValue.textContent = String(stageFont);
+  if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
 }
 
 function renderStage() {
@@ -1769,6 +1847,15 @@ function setStageFocus(on) {
   if (isStageFocus) isMobileSongMenuOpen = false;
   syncStageChrome();
   if (el.mobileSongMenu && !isMobileSongMenuOpen) el.mobileSongMenu.hidden = true;
+}
+
+function setSongToolsOpen(on) {
+  isSongToolsOpen = Boolean(on);
+  el.appShell.classList.toggle("tools-open", isSongToolsOpen);
+}
+
+function toggleSongTools() {
+  setSongToolsOpen(!isSongToolsOpen);
 }
 
 function toggleStageFocus() {
@@ -2027,7 +2114,7 @@ function jumpToStageSong(songId) {
   const setlist = activeSetlist();
   selectedSongId = songId;
   if (!setlist || !setlist.songIds.includes(songId)) activeSetlistId = null;
-  isMobileSongMenuOpen = isStageRundownWide() && Boolean(activeSetlist());
+  isMobileSongMenuOpen = false;
   stageMenuQuery = "";
   markSongOpened(songId);
   persist();
@@ -2520,7 +2607,7 @@ function changeStageFont(delta) {
   lookDraft = { ...lookDraft, stageFont };
   persistLook(savedLook);
   applyLook(document.documentElement, savedLook);
-  if (el.songFontValue) el.songFontValue.textContent = String(stageFont);
+  if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
   renderMore();
 }
 
@@ -2529,11 +2616,15 @@ function changeLookFont(delta) {
   renderLookStudio();
 }
 
+function fontPercentLabel(px = stageFont) {
+  return `${Math.round((Number(px) || 22) / 22 * 100)}%`;
+}
+
 function defaultLook() {
   return {
-    stageBg: LOOK_PRESETS.night.stageBg,
-    lyricColor: LOOK_PRESETS.night.lyricColor,
-    chordColor: LOOK_PRESETS.night.chordColor,
+    stageBg: "#000000",
+    lyricColor: "#ffffff",
+    chordColor: "#7dd3fc",
     stageFont: defaultStageFont(),
     stageGap: 1.35,
   };
@@ -2658,7 +2749,7 @@ function renderLookStudio() {
   if (el.lookBgSwatches) el.lookBgSwatches.innerHTML = lookSwatches(LOOK_BG, "look-bg", lookDraft.stageBg);
   if (el.lookLyricSwatches) el.lookLyricSwatches.innerHTML = lookSwatches(LOOK_LYRIC, "look-lyric", lookDraft.lyricColor);
   if (el.lookChordSwatches) el.lookChordSwatches.innerHTML = lookSwatches(LOOK_CHORD, "look-chord", lookDraft.chordColor);
-  if (el.fontSizeMore) el.fontSizeMore.value = String(lookDraft.stageFont);
+  if (el.fontSizeMore) el.fontSizeMore.value = fontPercentLabel(lookDraft.stageFont);
   const preset = activeLookPreset();
   document.querySelectorAll("[data-look-preset]").forEach((button) => {
     button.classList.toggle("active", button.dataset.lookPreset === preset);
@@ -2673,8 +2764,7 @@ function renderLookStudio() {
 }
 
 function defaultStageFont() {
-  if (matchMedia("(max-width: 560px)").matches) return 22;
-  if (matchMedia("(max-width: 920px)").matches) return 20;
+  if (matchMedia("(max-width: 767px)").matches) return 22;
   return 22;
 }
 
@@ -3193,25 +3283,8 @@ function capoSuggestion(song) {
 
 function renderCapoHint(song) {
   if (!el.songCapoHint) return;
-  const suggestion = song ? capoSuggestion(song) : null;
-  if (!suggestion) {
-    el.songCapoHint.hidden = true;
-    el.songCapoHint.innerHTML = "";
-    return;
-  }
-  const applied = Number(song.capo || 0) === suggestion.capo && Number(song.transposeValue || 0) === suggestion.transpose;
-  el.songCapoHint.hidden = false;
-  if (applied) {
-    el.songCapoHint.innerHTML = suggestion.capo
-      ? escapeHtml(t("capo.applied", { capo: suggestion.capo, shape: suggestion.shapeKey }))
-      : escapeHtml(t("capo.open", { shape: suggestion.shapeKey }));
-    return;
-  }
-  el.songCapoHint.innerHTML = `
-    <span>${escapeHtml(t("capo.suggestion", { capo: suggestion.capo, shape: suggestion.shapeKey }))}</span>
-    <button type="button" id="applyCapoBtn">${escapeHtml(t("capo.use"))}</button>
-  `;
-  el.songCapoHint.querySelector("#applyCapoBtn")?.addEventListener("click", applyCapoSuggestion);
+  el.songCapoHint.hidden = true;
+  el.songCapoHint.innerHTML = "";
 }
 
 function applyCapoSuggestion() {

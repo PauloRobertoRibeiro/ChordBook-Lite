@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#101820" />
     <title>ChordBook Lite</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=29" />
+    <link rel="stylesheet" href="./styles.css?v=32" />
   </head>
   <body>
     <div class="app-shell library-active">
@@ -21,7 +21,7 @@
         <nav id="libraryRail" class="library-rail" aria-label="Filtro da biblioteca"></nav>
         <nav class="nav-tabs" aria-label="Secoes" data-i18n-aria="aria.sections">
           <button class="nav-tab active" data-view="library" data-i18n="nav.songs">Musicas</button>
-          <button class="nav-tab" data-view="setlists" data-i18n="nav.setlists">Culto</button>
+          <button class="nav-tab" data-view="setlists" data-i18n="nav.setlists">Setlists</button>
           <button class="nav-tab" data-view="import" data-i18n="nav.more">Mais</button>
         </nav>
         <div class="sidebar-actions">
@@ -31,10 +31,11 @@
 
       <main class="workspace">
         <section class="toolbar">
+          <strong class="workspace-brand">ChordBook Lite</strong>
           <div class="search-panel">
             <div class="search-box">
-              <span aria-hidden="true" data-i18n="search.label">Buscar</span>
-              <input id="searchInput" type="search" placeholder="Buscar musica, artista ou tom..." data-i18n-placeholder="search.placeholder" />
+              <span aria-hidden="true">⌕</span>
+              <input id="searchInput" type="search" placeholder="Buscar musicas, autor, tom..." data-i18n-placeholder="search.placeholder" />
             </div>
             <div class="search-scope" role="tablist" aria-label="Onde buscar" data-i18n-aria="search.where">
               <button type="button" class="search-scope-btn active" data-search-scope="library" data-i18n="search.library">ChordBook</button>
@@ -42,7 +43,7 @@
             </div>
           </div>
           <div class="toolbar-group home-shortcuts">
-            <button type="button" data-view="setlists" data-i18n="nav.setlists">Culto</button>
+            <button type="button" data-view="setlists" data-i18n="nav.setlists">Setlists</button>
             <button type="button" id="toolbarFavsBtn" data-i18n="library.favorites">Favoritos</button>
             <button type="button" data-view="import" data-i18n="nav.more">Mais</button>
           </div>
@@ -58,12 +59,12 @@
                 </div>
                 <div class="library-tools">
                   <select id="categoryFilter" aria-label="Filtrar categoria" data-i18n-aria="library.filterCategory"></select>
-                  <button id="pasteChartLibraryBtn" type="button" data-i18n="paste.open">Colar cifra</button>
                 </div>
               </div>
+              <button id="pasteChartLibraryBtn" class="paste-library-btn song-phone-only" type="button" data-open-paste data-i18n="paste.open">Colar cifra</button>
               <div class="library-filters" role="tablist" aria-label="Filtro da biblioteca" data-i18n-aria="library.filter">
+                <button type="button" class="library-filter active" data-library-filter="all"><span data-i18n="library.allSongs">Todas</span> <span class="filter-count">0</span></button>
                 <button type="button" class="library-filter" data-library-filter="recent"><span data-i18n="library.recent">Recentes</span> <span class="filter-count">0</span></button>
-                <button type="button" class="library-filter active" data-library-filter="all"><span data-i18n="nav.songs">Musicas</span> <span class="filter-count">0</span></button>
                 <button type="button" class="library-filter" data-library-filter="favorites"><span data-i18n="library.favorites">Favoritos</span> <span class="filter-count">0</span></button>
               </div>
               <div id="categoryFilters" class="key-filters category-filters" role="listbox" aria-label="Filtrar categoria" data-i18n-aria="library.filterCategory"></div>
@@ -107,12 +108,15 @@
         <section id="songView" class="view">
           <div class="song-read">
             <header class="song-read-bar">
-              <button id="songBackBtn" type="button" data-i18n="nav.libraryBack">Biblioteca</button>
+              <button id="songBackBtn" type="button" data-i18n="nav.libraryBack">‹ Biblioteca</button>
               <div class="song-read-shortcuts">
                 <button id="songFavBtn" type="button" aria-label="Favorito" data-i18n-aria="library.favorite">★</button>
-                <button id="songScrollBtn" type="button" data-i18n="song.scroll">Rolagem</button>
+                <button id="songTomChip" class="song-wide-only song-chip" type="button">Tom</button>
+                <button id="songCapoChip" class="song-wide-only song-chip" type="button">Capo</button>
+                <button id="songScrollBtn" class="song-wide-only" type="button" data-i18n="song.scroll">Rolagem</button>
+                <button id="songToolsToggle" class="song-phone-only" type="button" data-i18n="song.tools">Ajustes</button>
                 <button id="songOpenStageBtn" type="button" class="primary-action" data-i18n="nav.stage">Palco</button>
-                <button id="songMoreBtn" type="button" data-i18n="nav.more">Mais</button>
+                <button id="songMoreBtn" class="song-wide-only" type="button" data-i18n="nav.more">Mais</button>
               </div>
             </header>
             <div id="songReadMenu" class="song-read-menu" hidden></div>
@@ -150,7 +154,7 @@
                   <span data-i18n="more.font">Tamanho da letra</span>
                   <div class="tool-stepper">
                     <button id="songFontDown" type="button">A-</button>
-                    <output id="songFontValue">22</output>
+                    <output id="songFontValue">100%</output>
                     <button id="songFontUp" type="button">A+</button>
                   </div>
                 </div>
@@ -160,6 +164,7 @@
                 <label class="switch-row"><span data-i18n="song.showLyrics">Mostrar letra</span><input id="songShowLyricsSwitch" type="checkbox" checked /></label>
                 <button id="songChordsBtn" type="button" data-i18n="song.chords">Acordes</button>
                 <button id="songSetlistBtn" type="button" data-i18n="song.addToSetlist">Adicionar ao setlist</button>
+                <button id="songEditToolsBtn" class="song-phone-only" type="button" data-i18n="song.edit">Editar musica</button>
                 <button id="songOpenStageBtn2" type="button" class="primary-action" data-i18n="song.stageGo">Modo palco</button>
               </aside>
             </div>
@@ -176,28 +181,30 @@
         <section id="stageView" class="view">
           <div class="stage-shell">
             <header class="stage-mode-bar">
-              <button id="stageExitBtn" type="button" data-i18n="stage.exit">Voltar</button>
+              <button id="stageExitBtn" class="stage-chrome" type="button" data-i18n="stage.exit">Voltar</button>
               <div class="stage-mode-title">
                 <strong id="stageSongTitle">Cancao</strong>
                 <span id="stageNowHint"></span>
               </div>
-              <button id="stageMenuBtn" type="button" data-i18n="stage.list">Ordem</button>
+              <button id="stageMenuBtn" class="stage-chrome" type="button" data-i18n="stage.list">Ordem</button>
             </header>
-            <p id="stageCueNote" class="stage-cue-note" hidden></p>
+            <p id="stageCueNote" class="stage-cue-note stage-chrome" hidden></p>
             <span id="stageCapoBadge" class="stage-capo-badge" hidden></span>
             <div id="mobileSongMenu" class="mobile-song-menu" hidden></div>
             <article id="stageContent" class="stage-content"></article>
+            <button id="stagePrevBtn" class="stage-nav-btn" type="button" aria-label="Anterior" data-i18n-aria="stage.prev">‹</button>
+            <button id="stageNextBtn" class="stage-nav-btn" type="button" aria-label="Proxima" data-i18n-aria="stage.next">›</button>
             <footer class="stage-mode-footer">
-              <button id="stagePrevBtn" class="stage-nav-btn" type="button" aria-label="Anterior" data-i18n-aria="stage.prev">‹</button>
-              <button id="stageTransposeDown" class="stage-tom-btn" type="button" aria-label="Tom -" data-i18n-aria="song.transposeDown">−</button>
-              <button id="stageScrollBtn" type="button" aria-label="Rolagem">▶</button>
+              <div class="stage-chrome stage-footer-tools">
+                <button id="stageTransposeDown" class="stage-tom-btn" type="button" aria-label="Tom -" data-i18n-aria="song.transposeDown">−</button>
+                <button id="stageScrollBtn" type="button" aria-label="Rolagem">▶</button>
+                <button id="stageTransposeUp" class="stage-tom-btn" type="button" aria-label="Tom +" data-i18n-aria="song.transposeUp">+</button>
+              </div>
               <div class="stage-progress">
                 <div id="stageDots" class="stage-dots"></div>
                 <span id="stagePosition">1/1</span>
                 <span id="stageNextHint" class="stage-next-hint" hidden></span>
               </div>
-              <button id="stageTransposeUp" class="stage-tom-btn" type="button" aria-label="Tom +" data-i18n-aria="song.transposeUp">+</button>
-              <button id="stageNextBtn" class="stage-nav-btn" type="button" aria-label="Proxima" data-i18n-aria="stage.next">›</button>
             </footer>
           </div>
         </section>
@@ -207,13 +214,13 @@
             <section class="setlist-panel">
               <div class="panel-header">
                 <div>
-                  <h1 data-i18n="nav.setlists">Culto</h1>
+                  <h1 data-i18n="nav.setlists">Setlists</h1>
                   <p id="setlistCount">0 listas</p>
                 </div>
-                <button id="newSetlistBtn" class="primary-action setlist-new-desktop" data-i18n="setlists.new">Novo culto</button>
+                <button id="newSetlistBtn" class="primary-action setlist-new-desktop" data-i18n="setlists.new">Novo setlist</button>
               </div>
               <div class="library-filters" role="tablist" aria-label="Filtro de setlists" data-i18n-aria="setlists.filter">
-                <button type="button" class="library-filter active" data-setlist-filter="all" data-i18n="setlists.mine">Meus cultos</button>
+                <button type="button" class="library-filter active" data-setlist-filter="all" data-i18n="setlists.mine">Meus setlists</button>
                 <button type="button" class="library-filter" data-setlist-filter="recent" data-i18n="setlists.recent">Recentes</button>
               </div>
               <div id="setlistList" class="song-list"></div>
@@ -267,6 +274,17 @@
         <section id="importView" class="view">
           <div class="files-panel more-panel">
             <h1 data-i18n="nav.settings">Configuracoes</h1>
+            <h2 class="more-heading" data-i18n="more.shortcuts">Atalhos</h2>
+            <div class="more-list more-shortcuts">
+              <button type="button" data-more-go="library" data-i18n="home.library">Biblioteca</button>
+              <button type="button" data-more-go="setlists" data-i18n="nav.setlists">Setlists</button>
+              <button type="button" data-more-go="favorites" data-i18n="library.favorites">Favoritas</button>
+              <button type="button" data-more-go="recent" data-i18n="library.recent">Recentes</button>
+              <button type="button" data-more-go="import-file" data-i18n="more.import">Importar musicas</button>
+              <button type="button" data-more-go="export" data-i18n="more.exportAll">Exportar backup</button>
+            </div>
+            <div class="more-columns">
+            <div class="more-col">
             <h2 class="more-heading" data-i18n="more.appearance">Aparencia</h2>
             <div class="more-list">
               <div class="more-row">
@@ -278,11 +296,11 @@
                 </div>
               </div>
               <div class="more-row">
-                <span data-i18n="more.language">Idioma</span>
-                <div class="more-inline lang-pills">
-                  <button type="button" data-lang="pt">PT</button>
-                  <button type="button" data-lang="es">ES</button>
-                  <button type="button" data-lang="en">EN</button>
+                <span data-i18n="more.fontDefault">Tamanho da letra padrao</span>
+                <div class="more-inline">
+                  <button id="fontDownMore" type="button">A-</button>
+                  <output id="fontSizeMore">100%</output>
+                  <button id="fontUpMore" type="button">A+</button>
                 </div>
               </div>
             </div>
@@ -293,74 +311,94 @@
               <label class="switch-row"><span data-i18n="song.showChords">Mostrar acordes</span><input id="moreShowChordsSwitch" type="checkbox" checked /></label>
               <label class="switch-row"><span data-i18n="song.showLyrics">Mostrar letra</span><input id="moreShowLyricsSwitch" type="checkbox" checked /></label>
             </div>
-            <h2 class="more-heading" data-i18n="look.title">Visual do palco</h2>
-            <div id="lookStudio" class="look-studio">
-              <div class="look-preview-frame">
-                <div class="look-preview-bar">
-                  <span data-i18n="look.kicker">Como fica no palco</span>
-                  <strong>Meu Abrigo</strong>
-                </div>
-                <div id="lookPreview" class="look-preview stage-content" aria-live="polite"></div>
-              </div>
-              <p id="lookHint" class="look-hint" data-i18n="look.hint">Mexe em baixo. A cifra em cima muda na hora. So grava se gostares.</p>
-              <p id="lookDirty" class="look-dirty" hidden data-i18n="look.dirty">Ainda nao gravado.</p>
-              <div class="look-block">
-                <span data-i18n="look.preset">Estilo</span>
-                <div class="look-pills">
-                  <button type="button" data-look-preset="night" data-i18n="look.night">Noite</button>
-                  <button type="button" data-look-preset="forest" data-i18n="look.forest">Bosque</button>
-                  <button type="button" data-look-preset="gold" data-i18n="look.gold">Ambar</button>
-                  <button type="button" data-look-preset="paper" data-i18n="look.paper">Papel</button>
-                  <button type="button" data-look-preset="contrast" data-i18n="look.contrast">Contraste</button>
-                </div>
-              </div>
-              <div class="look-block">
-                <span data-i18n="look.screen">Tela</span>
-                <div class="look-swatches" id="lookBgSwatches"></div>
-              </div>
-              <div class="look-block">
-                <span data-i18n="look.lyrics">Letra</span>
-                <div class="look-swatches" id="lookLyricSwatches"></div>
-              </div>
-              <div class="look-block">
-                <span data-i18n="look.chords">Cifra</span>
-                <div class="look-swatches" id="lookChordSwatches"></div>
-              </div>
-              <div class="look-block">
-                <span data-i18n="more.font">Tamanho da letra</span>
-                <div class="more-inline">
-                  <button id="fontDownMore" type="button">A-</button>
-                  <output id="fontSizeMore">22</output>
-                  <button id="fontUpMore" type="button">A+</button>
-                </div>
-              </div>
-              <div class="look-block">
-                <span data-i18n="look.gap">Espaco</span>
-                <div class="look-pills">
-                  <button type="button" data-look-gap="1.18" data-i18n="look.gapTight">Junto</button>
-                  <button type="button" data-look-gap="1.35" data-i18n="look.gapNormal">Normal</button>
-                  <button type="button" data-look-gap="1.55" data-i18n="look.gapLoose">Folgado</button>
-                </div>
-              </div>
-              <div class="look-actions">
-                <button type="button" id="lookCancel" data-i18n="look.discard">Descartar</button>
-                <button type="button" id="lookSave" class="primary-action" data-i18n="look.save">Guardar visual</button>
-              </div>
             </div>
+            <div class="more-col">
             <h2 class="more-heading" data-i18n="more.data">Dados</h2>
             <div class="more-list">
-              <button id="sampleBtnMore" type="button" data-i18n="more.sample">Carregar exemplo</button>
-              <button id="exportSelectedBtn" type="button" data-i18n="more.exportSong">Exportar cifra atual</button>
-              <button id="exportRepertoireBtn" type="button" data-i18n="more.exportAll">Exportar repertorio completo</button>
               <label class="file-button large">
-                <span data-i18n="more.import">Importar ChordBook</span>
+                <span data-i18n="more.import">Importar musicas</span>
                 <input id="importFileInputAlt" type="file" accept=".json,.txt,.chordpro,.chordbook,.chordbook-library,application/json,text/plain" />
               </label>
+              <button id="exportRepertoireBtn" type="button" data-i18n="more.exportAll">Exportar backup</button>
+              <label class="file-button large">
+                <span data-i18n="more.restore">Restaurar backup</span>
+                <input id="restoreFileInput" type="file" accept=".json,.txt,.chordpro,.chordbook,.chordbook-library,application/json,text/plain" />
+              </label>
               <button id="clearLibraryBtn" type="button" class="danger-action" data-i18n="more.clear">Limpar dados</button>
+              <details class="look-details">
+                <summary data-i18n="nav.more">Mais</summary>
+                <div class="more-list" style="margin-top:10px">
+                  <button type="button" data-open-paste data-i18n="more.paste">Trazer uma musica</button>
+                  <button id="sitesSearchBtn" type="button" data-i18n="search.trySites">Buscar nos sites</button>
+                  <button id="exportSelectedBtn" type="button" data-i18n="more.exportSong">Exportar cifra atual</button>
+                  <button id="sampleBtnMore" type="button" data-i18n="more.sample">Carregar exemplo</button>
+                </div>
+              </details>
             </div>
-            <h2 class="more-heading" data-i18n="more.about">Sobre</h2>
-            <p class="more-lead" data-i18n="more.aboutText">ChordBook Lite — cifras para ver e tocar, sem perder tempo.</p>
+            <h2 class="more-heading" data-i18n="more.other">Outras opcoes</h2>
+            <div class="more-list">
+              <div class="more-row">
+                <span data-i18n="more.language">Idioma</span>
+                <div class="more-inline lang-pills">
+                  <button type="button" data-lang="pt">PT</button>
+                  <button type="button" data-lang="es">ES</button>
+                  <button type="button" data-lang="en">EN</button>
+                </div>
+              </div>
+            </div>
+            <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
+            <p class="more-lead" data-i18n="more.aboutText">Sobre o ChordBook Lite</p>
             <pre id="fileLog" class="file-log">Pronto.</pre>
+            </div>
+            </div>
+            <details class="look-details">
+              <summary data-i18n="look.title">Visual do palco</summary>
+              <div id="lookStudio" class="look-studio">
+                <div class="look-preview-frame">
+                  <div class="look-preview-bar">
+                    <span data-i18n="look.kicker">Como fica no palco</span>
+                    <strong>Meu Abrigo</strong>
+                  </div>
+                  <div id="lookPreview" class="look-preview stage-content" aria-live="polite"></div>
+                </div>
+                <p id="lookHint" class="look-hint" data-i18n="look.hint">Mexe em baixo. A cifra em cima muda na hora. So grava se gostares.</p>
+                <p id="lookDirty" class="look-dirty" hidden data-i18n="look.dirty">Ainda nao gravado.</p>
+                <div class="look-block">
+                  <span data-i18n="look.preset">Estilo</span>
+                  <div class="look-pills">
+                    <button type="button" data-look-preset="night" data-i18n="look.night">Noite</button>
+                    <button type="button" data-look-preset="forest" data-i18n="look.forest">Bosque</button>
+                    <button type="button" data-look-preset="gold" data-i18n="look.gold">Ambar</button>
+                    <button type="button" data-look-preset="paper" data-i18n="look.paper">Papel</button>
+                    <button type="button" data-look-preset="contrast" data-i18n="look.contrast">Contraste</button>
+                  </div>
+                </div>
+                <div class="look-block">
+                  <span data-i18n="look.screen">Tela</span>
+                  <div class="look-swatches" id="lookBgSwatches"></div>
+                </div>
+                <div class="look-block">
+                  <span data-i18n="look.lyrics">Letra</span>
+                  <div class="look-swatches" id="lookLyricSwatches"></div>
+                </div>
+                <div class="look-block">
+                  <span data-i18n="look.chords">Cifra</span>
+                  <div class="look-swatches" id="lookChordSwatches"></div>
+                </div>
+                <div class="look-block">
+                  <span data-i18n="look.gap">Espaco</span>
+                  <div class="look-pills">
+                    <button type="button" data-look-gap="1.18" data-i18n="look.gapTight">Junto</button>
+                    <button type="button" data-look-gap="1.35" data-i18n="look.gapNormal">Normal</button>
+                    <button type="button" data-look-gap="1.55" data-i18n="look.gapLoose">Folgado</button>
+                  </div>
+                </div>
+                <div class="look-actions">
+                  <button type="button" id="lookCancel" data-i18n="look.discard">Descartar</button>
+                  <button type="button" id="lookSave" class="primary-action" data-i18n="look.save">Guardar visual</button>
+                </div>
+              </div>
+            </details>
           </div>
         </section>
       </main>
@@ -371,7 +409,7 @@
         </button>
         <button type="button" class="bottom-nav-btn" data-view="setlists">
           <span aria-hidden="true">≡</span>
-          <span data-i18n="nav.setlists">Culto</span>
+          <span data-i18n="nav.setlists">Setlists</span>
         </button>
         <button type="button" class="bottom-nav-btn" data-view="import">
           <span aria-hidden="true">…</span>
@@ -404,6 +442,6 @@
       </div>
     </div>
 
-    <script src="./app.js?v=29" defer></script>
+    <script src="./app.js?v=32" defer></script>
   </body>
 </html>
