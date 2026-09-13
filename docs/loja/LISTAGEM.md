@@ -11,7 +11,7 @@ Descrição curta (máx. 80 caracteres):
 
 ChordBook Lite é o caderno de cifras para quem toca no culto, no ensaio e no palco.
 
-Guarde as músicas neste aparelho. Transponha o tom, ajuste o capo, monte o setlist do domingo e abra o modo palco com letra grande e acordes em destaque. Sem criar conta e sem depender da nuvem.
+Guarde as músicas neste aparelho. Transponha o tom, ajuste o capo, monte o setlist do domingo e abra o modo palco com letra grande e acordes em destaque. Sem criar conta. No computador, você pode editar com um código e a autorização deste celular.
 
 O que você faz no app
 
@@ -21,6 +21,7 @@ O que você faz no app
 • Modo palco: fundo preto, cifra grande, passe para a próxima do setlist
 • Setlists e programa de culto para enviar no WhatsApp
 • Backup em arquivo JSON — a biblioteca é sua
+• Ligar um computador com código e permissão no celular
 
 Para quem é
 
@@ -58,4 +59,4 @@ Gráfico de funcionalidade: `docs/loja/feature-graphic.png` (1024 × 500)
 
 ## Política pública (URL na Play)
 
-Publique `pwa/privacy.html` ou `docs/loja/privacidade.html` em HTTPS, por exemplo GitHub Pages deste repositório, e cole o URL no Console.
+Publique `pwa/privacy.html` em HTTPS via GitHub Pages deste repositório (`/privacy.html`) e cole o URL no Console. A página do grupo é `/instalar.html`.

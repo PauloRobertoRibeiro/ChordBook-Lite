@@ -1,6 +1,7 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 const LOOK_KEY = "chordbook.look.v1";
+const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const LOOK_PRESETS = {
   night: { stageBg: "#0d100f", lyricColor: "#f5f8f6", chordColor: "#8ec5ff" },
   forest: { stageBg: "#10211c", lyricColor: "#e7f6f0", chordColor: "#5ee0c5" },
@@ -20,6 +21,8 @@ const LOOK_SAMPLE = [
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const FLAT_TO_SHARP = { Db: "C#", Eb: "D#", Gb: "F#", Ab: "G#", Bb: "A#" };
 const EASY_KEYS = ["G", "C", "D", "A", "E"];
+const CHORD_FIND_RE = /[A-G](?:#|b)?(?:maj|min|sus|dim|aug|add|m)?\d*(?:sus\d*)?(?:\/[A-G](?:#|b)?(?:maj|min|m)?\d*)?/g;
+const CHORD_TOKEN_RE = /^(?:[A-G](?:#|b)?(?:maj|min|sus|dim|aug|add|m)?\d*(?:sus\d*)?(?:\/[A-G](?:#|b)?(?:maj|min|m)?\d*)?)$/;
 const CHORD_SHAPES = {
   C: "x32010", C7: "x32310", Cm: "x31013", Cm7: "x31313", Cmaj7: "x32000", Cadd9: "x32030", Csus4: "x33010",
   D: "xx0232", D7: "xx0212", Dm: "xx0231", Dm7: "xx0211", Dmaj7: "xx0222", Dsus4: "xx0233", Dadd9: "x54030",
@@ -92,7 +95,7 @@ const I18N = {
     "library.favOne": "{n} favorita",
     "library.favMany": "{n} favoritas",
     "library.empty": "Nenhuma cifra encontrada.",
-    "library.emptyStart": "Nenhuma cifra ainda. Toque em + ou em Colar cifra.",
+    "library.emptyStart": "Nenhuma cifra ainda. Toque em +.",
     "library.emptyFavorites": "Nenhuma cifra favorita.",
     "library.emptyRecent": "Toque no nome de uma música para tocar. As recentes aparecem aqui.",
     "library.favorite": "Favorito",
@@ -143,7 +146,9 @@ const I18N = {
     "song.list": "Lista",
     "song.play": "Tocar",
     "song.edit": "Editar música",
+    "song.editShort": "Editar",
     "song.share": "Compartilhar",
+    "song.toolsPull": "Puxar capo e letra",
     "song.stageMode": "Modo palco",
     "song.addToSetlist": "Adicionar ao setlist",
     "song.tools": "Ajustes",
@@ -153,11 +158,12 @@ const I18N = {
     "stage.mode": "Modo Palco",
     "stage.menu": "Menu",
     "stage.exit": "Voltar",
-    "stage.list": "Ordem",
+    "stage.list": "Lista",
     "stage.close": "Fechar",
     "stage.now": "agora",
-    "stage.listHint": "Escreva para saltar de música.",
-    "stage.setlistLabel": "Ordem do culto",
+    "stage.listHint": "Toque para mudar de música.",
+    "stage.setlistLabel": "Músicas de hoje",
+    "stage.recentLabel": "Músicas recentes",
     "stage.prev": "Anterior",
     "stage.next": "Próxima",
     "stage.end": "Fim do setlist.",
@@ -181,18 +187,31 @@ const I18N = {
     "setlists.empty": "Nenhum setlist criado.",
     "setlists.emptyRecent": "Abra um setlist no palco para aparecer aqui.",
     "setlists.emptyList": "Sem músicas ainda",
+    "setlists.songsOne": "{n} música",
+    "setlists.songsMany": "{n} músicas",
     "setlists.edit": "Editar setlist",
     "setlists.editLead": "Ordem das músicas para o dia.",
     "setlists.name": "Nome do setlist",
     "setlists.notes": "Notas",
-    "setlists.openStage": "Abrir no palco",
+    "setlists.openStage": "Tocar",
+    "setlists.playTitle": "Como quer ver as músicas?",
+    "setlists.playLead": "A cifra é clara para ensaiar. O palco é escuro para projetar.",
+    "setlists.playChart": "Cifra",
+    "setlists.playChartHint": "Tela clara, com capo e edição",
+    "setlists.playStage": "Palco",
+    "setlists.playStageHint": "Tela escura, para o culto",
+    "setlists.playExit": "Sair",
+    "setlists.playDone": "Fim",
     "setlists.save": "Salvar",
     "setlists.delete": "Excluir",
     "setlists.inList": "No setlist",
     "setlists.noSongs": "Nenhuma música neste setlist.",
     "setlists.addSong": "Adicionar",
+    "setlists.remove": "Apagar",
+    "setlists.details": "Dados do culto",
+    "setlists.addTitle": "Acrescentar música",
     "setlists.allAdded": "Todas as músicas já foram adicionadas.",
-    "setlists.needSongs": "Adicione músicas ao setlist para abrir no palco.",
+    "setlists.needSongs": "Adicione músicas ao setlist para tocar.",
     "setlists.saved": "Programa salvo.",
     "setlists.added": "Adicionada a {title}.",
     "setlists.already": "Já está neste setlist.",
@@ -242,10 +261,11 @@ const I18N = {
     "more.clear": "Limpar dados",
     "more.clearConfirm": "Apagar todas as músicas e setlists deste aparelho?",
     "more.about": "Sobre",
-    "more.aboutText": "Cifras, setlists e modo palco neste aparelho. Sem conta e sem nuvem.",
-    "more.aboutLegal": "Os dados ficam só neste celular. Exporte um backup antes de desinstalar.",
+    "more.aboutText": "Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.",
+    "more.aboutLegal": "Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.",
     "more.version": "Versão {v}",
     "more.privacy": "Política de privacidade",
+    "more.install": "Instalar e partilhar",
     "more.font": "Tamanho da letra",
     "more.fontDefault": "Tamanho da letra padrão",
     "more.shortcuts": "Atalhos",
@@ -258,6 +278,37 @@ const I18N = {
     "more.exportSong": "Exportar cifra atual",
     "more.exportAll": "Exportar backup",
     "more.import": "Importar músicas",
+    "sync.title": "Computador",
+    "sync.lead": "Abra o ChordBook no computador, mostre o código e autorize neste celular. Depois edite lá e use aqui.",
+    "sync.showCode": "Mostrar código neste computador",
+    "sync.codeLabel": "Código do computador",
+    "sync.connect": "Ligar ao computador",
+    "sync.stop": "Desligar",
+    "sync.hostTitle": "Editar neste computador",
+    "sync.hostLead": "No celular, abra ChordBook → Mais → Computador e digite este código. Depois toque em Permitir.",
+    "sync.sameWifi": "Os dois aparelhos precisam de internet. Na mesma Wi-Fi funciona melhor.",
+    "sync.authTitle": "Permitir este computador?",
+    "sync.authLead": "Ele vai ver e alterar as cifras deste celular. Só aceite se foi você que abriu o ChordBook no computador.",
+    "sync.allow": "Permitir",
+    "sync.deny": "Recusar",
+    "sync.waiting": "Aguardando o celular…",
+    "sync.waitingAuth": "Aguardando permissão no celular…",
+    "sync.joining": "A ligar…",
+    "sync.connected": "Ligado. O que você salvar num lado aparece no outro.",
+    "sync.disconnected": "Ligação encerrada.",
+    "sync.denied": "O celular recusou este computador.",
+    "sync.needCode": "Digite o código de 6 números que aparece no computador.",
+    "sync.badCode": "Código inválido.",
+    "sync.fail": "Não foi possível ligar. Confira a internet e tente de novo na mesma Wi-Fi.",
+    "sync.received": "Biblioteca recebida do celular.",
+    "sync.sent": "Alterações enviadas ao celular.",
+    "sync.bannerIdle": "Edite as cifras do celular neste computador.",
+    "sync.bannerStart": "Começar",
+    "sync.bannerWait": "No celular: Mais → Computador → {code}",
+    "sync.bannerOn": "Ligado ao celular",
+    "sync.bannerPhone": "Ligado ao computador",
+    "sync.bannerOpen": "Ver código",
+    "sync.peerBusy": "Esse código já está em uso. Gerando outro…",
     "more.ready": "Pronto.",
     "more.themeLight": "Tema claro",
     "more.themeDark": "Tema escuro",
@@ -314,27 +365,27 @@ const I18N = {
     "nav.setlists": "Setlists",
     "nav.chart": "Cifra",
     "nav.stage": "Escenario",
-    "nav.more": "Mas",
+    "nav.more": "Más",
     "nav.settings": "Ajustes",
     "nav.libraryBack": "‹ Biblioteca",
-    "nav.newSong": "Nueva cancion",
+    "nav.newSong": "Nueva canción",
     "nav.exportLibrary": "Exportar biblioteca",
     "nav.importFile": "Importar archivo",
     "search.label": "Buscar",
-    "search.placeholder": "Buscar cancion, artista o tono...",
-    "search.sitesPlaceholder": "Nombre de la cancion o artista...",
+    "search.placeholder": "Buscar canción, artista o tono...",
+    "search.sitesPlaceholder": "Nombre de la canción o artista...",
     "search.library": "ChordBook",
     "search.sites": "Sitios",
-    "search.where": "Donde buscar",
+    "search.where": "Dónde buscar",
     "search.sitesLead": "Abra el sitio, copie la cifra y vuelva para pegarla.",
-    "search.sitesEmpty": "Escriba el nombre de la cancion o del artista.",
+    "search.sitesEmpty": "Escriba el nombre de la canción o del artista.",
     "search.sitesOpen": "Buscar \"{q}\"",
     "search.sitesHome": "Abrir {name}",
-    "search.sitesCount": "Busqueda en sitios",
+    "search.sitesCount": "Búsqueda en sitios",
     "search.thenPaste": "Ya copié: pegar cifra",
     "search.trySites": "Buscar en los sitios",
     "more.sampleShort": "Ejemplo",
-    "home.title": "Tu musica",
+    "home.title": "Tu música",
     "home.lead": "Biblioteca, escenario y programa de culto para tocar sin perder tiempo.",
     "home.library": "Biblioteca",
     "home.libraryLead": "Todas las cifras",
@@ -342,43 +393,43 @@ const I18N = {
     "home.setlistsLead": "Orden del culto",
     "home.files": "Archivos",
     "home.filesLead": "Importar copia",
-    "home.newSong": "+ Nueva cancion",
+    "home.newSong": "+ Nueva canción",
     "home.seeAll": "Ver todas",
-    "home.empty": "Todavia no hay cifras.",
+    "home.empty": "Todavía no hay cifras.",
     "home.open": "Abrir",
     "library.favorites": "Favoritas",
     "library.recent": "Recientes",
     "library.editSelected": "Editar seleccionada",
     "library.filter": "Filtro de la biblioteca",
-    "library.filterCategory": "Filtrar categoria",
+    "library.filterCategory": "Filtrar categoría",
     "library.filterKey": "Filtrar tono",
     "library.allCategories": "Todas",
     "library.allKeys": "Todos",
     "library.allSongs": "Todas",
-    "library.categories": "Categorias",
+    "library.categories": "Categorías",
     "library.keys": "Tonos",
-    "library.emptyKey": "Ninguna cancion en este tono.",
+    "library.emptyKey": "Ninguna canción en este tono.",
     "library.countOne": "{n} cifra",
     "library.countMany": "{n} cifras",
     "library.favOne": "{n} favorita",
     "library.favMany": "{n} favoritas",
     "library.empty": "No se encontraron cifras.",
-    "library.emptyStart": "Todavía no hay cifras. Pulse + o Pegar cifra.",
+    "library.emptyStart": "Todavía no hay cifras. Pulse +.",
     "library.emptyFavorites": "No hay cifras favoritas.",
-    "library.emptyRecent": "Toque el nombre de una cancion para tocar. Las recientes aparecen aqui.",
+    "library.emptyRecent": "Toque el nombre de una canción para tocar. Las recientes aparecen aquí.",
     "library.favorite": "Favorito",
     "library.unfavorite": "Quitar favorito",
     "preview.edit": "Editar",
-    "preview.more": "Mas",
+    "preview.more": "Más",
     "preview.youtube": "YouTube",
-    "editor.title": "Editar cancion",
+    "editor.title": "Editar canción",
     "editor.lead": "Completa los datos y escribe la letra con los acordes.",
-    "editor.name": "Nombre de la cancion",
+    "editor.name": "Nombre de la canción",
     "editor.namePh": "Ej.: Esperanza Viva",
     "editor.artist": "Autor / artista",
     "editor.artistPh": "Ej.: Ministerio de alabanza",
-    "editor.category": "Categoria",
-    "editor.categoryPh": "Ej.: Alabanza, Celebracion",
+    "editor.category": "Categoría",
+    "editor.categoryPh": "Ej.: Alabanza, Celebración",
     "editor.capo": "Cejilla",
     "editor.cue": "Recado en el escenario",
     "editor.cuePh": "Ej.: entra en el 2. verso",
@@ -387,23 +438,23 @@ const I18N = {
     "editor.duplicate": "Duplicar",
     "editor.delete": "Eliminar",
     "paste.open": "Pegar cifra",
-    "paste.title": "Traer una cancion",
-    "paste.lead": "Abra un himnario o sitio, copie la cifra y peguela abajo. Luego ajuste frases y acordes.",
-    "paste.sites": "Donde copiar",
+    "paste.title": "Traer una canción",
+    "paste.lead": "Abra un himnario o sitio, copie la cifra y péguela abajo. Luego ajuste frases y acordes.",
+    "paste.sites": "Dónde copiar",
     "paste.apply": "Traer al editor",
     "paste.clipboard": "Pegar del portapapeles",
-    "paste.placeholder": "Pegue aqui la cifra copiada...",
-    "paste.empty": "No encontre letra ni acordes para pegar.",
+    "paste.placeholder": "Pegue aquí la cifra copiada...",
+    "paste.empty": "No encontré letra ni acordes para pegar.",
     "paste.ready": "Cifra pegada. Ajuste lo que haga falta y guarde.",
     "paste.clipboardFail": "Pegue con Ctrl+V o toque largo en el campo.",
     "common.back": "Volver",
     "common.save": "Guardar",
-    "song.untitled": "Cancion",
-    "song.noTitle": "Sin titulo",
+    "song.untitled": "Canción",
+    "song.noTitle": "Sin título",
     "song.transposeDown": "Tono -",
     "song.transposeUp": "Tono +",
     "song.transpose": "Transportar tono",
-    "song.autoScroll": "Desplazamiento automatico",
+    "song.autoScroll": "Desplazamiento automático",
     "song.focus": "Modo foco",
     "song.showChords": "Mostrar acordes",
     "song.showLyrics": "Mostrar letra",
@@ -413,27 +464,30 @@ const I18N = {
     "song.scrollStop": "Parar",
     "song.list": "Lista",
     "song.play": "Tocar",
-    "song.edit": "Editar cancion",
+    "song.edit": "Editar canción",
+    "song.editShort": "Editar",
     "song.share": "Compartir",
+    "song.toolsPull": "Deslizar cejilla y letra",
     "song.stageMode": "Modo escenario",
-    "song.addToSetlist": "Anadir al setlist",
+    "song.addToSetlist": "Añadir al setlist",
     "song.tools": "Ajustes",
     "song.key": "Tono {key}",
     "song.capoChip": "Cejilla {capo}",
     "song.sounds": "suena {key}",
     "stage.mode": "Modo escenario",
-    "stage.menu": "Menu",
+    "stage.menu": "Menú",
     "stage.exit": "Volver",
-    "stage.list": "Orden",
+    "stage.list": "Lista",
     "stage.close": "Cerrar",
     "stage.now": "ahora",
-    "stage.listHint": "Escriba para saltar de cancion.",
-    "stage.setlistLabel": "Orden del culto",
+    "stage.listHint": "Toque para cambiar de canción.",
+    "stage.setlistLabel": "Canciones de hoy",
+    "stage.recentLabel": "Canciones recientes",
     "stage.prev": "Anterior",
     "stage.next": "Siguiente",
     "stage.end": "Fin del setlist.",
     "stage.start": "Inicio del setlist.",
-    "stage.after": "despues: {title}",
+    "stage.after": "después: {title}",
     "stage.startScroll": "Desplazar",
     "stage.stopScroll": "Parar",
     "stage.focus": "Foco",
@@ -449,37 +503,50 @@ const I18N = {
     "setlists.countMany": "{n} setlists",
     "setlists.recentOne": "{n} reciente",
     "setlists.recentMany": "{n} recientes",
-    "setlists.empty": "Ningun setlist creado.",
-    "setlists.emptyRecent": "Abre un setlist en el escenario para verlo aqui.",
-    "setlists.emptyList": "Todavia sin canciones",
+    "setlists.empty": "Ningún setlist creado.",
+    "setlists.emptyRecent": "Abre un setlist en el escenario para verlo aquí.",
+    "setlists.emptyList": "Todavía sin canciones",
+    "setlists.songsOne": "{n} canción",
+    "setlists.songsMany": "{n} canciones",
     "setlists.edit": "Editar setlist",
-    "setlists.editLead": "Orden de las canciones del dia.",
+    "setlists.editLead": "Orden de las canciones del día.",
     "setlists.name": "Nombre del setlist",
     "setlists.notes": "Notas",
-    "setlists.openStage": "Abrir en escenario",
+    "setlists.openStage": "Tocar",
+    "setlists.playTitle": "¿Cómo quiere verlas?",
+    "setlists.playLead": "La cifra es clara para ensayar. El escenario es oscuro para proyectar.",
+    "setlists.playChart": "Cifra",
+    "setlists.playChartHint": "Pantalla clara, con cejilla y edición",
+    "setlists.playStage": "Escenario",
+    "setlists.playStageHint": "Pantalla oscura, para el culto",
+    "setlists.playExit": "Salir",
+    "setlists.playDone": "Fin",
     "setlists.save": "Guardar",
     "setlists.delete": "Eliminar",
     "setlists.inList": "En el setlist",
-    "setlists.noSongs": "Ninguna cancion en este setlist.",
-    "setlists.addSong": "Anadir",
-    "setlists.allAdded": "Todas las canciones ya fueron anadidas.",
-    "setlists.needSongs": "Anade canciones al setlist para abrir en escenario.",
+    "setlists.noSongs": "Ninguna canción en este setlist.",
+    "setlists.addSong": "Añadir",
+    "setlists.remove": "Borrar",
+    "setlists.details": "Datos del culto",
+    "setlists.addTitle": "Añadir canción",
+    "setlists.allAdded": "Todas las canciones ya fueron añadidas.",
+    "setlists.needSongs": "Añade canciones al setlist para tocar.",
     "setlists.saved": "Programa guardado.",
-    "setlists.added": "Anadida a {title}.",
-    "setlists.already": "Ya esta en este setlist.",
-    "setlists.deleteConfirm": "Eliminar el setlist \"{title}\"?",
+    "setlists.added": "Añadida a {title}.",
+    "setlists.already": "Ya está en este setlist.",
+    "setlists.deleteConfirm": "¿Eliminar el setlist \"{title}\"?",
     "service.title": "Programa de culto",
-    "service.lead": "Complete quien sirve el domingo y las canciones. Luego envie a cada participante.",
+    "service.lead": "Complete quién sirve el domingo y las canciones. Luego envíe a cada participante.",
     "service.name": "Nombre del culto",
     "service.namePh": "Ej.: Culto Domingo",
     "service.date": "Fecha",
-    "service.opening": "Apertura (preludio, quien toca)",
+    "service.opening": "Apertura (preludio, quién toca)",
     "service.openingPh": "Ej.: Piano — Ana",
     "service.leader": "Dirigente",
     "service.announcements": "Anuncios y lectura de la palabra",
-    "service.worship": "Grupo de adoracion",
+    "service.worship": "Grupo de adoración",
     "service.worshipPh": "Ej.: Ministerio de alabanza",
-    "service.songs": "Grupo de adoracion — canciones",
+    "service.songs": "Grupo de adoración — canciones",
     "service.preacher": "Predicador",
     "service.preacherRole": "Pastor o invitado",
     "service.pastor": "Pastor",
@@ -488,17 +555,17 @@ const I18N = {
     "service.communionPh": "Ej.: Pastor Juan",
     "service.send": "Enviar programa",
     "service.whatsapp": "WhatsApp",
-    "service.copied": "Programa copiado. Peguelo en WhatsApp o en el grupo.",
+    "service.copied": "Programa copiado. Péguelo en WhatsApp o en el grupo.",
     "service.shared": "Programa enviado.",
-    "service.copyFail": "No pude copiar. Use el boton WhatsApp para enviar.",
+    "service.copyFail": "No pude copiar. Use el botón WhatsApp para enviar.",
     "service.heading": "PROGRAMA DE CULTO",
     "service.itemOpening": "1. APERTURA (Preludio)",
     "service.itemLeader": "2. DIRIGENTE",
     "service.itemAnnouncements": "3. ANUNCIOS Y LECTURA DE LA PALABRA",
-    "service.itemWorship": "4. GRUPO DE ADORACION",
+    "service.itemWorship": "4. GRUPO DE ADORACIÓN",
     "service.itemPreacher": "5. PREDICADOR",
     "service.itemCommunion": "6. SANTA CENA",
-    "service.noSongs": "Todavia sin canciones.",
+    "service.noSongs": "Todavía sin canciones.",
     "service.key": "Tono {key}",
     "service.tba": "por definir",
     "service.defaultTitle": "Culto Domingo",
@@ -507,41 +574,73 @@ const I18N = {
     "more.theme": "Tema",
     "more.themeLightShort": "Claro",
     "more.themeDarkShort": "Oscuro",
-    "more.themeAuto": "Automatico",
+    "more.themeAuto": "Automático",
     "more.features": "Funciones",
     "more.data": "Datos",
     "more.clear": "Borrar datos",
-    "more.clearConfirm": "Borrar todas las canciones y setlists de este aparato?",
+    "more.clearConfirm": "¿Borrar todas las canciones y setlists de este aparato?",
     "more.about": "Acerca de",
-    "more.aboutText": "Cifras, setlists y modo escenario en este aparato. Sin cuenta y sin nube.",
-    "more.aboutLegal": "Los datos quedan solo en este teléfono. Exporte una copia antes de desinstalar.",
+    "more.aboutText": "Cifras, setlists y modo escenario en este aparato. Sin cuenta. Puede enlazar un computador con su autorización.",
+    "more.aboutLegal": "Los datos quedan en este teléfono. Un computador solo entra con el código y su permiso. Exporte una copia antes de desinstalar.",
     "more.version": "Versión {v}",
     "more.privacy": "Política de privacidad",
-    "more.font": "Tamano de letra",
-    "more.fontDefault": "Tamano de letra predeterminado",
+    "more.install": "Instalar y compartir",
+    "more.font": "Tamaño de letra",
+    "more.fontDefault": "Tamaño de letra predeterminado",
     "more.shortcuts": "Atajos",
     "more.other": "Otras opciones",
     "more.restore": "Restaurar copia",
     "more.language": "Idioma",
-    "more.paste": "Traer una cancion",
+    "more.paste": "Traer una canción",
     "more.backups": "Copias de seguridad",
     "more.sample": "Cargar ejemplo",
     "more.exportSong": "Exportar cifra actual",
     "more.exportAll": "Exportar copia de seguridad",
     "more.import": "Importar canciones",
+    "sync.title": "Computador",
+    "sync.lead": "Abra ChordBook en el computador, muestre el código y autorice en este teléfono. Después edite allí y use aquí.",
+    "sync.showCode": "Mostrar código en este computador",
+    "sync.codeLabel": "Código del computador",
+    "sync.connect": "Conectar al computador",
+    "sync.stop": "Desconectar",
+    "sync.hostTitle": "Editar en este computador",
+    "sync.hostLead": "En el teléfono, abra ChordBook → Más → Computador y escriba este código. Luego pulse Permitir.",
+    "sync.sameWifi": "Los dos aparatos necesitan internet. En la misma Wi-Fi funciona mejor.",
+    "sync.authTitle": "¿Permitir este computador?",
+    "sync.authLead": "Va a ver y cambiar las cifras de este teléfono. Acéptelo solo si usted abrió ChordBook en el computador.",
+    "sync.allow": "Permitir",
+    "sync.deny": "Rechazar",
+    "sync.waiting": "Esperando el teléfono…",
+    "sync.waitingAuth": "Esperando permiso en el teléfono…",
+    "sync.joining": "Conectando…",
+    "sync.connected": "Conectado. Lo que guarde en un lado aparece en el otro.",
+    "sync.disconnected": "Conexión cerrada.",
+    "sync.denied": "El teléfono rechazó este computador.",
+    "sync.needCode": "Escriba el código de 6 números que aparece en el computador.",
+    "sync.badCode": "Código no válido.",
+    "sync.fail": "No se pudo conectar. Compruebe internet e inténtelo en la misma Wi-Fi.",
+    "sync.received": "Biblioteca recibida del teléfono.",
+    "sync.sent": "Cambios enviados al teléfono.",
+    "sync.bannerIdle": "Edite las cifras del teléfono en este computador.",
+    "sync.bannerStart": "Empezar",
+    "sync.bannerWait": "En el teléfono: Más → Computador → {code}",
+    "sync.bannerOn": "Conectado al teléfono",
+    "sync.bannerPhone": "Conectado al computador",
+    "sync.bannerOpen": "Ver código",
+    "sync.peerBusy": "Ese código ya está en uso. Generando otro…",
     "more.ready": "Listo.",
     "more.themeLight": "Tema claro",
     "more.themeDark": "Tema oscuro",
     "more.themeNamedLight": "Tema: claro",
     "more.themeNamedDark": "Tema: oscuro",
     "look.title": "Visual del escenario",
-    "look.kicker": "Asi se ve en el escenario",
+    "look.kicker": "Así se ve en el escenario",
     "look.hint": "Cambia abajo. La cifra de arriba se actualiza al momento. Guarda solo si te gusta.",
-    "look.dirty": "Todavia no guardado. Puedes descartar o guardar.",
+    "look.dirty": "Todavía no guardado. Puedes descartar o guardar.",
     "look.preset": "Estilo",
     "look.night": "Noche",
     "look.forest": "Bosque",
-    "look.gold": "Ambar",
+    "look.gold": "Ámbar",
     "look.paper": "Papel",
     "look.contrast": "Contraste",
     "look.screen": "Pantalla",
@@ -554,7 +653,7 @@ const I18N = {
     "look.save": "Guardar visual",
     "look.discard": "Descartar",
     "look.saved": "Visual del escenario guardado.",
-    "look.reverted": "Volvi al visual guardado.",
+    "look.reverted": "Volví al visual guardado.",
     "capo.suggestion": "Sugerencia: Cejilla {capo} · {shape}",
     "capo.applied": "Cejilla {capo} · formas en {shape}",
     "capo.open": "Formas en {shape}",
@@ -563,21 +662,21 @@ const I18N = {
     "chords.title": "Acordes",
     "chords.close": "Cerrar",
     "chords.empty": "No hay acordes en esta cifra.",
-    "msg.saved": "Cancion guardada.",
-    "msg.copied": "Cancion copiada para compartir.",
-    "msg.copyFail": "No pude copiar. Descargue un archivo de la cancion.",
-    "msg.sample": "Anadir cifras de ejemplo de todas formas?",
-    "msg.sampleExists": "Los ejemplos ya estan en la biblioteca.",
+    "msg.saved": "Canción guardada.",
+    "msg.copied": "Canción copiada para compartir.",
+    "msg.copyFail": "No pude copiar. Descargue un archivo de la canción.",
+    "msg.sample": "¿Añadir cifras de ejemplo de todas formas?",
+    "msg.sampleExists": "Los ejemplos ya están en la biblioteca.",
     "msg.noSong": "Ninguna cifra seleccionada.",
     "msg.imported": "Importado: {result}",
     "msg.importFail": "No se pudo importar: {error}",
     "msg.file": "Archivo generado: {name}",
-    "msg.deleteSong": "Eliminar \"{title}\"?",
+    "msg.deleteSong": "¿Eliminar \"{title}\"?",
     "msg.cleared": "Biblioteca borrada.",
-    "aria.nav": "Navegacion principal",
+    "aria.nav": "Navegación principal",
     "aria.sections": "Secciones",
-    "aria.menu": "Menu principal",
-    "aria.mobileNav": "Navegacion del telefono",
+    "aria.menu": "Menú principal",
+    "aria.mobileNav": "Navegación del teléfono",
   },
   en: {
     "brand.tagline": "Your songs, always with you",
@@ -634,7 +733,7 @@ const I18N = {
     "library.favOne": "{n} favorite",
     "library.favMany": "{n} favorites",
     "library.empty": "No charts found.",
-    "library.emptyStart": "No charts yet. Tap + or Paste chart.",
+    "library.emptyStart": "No charts yet. Tap +.",
     "library.emptyFavorites": "No favorite charts.",
     "library.emptyRecent": "Tap a song name to play. Recent songs show up here.",
     "library.favorite": "Favorite",
@@ -685,6 +784,8 @@ const I18N = {
     "song.list": "List",
     "song.play": "Play",
     "song.edit": "Edit song",
+    "song.editShort": "Edit",
+    "song.toolsPull": "Pull capo and type",
     "song.share": "Share",
     "song.stageMode": "Stage mode",
     "song.addToSetlist": "Add to setlist",
@@ -695,11 +796,12 @@ const I18N = {
     "stage.mode": "Stage mode",
     "stage.menu": "Menu",
     "stage.exit": "Back",
-    "stage.list": "Order",
+    "stage.list": "List",
     "stage.close": "Close",
     "stage.now": "now",
-    "stage.listHint": "Type to jump to a song.",
-    "stage.setlistLabel": "Service order",
+    "stage.listHint": "Tap a song to switch.",
+    "stage.setlistLabel": "Today's songs",
+    "stage.recentLabel": "Recent songs",
     "stage.prev": "Previous",
     "stage.next": "Next",
     "stage.end": "End of setlist.",
@@ -723,18 +825,31 @@ const I18N = {
     "setlists.empty": "No setlists yet.",
     "setlists.emptyRecent": "Open a setlist on stage to see it here.",
     "setlists.emptyList": "No songs yet",
+    "setlists.songsOne": "{n} song",
+    "setlists.songsMany": "{n} songs",
     "setlists.edit": "Edit setlist",
     "setlists.editLead": "Song order for the day.",
     "setlists.name": "Setlist name",
     "setlists.notes": "Notes",
-    "setlists.openStage": "Open on stage",
+    "setlists.openStage": "Play",
+    "setlists.playTitle": "How do you want to see them?",
+    "setlists.playLead": "The chart is light for rehearsal. Stage is dark for projection.",
+    "setlists.playChart": "Chart",
+    "setlists.playChartHint": "Light screen, with capo and edit",
+    "setlists.playStage": "Stage",
+    "setlists.playStageHint": "Dark screen, for the service",
+    "setlists.playExit": "Exit",
+    "setlists.playDone": "End",
     "setlists.save": "Save",
     "setlists.delete": "Delete",
     "setlists.inList": "In the setlist",
     "setlists.noSongs": "No songs in this setlist.",
     "setlists.addSong": "Add",
+    "setlists.remove": "Remove",
+    "setlists.details": "Service details",
+    "setlists.addTitle": "Add a song",
     "setlists.allAdded": "Every song is already added.",
-    "setlists.needSongs": "Add songs to the setlist to open on stage.",
+    "setlists.needSongs": "Add songs to the setlist to play.",
     "setlists.saved": "Program saved.",
     "setlists.added": "Added to {title}.",
     "setlists.already": "Already in this setlist.",
@@ -784,10 +899,11 @@ const I18N = {
     "more.clear": "Clear data",
     "more.clearConfirm": "Delete all songs and setlists on this device?",
     "more.about": "About",
-    "more.aboutText": "Charts, setlists and stage mode on this device. No account and no cloud.",
-    "more.aboutLegal": "Your data stays on this phone. Export a backup before uninstalling.",
+    "more.aboutText": "Charts, setlists and stage mode on this device. No account. You can link a computer with your permission.",
+    "more.aboutLegal": "Your data stays on this phone. A computer can join only with the code and your permission. Export a backup before uninstalling.",
     "more.version": "Version {v}",
     "more.privacy": "Privacy policy",
+    "more.install": "Install and share",
     "more.font": "Font size",
     "more.fontDefault": "Default font size",
     "more.shortcuts": "Shortcuts",
@@ -800,6 +916,37 @@ const I18N = {
     "more.exportSong": "Export current chart",
     "more.exportAll": "Export backup",
     "more.import": "Import songs",
+    "sync.title": "Computer",
+    "sync.lead": "Open ChordBook on the computer, show the code, and approve it on this phone. Then edit there and play here.",
+    "sync.showCode": "Show code on this computer",
+    "sync.codeLabel": "Computer code",
+    "sync.connect": "Connect to computer",
+    "sync.stop": "Disconnect",
+    "sync.hostTitle": "Edit on this computer",
+    "sync.hostLead": "On the phone, open ChordBook → More → Computer and type this code. Then tap Allow.",
+    "sync.sameWifi": "Both devices need internet. Same Wi-Fi works best.",
+    "sync.authTitle": "Allow this computer?",
+    "sync.authLead": "It will see and change the charts on this phone. Allow it only if you opened ChordBook on the computer.",
+    "sync.allow": "Allow",
+    "sync.deny": "Decline",
+    "sync.waiting": "Waiting for the phone…",
+    "sync.waitingAuth": "Waiting for permission on the phone…",
+    "sync.joining": "Connecting…",
+    "sync.connected": "Linked. What you save on one side appears on the other.",
+    "sync.disconnected": "Connection closed.",
+    "sync.denied": "The phone declined this computer.",
+    "sync.needCode": "Type the 6-digit code shown on the computer.",
+    "sync.badCode": "Invalid code.",
+    "sync.fail": "Could not connect. Check the internet and try again on the same Wi-Fi.",
+    "sync.received": "Library received from the phone.",
+    "sync.sent": "Changes sent to the phone.",
+    "sync.bannerIdle": "Edit the phone charts on this computer.",
+    "sync.bannerStart": "Start",
+    "sync.bannerWait": "On the phone: More → Computer → {code}",
+    "sync.bannerOn": "Linked to the phone",
+    "sync.bannerPhone": "Linked to the computer",
+    "sync.bannerOpen": "Show code",
+    "sync.peerBusy": "That code is in use. Making another…",
     "more.ready": "Ready.",
     "more.themeLight": "Light theme",
     "more.themeDark": "Dark theme",
@@ -917,26 +1064,39 @@ let selectedSetlistId = state.setlists[0]?.id ?? null;
 let activeSetlistId = null;
 let isEditingSong = false;
 let isEditingSetlist = false;
+let isSetlistDetailsOpen = false;
+let isSetlistAddOpen = false;
+let isSetlistDayMenuOpen = false;
 let isMobileSongMenuOpen = false;
 let isSongReadMenuOpen = false;
 let isSetlistPickerOpen = false;
 let isChordSheetOpen = false;
 let isStageFocus = false;
 let isSongToolsOpen = false;
+let isSetlistPlaying = false;
+let setlistPlayFinished = false;
 let isAutoScrolling = false;
+const SYNC_PEER_PREFIX = "cblite";
+const syncLink = {
+  role: "",
+  code: "",
+  status: "idle",
+  peer: null,
+  conn: null,
+  authorized: false,
+  hostRetries: 0,
+  pushTimer: 0,
+};
 let autoScrollTimer = null;
 let autoScrollGuardUntil = 0;
 let stageMenuQuery = "";
 let stageTouchStart = null;
 let stageTouchUsed = false;
+let chartPinch = null;
 const savedScrollSpeed = Number(localStorage.getItem("chordbook.scrollSpeed") || 30);
 let scrollSpeed = Math.min(100, Math.max(10, savedScrollSpeed || 30));
 const savedStageFont = localStorage.getItem("chordbook.stageFont");
 let stageFont = Number(savedStageFont || defaultStageFont());
-if (matchMedia("(max-width: 767px)").matches && stageFont < 22) {
-  stageFont = 22;
-  localStorage.setItem("chordbook.stageFont", String(stageFont));
-}
 let savedLook = loadLook();
 savedLook.stageFont = stageFont;
 let lookDraft = { ...savedLook };
@@ -990,12 +1150,17 @@ const el = {
   songReadTitle: document.querySelector("#songReadTitle"),
   songReadMeta: document.querySelector("#songReadMeta"),
   songKeyBadge: document.querySelector("#songKeyBadge"),
+  songKeyStepper: document.querySelector("#songKeyStepper"),
+  songKeyBadgeDown: document.querySelector("#songKeyBadgeDown"),
+  songKeyBadgeUp: document.querySelector("#songKeyBadgeUp"),
+  songCapoStepper: document.querySelector("#songCapoStepper"),
   songFav: document.querySelector("#songFavBtn"),
-  songTomChip: document.querySelector("#songTomChip"),
-  songCapoChip: document.querySelector("#songCapoChip"),
-  songToolsToggle: document.querySelector("#songToolsToggle"),
+  songEdit: document.querySelector("#songEditBtn"),
   songMore: document.querySelector("#songMoreBtn"),
+  songToolsPanel: document.querySelector("#songToolsPanel"),
+  songToolsHandle: document.querySelector("#songToolsHandle"),
   songReadMenu: document.querySelector("#songReadMenu"),
+  songRead: document.querySelector(".song-read"),
   songReadContent: document.querySelector("#songReadContent"),
   songTransposeDown: document.querySelector("#songTransposeDown"),
   songTransposeUp: document.querySelector("#songTransposeUp"),
@@ -1008,7 +1173,6 @@ const el = {
   songCapoUp: document.querySelector("#songCapoUp"),
   songOpenStage: document.querySelector("#songOpenStageBtn"),
   songOpenStage2: document.querySelector("#songOpenStageBtn2"),
-  songEditTools: document.querySelector("#songEditToolsBtn"),
   songScroll: document.querySelector("#songScrollBtn"),
   songAutoScrollSwitch: document.querySelector("#songAutoScrollSwitch"),
   songFocusSwitch: document.querySelector("#songFocusSwitch"),
@@ -1049,6 +1213,16 @@ const el = {
   newSetlist: document.querySelector("#newSetlistBtn"),
   setlistFab: document.querySelector("#setlistFab"),
   closeSetlist: document.querySelector("#closeSetlistBtn"),
+  setlistEditDetails: document.querySelector("#setlistEditDetailsBtn"),
+  setlistAdd: document.querySelector("#setlistAddBtn"),
+  setlistMore: document.querySelector("#setlistMoreBtn"),
+  setlistDayMenu: document.querySelector("#setlistDayMenu"),
+  setlistDayMeta: document.querySelector("#setlistDayMeta"),
+  setlistDayLead: document.querySelector("#setlistDayLead"),
+  setlistDetails: document.querySelector("#setlistDetails"),
+  setlistAddSheet: document.querySelector("#setlistAddSheet"),
+  setlistAddList: document.querySelector("#setlistAddList"),
+  setlistAddClose: document.querySelector("#setlistAddClose"),
   setlistTitle: document.querySelector("#setlistTitleInput"),
   setlistNotes: document.querySelector("#setlistNotesInput"),
   serviceDate: document.querySelector("#serviceDate"),
@@ -1066,6 +1240,9 @@ const el = {
   serviceEditorTitle: document.querySelector("#serviceEditorTitle"),
   saveSetlist: document.querySelector("#saveSetlistBtn"),
   openSetlist: document.querySelector("#openSetlistBtn"),
+  setlistPlaySheet: document.querySelector("#setlistPlaySheet"),
+  setlistPlayClose: document.querySelector("#setlistPlayClose"),
+  setlistPlayExit: document.querySelector("#setlistPlayExit"),
   deleteSetlist: document.querySelector("#deleteSetlistBtn"),
   exportSelected: document.querySelector("#exportSelectedBtn"),
   exportRepertoire: document.querySelector("#exportRepertoireBtn"),
@@ -1074,12 +1251,31 @@ const el = {
   toast: document.querySelector("#toast"),
   pasteChart: document.querySelector("#pasteChart"),
   pasteChartInput: document.querySelector("#pasteChartInput"),
-  pasteChartLibraryBtn: document.querySelector("#pasteChartLibraryBtn"),
   sitesSearchBtn: document.querySelector("#sitesSearchBtn"),
   moreGo: document.querySelectorAll("[data-more-go]"),
   pasteChartClose: document.querySelector("#pasteChartClose"),
   pasteChartApply: document.querySelector("#pasteChartApply"),
   pasteChartClipboard: document.querySelector("#pasteChartClipboard"),
+  toolbarSync: document.querySelector("#toolbarSyncBtn"),
+  syncBanner: document.querySelector("#syncBanner"),
+  syncBannerText: document.querySelector("#syncBannerText"),
+  syncBannerBtn: document.querySelector("#syncBannerBtn"),
+  syncHostBtn: document.querySelector("#syncHostBtn"),
+  syncJoinBtn: document.querySelector("#syncJoinBtn"),
+  syncStopBtn: document.querySelector("#syncStopBtn"),
+  syncJoinInput: document.querySelector("#syncJoinInput"),
+  syncCodeDisplay: document.querySelector("#syncCodeDisplay"),
+  syncStatus: document.querySelector("#syncStatus"),
+  syncHostSheet: document.querySelector("#syncHostSheet"),
+  syncHostSheetCode: document.querySelector("#syncHostSheetCode"),
+  syncHostSheetClose: document.querySelector("#syncHostSheetClose"),
+  syncHostSheetStatus: document.querySelector("#syncHostSheetStatus"),
+  syncAuthSheet: document.querySelector("#syncAuthSheet"),
+  syncAuthAllow: document.querySelector("#syncAuthAllow"),
+  syncAuthDeny: document.querySelector("#syncAuthDeny"),
+  editorPreviewTitle: document.querySelector("#editorPreviewTitle"),
+  editorPreviewMeta: document.querySelector("#editorPreviewMeta"),
+  editorPreviewBody: document.querySelector("#editorPreviewBody"),
 };
 
 document.documentElement.classList.toggle("dark", effectiveTheme() === "dark");
@@ -1104,11 +1300,32 @@ function bindEvents() {
     switchView("library");
     setLibraryFilter("favorites");
   });
+  el.toolbarSync?.addEventListener("click", () => startComputerHost({ openSheet: true }));
+  el.syncBannerBtn?.addEventListener("click", handleSyncBannerClick);
+  el.syncHostBtn?.addEventListener("click", () => startComputerHost({ openSheet: true }));
+  el.syncJoinBtn?.addEventListener("click", joinComputerHost);
+  el.syncStopBtn?.addEventListener("click", () => stopSyncLink(true));
+  el.syncJoinInput?.addEventListener("input", formatSyncCodeInput);
+  el.syncJoinInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      joinComputerHost();
+    }
+  });
+  el.syncHostSheetClose?.addEventListener("click", () => setSyncHostSheetOpen(false));
+  el.syncHostSheet?.addEventListener("click", (event) => {
+    if (event.target === el.syncHostSheet) setSyncHostSheetOpen(false);
+  });
+  el.syncAuthAllow?.addEventListener("click", allowSyncComputer);
+  el.syncAuthDeny?.addEventListener("click", denySyncComputer);
+  [el.title, el.artist, el.category, el.capo, el.cue, el.lines].forEach((field) => {
+    field?.addEventListener("input", updateEditorPreview);
+  });
   el.themePills.forEach((button) => button.addEventListener("click", () => setTheme(button.dataset.theme)));
   el.songCapoDown?.addEventListener("click", () => changeCapo(-1));
   el.songCapoUp?.addEventListener("click", () => changeCapo(1));
   el.songOpenStage2?.addEventListener("click", openStageMode);
-  el.songEditTools?.addEventListener("click", editSelectedFromStage);
+  el.songEdit?.addEventListener("click", editSelectedFromStage);
   el.songAutoScrollSwitch?.addEventListener("change", (event) => setPreferAutoScroll(event.target.checked));
   el.songFocusSwitch?.addEventListener("change", (event) => setFocusChart(event.target.checked));
   el.songShowChordsSwitch?.addEventListener("change", (event) => setShowChords(event.target.checked));
@@ -1118,13 +1335,26 @@ function bindEvents() {
   el.moreShowChordsSwitch?.addEventListener("change", (event) => setShowChords(event.target.checked));
   el.moreShowLyricsSwitch?.addEventListener("change", (event) => setShowLyrics(event.target.checked));
   el.navTabs.forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
-  el.bottomNav.forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
+  el.bottomNav.forEach((button) => button.addEventListener("click", () => {
+    if (button.dataset.view === "library") {
+      setLibraryFilter("all");
+      setLibraryKeyFilter("");
+      if (el.categoryFilter) el.categoryFilter.value = "Todas";
+      searchScope = "library";
+      el.searchScope.forEach((btn) => btn.classList.toggle("active", btn.dataset.searchScope === "library"));
+    }
+    switchView(button.dataset.view);
+  }));
   el.libraryFilters.forEach((button) => button.addEventListener("click", () => setLibraryFilter(button.dataset.libraryFilter)));
   el.setlistFilters.forEach((button) => button.addEventListener("click", () => setSetlistFilter(button.dataset.setlistFilter)));
-  window.addEventListener("resize", updateResponsiveStageFont);
+  window.addEventListener("resize", () => {
+    updateResponsiveStageFont();
+    updateSyncUi();
+  });
   window.addEventListener("keydown", handleStageHotkeys);
+  window.addEventListener("keydown", handleEditorSaveHotkey);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && el.appShell.classList.contains("stage-active")) {
+    if (document.visibilityState === "visible" && (el.appShell.classList.contains("stage-active") || isSetlistPlaying)) {
       requestStageWakeLock();
     }
   });
@@ -1154,19 +1384,24 @@ function bindEvents() {
   el.duplicate.addEventListener("click", duplicateSong);
   el.delete.addEventListener("click", deleteSong);
   el.songBack.addEventListener("click", closeSongView);
+  el.setlistPlayExit?.addEventListener("click", closeSongView);
   el.songFav.addEventListener("click", toggleFavorite);
   el.songMore.addEventListener("click", toggleSongReadMenu);
   el.songTransposeDown.addEventListener("click", () => transposeSelected(-1));
   el.songTransposeUp.addEventListener("click", () => transposeSelected(1));
+  el.songKeyBadgeDown?.addEventListener("click", () => transposeSelected(-1));
+  el.songKeyBadgeUp?.addEventListener("click", () => transposeSelected(1));
   el.songFontDown.addEventListener("click", () => changeStageFont(-2));
   el.songFontUp.addEventListener("click", () => changeStageFont(2));
+  bindChartPinch(el.songReadContent?.closest(".song-sheet"));
+  bindChartPinch(el.stageContent);
   el.songOpenStage.addEventListener("click", openStageMode);
   el.songSetlist.addEventListener("click", openSetlistPickerFromSong);
   el.songScroll.addEventListener("click", toggleAutoScroll);
   el.songChords.addEventListener("click", toggleChordSheet);
   el.chordSheetClose.addEventListener("click", closeChordSheet);
   el.langButtons.forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.lang)));
-  el.stageExit.addEventListener("click", openSongView);
+  el.stageExit.addEventListener("click", () => (isSetlistPlaying ? closeSongView() : openSongView()));
   el.stageMenu.addEventListener("click", toggleMobileSongMenu);
   el.stagePrev.addEventListener("click", () => moveSetlistStage(-1));
   el.stageScroll.addEventListener("click", toggleAutoScroll);
@@ -1175,6 +1410,8 @@ function bindEvents() {
   el.stageTransposeUp.addEventListener("click", () => transposeSelected(1));
   el.stageShell.addEventListener("touchstart", handleStageTouchStart, { passive: true });
   el.stageShell.addEventListener("touchend", handleStageTouchEnd, { passive: true });
+  el.songRead?.addEventListener("touchstart", handleSongSetlistTouchStart, { passive: true });
+  el.songRead?.addEventListener("touchend", handleSongSetlistTouchEnd, { passive: true });
   el.stageContent.addEventListener("click", handleStageContentClick);
   el.stageContent.addEventListener("wheel", handleStageManualScroll, { passive: true });
   el.stageContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
@@ -1183,17 +1420,49 @@ function bindEvents() {
   el.newSetlist.addEventListener("click", createSetlist);
   el.setlistFab.addEventListener("click", createSetlist);
   el.closeSetlist.addEventListener("click", closeSetlistEditor);
+  el.setlistEditDetails?.addEventListener("click", () => {
+    isSetlistDetailsOpen = !isSetlistDetailsOpen;
+    isSetlistAddOpen = false;
+    isSetlistDayMenuOpen = false;
+    renderSetlists();
+    if (isSetlistDetailsOpen) requestAnimationFrame(() => el.setlistTitle?.focus());
+  });
+  el.setlistAdd?.addEventListener("click", () => {
+    isSetlistAddOpen = !isSetlistAddOpen;
+    isSetlistDayMenuOpen = false;
+    renderSetlists();
+  });
+  el.setlistAddClose?.addEventListener("click", () => {
+    isSetlistAddOpen = false;
+    renderSetlists();
+  });
+  el.setlistAddSheet?.addEventListener("click", (event) => {
+    if (event.target === el.setlistAddSheet) {
+      isSetlistAddOpen = false;
+      renderSetlists();
+    }
+  });
+  el.setlistMore?.addEventListener("click", () => {
+    isSetlistDayMenuOpen = !isSetlistDayMenuOpen;
+    isSetlistAddOpen = false;
+    renderSetlistDayMenu();
+  });
   el.saveSetlist.addEventListener("click", () => saveSetlist());
   el.shareService?.addEventListener("click", () => shareServiceProgram());
   el.whatsappService?.addEventListener("click", shareServiceWhatsApp);
-  el.openSetlist.addEventListener("click", openSelectedSetlistOnStage);
+  el.openSetlist.addEventListener("click", askSetlistPlayMode);
+  el.setlistPlayClose?.addEventListener("click", closeSetlistPlaySheet);
+  el.setlistPlaySheet?.addEventListener("click", (event) => {
+    if (event.target === el.setlistPlaySheet) closeSetlistPlaySheet();
+  });
+  el.setlistPlaySheet?.querySelectorAll("[data-play-mode]").forEach((button) => {
+    button.addEventListener("click", () => openSelectedSetlist(button.dataset.playMode));
+  });
   el.deleteSetlist.addEventListener("click", deleteSetlist);
   el.exportSelected.addEventListener("click", exportSelectedSong);
   el.exportRepertoire.addEventListener("click", exportRepertoire);
   el.importInputs.filter(Boolean).forEach((input) => input.addEventListener("change", importFile));
-  el.pasteChartLibraryBtn?.addEventListener("click", () => openPasteChart(true));
   document.querySelectorAll("[data-open-paste]").forEach((button) => {
-    if (button === el.pasteChartLibraryBtn) return;
     button.addEventListener("click", () => openPasteChart(true));
   });
   el.sitesSearchBtn?.addEventListener("click", () => {
@@ -1224,17 +1493,20 @@ function bindEvents() {
       document.querySelector("#moreAbout")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
+    if (go === "sync") {
+      switchView("import");
+      requestAnimationFrame(() => document.querySelector("#syncPanel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      return;
+    }
     switchView(go);
   }));
-  el.songToolsToggle?.addEventListener("click", toggleSongTools);
-  el.songTomChip?.addEventListener("click", () => setSongToolsOpen(true));
-  el.songCapoChip?.addEventListener("click", () => setSongToolsOpen(true));
   el.pasteChartClose?.addEventListener("click", closePasteChart);
   el.pasteChartApply?.addEventListener("click", applyPastedChart);
   el.pasteChartClipboard?.addEventListener("click", pasteChartFromClipboard);
   el.pasteChart?.addEventListener("click", (event) => {
     if (event.target === el.pasteChart) closePasteChart();
   });
+  bindSongToolsSheet();
 }
 
 function render() {
@@ -1250,6 +1522,7 @@ function render() {
   renderMore();
   syncChartPrefs();
   updateScrollButtons();
+  syncSetlistPlayChrome();
 }
 
 function isStageRundownWide() {
@@ -1259,7 +1532,12 @@ function isStageRundownWide() {
 function switchView(view) {
   if (view !== "library") closePasteChart();
   if (view !== "library") isEditingSong = false;
-  if (view !== "setlists") isEditingSetlist = false;
+  if (view !== "setlists") {
+    isEditingSetlist = false;
+    isSetlistDetailsOpen = false;
+    isSetlistAddOpen = false;
+    isSetlistDayMenuOpen = false;
+  }
   const keepScroll = isAutoScrolling && (view === "song" || view === "stage");
   const enteringStage = view === "stage" && !el.appShell.classList.contains("stage-active");
   const importOpen = document.querySelector("#importView")?.classList.contains("active");
@@ -1280,15 +1558,20 @@ function switchView(view) {
     isSongToolsOpen = false;
     el.appShell.classList.remove("tools-open");
   }
-  if (view !== "song" && view !== "stage") stopAutoScroll();
+  if (view !== "song" && view !== "stage") {
+    isSetlistPlaying = false;
+    setlistPlayFinished = false;
+    stopAutoScroll();
+  }
   if (view !== "song") {
     isSongReadMenuOpen = false;
     isSetlistPickerOpen = false;
     isChordSheetOpen = false;
   }
   activeView = view;
-  el.navTabs.forEach((button) => button.classList.toggle("active", button.dataset.view === view));
-  el.bottomNav.forEach((button) => button.classList.toggle("active", button.dataset.view === view));
+  const navView = view === "song" ? "library" : view;
+  el.navTabs.forEach((button) => button.classList.toggle("active", button.dataset.view === navView));
+  el.bottomNav.forEach((button) => button.classList.toggle("active", button.dataset.view === navView));
   el.views.forEach((section) => section.classList.toggle("active", section.id === `${view}View`));
   el.appShell.classList.toggle("library-active", view === "library");
   el.appShell.classList.toggle("setlists-active", view === "setlists");
@@ -1297,12 +1580,13 @@ function switchView(view) {
   el.appShell.classList.toggle("stage-active", view === "stage");
   el.appShell.classList.toggle("editing-song", view === "library" && isEditingSong);
   el.appShell.classList.toggle("editing-setlist", view === "setlists" && isEditingSetlist);
-  if (view === "stage") requestStageWakeLock();
+  if (view === "stage" || (view === "song" && isSetlistPlaying)) requestStageWakeLock();
   else releaseStageWakeLock();
   renderSongReadMenu();
   renderMobileSongMenu();
   renderLibraryRail();
   if (keepScroll) startAutoScroll();
+  syncSetlistPlayChrome();
 }
 
 function setLibraryFilter(filter) {
@@ -1382,6 +1666,8 @@ function openSetlistPickerFromSong() {
 }
 
 function closeSongView() {
+  isSetlistPlaying = false;
+  setlistPlayFinished = false;
   if (activeSetlistId) {
     selectedSetlistId = activeSetlistId;
     isEditingSetlist = true;
@@ -1486,29 +1772,12 @@ function renderLibraryRail() {
     favorites: state.songs.filter((song) => song.isFavorite).length,
     setlists: state.setlists.length,
   };
-  const category = el.categoryFilter.value || "Todas";
-  const categories = [...new Set(state.songs.map((song) => song.category || "Geral").sort())];
-  const keyMap = {};
-  state.songs.forEach((song) => {
-    const key = songWrittenKey(song);
-    if (!key) return;
-    keyMap[key] = (keyMap[key] || 0) + 1;
-  });
-  const keys = Object.keys(keyMap).sort(compareSongKeys);
   const onLibrary = activeView === "library";
   el.libraryRail.innerHTML = `
     <button type="button" class="rail-item ${onLibrary && libraryFilter === "all" ? "active" : ""}" data-rail="all">${t("library.allSongs")} <span>${counts.all}</span></button>
     <button type="button" class="rail-item ${onLibrary && libraryFilter === "favorites" ? "active" : ""}" data-rail="favorites">${t("library.favorites")} <span>${counts.favorites}</span></button>
     <button type="button" class="rail-item ${onLibrary && libraryFilter === "recent" ? "active" : ""}" data-rail="recent">${t("library.recent")} <span>${counts.recent}</span></button>
     <button type="button" class="rail-item ${activeView === "setlists" ? "active" : ""}" data-rail-view="setlists">${t("nav.setlists")} <span>${counts.setlists}</span></button>
-    <p class="rail-label">${t("library.categories")}</p>
-    <button type="button" class="rail-item ${onLibrary && category === "Todas" ? "active" : ""}" data-rail-category="Todas">${t("library.allCategories")}</button>
-    ${categories.map((name) => `<button type="button" class="rail-item ${onLibrary && category === name ? "active" : ""}" data-rail-category="${escapeHtml(name)}">${escapeHtml(name)} <span>${state.songs.filter((song) => (song.category || "Geral") === name).length}</span></button>`).join("")}
-    <p class="rail-label">${t("library.keys")}</p>
-    <button type="button" class="rail-item ${onLibrary && !libraryKeyFilter ? "active" : ""}" data-rail-key="">${t("library.allKeys")}</button>
-    ${keys.map((key) => `<button type="button" class="rail-item ${onLibrary && libraryKeyFilter === key ? "active" : ""}" data-rail-key="${escapeHtml(key)}">${escapeHtml(key)} <span>${keyMap[key]}</span></button>`).join("")}
-    <p class="rail-label">${t("nav.more")}</p>
-    <button type="button" class="rail-item ${activeView === "import" ? "active" : ""}" data-rail-view="import">${t("nav.settings")}</button>
   `;
   el.libraryRail.querySelectorAll("[data-rail]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1519,20 +1788,6 @@ function renderLibraryRail() {
   el.libraryRail.querySelectorAll("[data-rail-view]").forEach((button) => {
     button.addEventListener("click", () => switchView(button.dataset.railView));
   });
-  el.libraryRail.querySelectorAll("[data-rail-category]").forEach((button) => {
-    button.addEventListener("click", () => {
-      el.categoryFilter.value = button.dataset.railCategory;
-      switchView("library");
-      renderSongs();
-      renderLibraryRail();
-    });
-  });
-  el.libraryRail.querySelectorAll("[data-rail-key]").forEach((button) => {
-    button.addEventListener("click", () => {
-      switchView("library");
-      setLibraryKeyFilter(button.dataset.railKey || "");
-    });
-  });
 }
 
 function renderSongs() {
@@ -1542,8 +1797,6 @@ function renderSongs() {
     return;
   }
   const scoped = libraryScopeSongs();
-  renderKeyFilters(scoped);
-  updateLibraryFilterCounts();
   const songs = scoped
     .filter((song) => !libraryKeyFilter || songWrittenKey(song) === libraryKeyFilter)
     .sort((a, b) => {
@@ -1662,6 +1915,7 @@ function songRow(song) {
   return `
     <article class="song-item ${song.id === selectedSongId ? "active" : ""}" data-song-wrap="${song.id}">
       <div class="song-row library-song-row">
+        <button type="button" class="song-fav ${song.isFavorite ? "on" : ""}" data-fav-id="${song.id}" aria-label="${song.isFavorite ? t("library.unfavorite") : t("library.favorite")}" title="${t("library.favorite")}">★</button>
         <button type="button" class="song-open-main" data-play-id="${song.id}">
           <span class="song-main">
             <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
@@ -1669,7 +1923,6 @@ function songRow(song) {
           </span>
         </button>
         ${written ? `<span class="song-key">${escapeHtml(written)}</span>` : `<span class="song-key muted">—</span>`}
-        <button type="button" class="song-fav ${song.isFavorite ? "on" : ""}" data-fav-id="${song.id}" aria-label="${song.isFavorite ? t("library.unfavorite") : t("library.favorite")}" title="${t("library.favorite")}">★</button>
       </div>
     </article>
   `;
@@ -1700,12 +1953,13 @@ function renderEditor() {
   el.category.value = song?.category ?? "";
   el.capo.value = song?.capo ?? 0;
   if (el.cue) el.cue.value = song?.cue ?? "";
-  el.lines.value = song?.lines.join("\n") ?? "";
+  el.lines.value = song ? foldStackedChords(song.lines).join("\n") : "";
   el.favorite.textContent = song?.isFavorite ? t("library.unfavorite") : t("library.favorite");
+  updateEditorPreview();
 }
 
 function songChartHtml(song) {
-  return song.lines.map((line) => renderChordLine(line, song.transposeValue || 0)).join("");
+  return renderChartLines(song.lines, song.transposeValue || 0);
 }
 
 function renderSongView() {
@@ -1718,8 +1972,9 @@ function renderSongView() {
     el.songReadMeta.textContent = "";
     el.songReadContent.innerHTML = "";
     el.songFav.classList.remove("on");
+    if (el.songKeyStepper) el.songKeyStepper.hidden = true;
+    if (el.songCapoStepper) el.songCapoStepper.hidden = true;
     if (el.songKeyBadge) {
-      el.songKeyBadge.hidden = true;
       el.songKeyBadge.textContent = "";
     }
     if (el.songCueNote) {
@@ -1730,22 +1985,26 @@ function renderSongView() {
   }
   el.songReadTitle.textContent = song.title || t("song.noTitle");
   const written = songWrittenKey(song);
-  el.songReadMeta.textContent = [song.artist, song.capo ? t("capo.short", { capo: song.capo }) : ""].filter(Boolean).join(" · ");
+  const position = activeSetlistPosition();
+  el.songReadMeta.textContent = [
+    song.artist,
+    song.capo ? t("capo.short", { capo: song.capo }) : "",
+    position ? `${position.index + 1}/${position.total}` : "",
+  ].filter(Boolean).join(" · ");
+  if (el.songKeyStepper) el.songKeyStepper.hidden = false;
+  if (el.songCapoStepper) el.songCapoStepper.hidden = false;
   if (el.songKeyBadge) {
-    el.songKeyBadge.hidden = !written;
-    el.songKeyBadge.textContent = written ? t("song.key", { key: written }) : "";
+    el.songKeyBadge.textContent = written ? t("song.key", { key: written }) : t("song.transpose");
   }
   if (el.songCueNote) {
     el.songCueNote.hidden = !song.cue;
     el.songCueNote.textContent = song.cue || "";
   }
   el.songFav.classList.toggle("on", Boolean(song.isFavorite));
-  if (el.songTomChip) el.songTomChip.textContent = written ? t("song.key", { key: written }) : t("song.transpose");
-  if (el.songCapoChip) el.songCapoChip.textContent = song.capo ? t("song.capoChip", { capo: song.capo }) : t("editor.capo");
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
-  if (el.songCapoValue) el.songCapoValue.textContent = String(song.capo || 0);
+  if (el.songCapoValue) el.songCapoValue.textContent = t("capo.short", { capo: song.capo || 0 });
   if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
 }
 
@@ -1803,17 +2062,36 @@ function renderStage() {
   const signature = `${song.id}:${song.transposeValue || 0}:${song.capo || 0}`;
   if (el.stageContent.dataset.sig !== signature) {
     el.stageContent.dataset.sig = signature;
-    el.stageContent.innerHTML = song.lines.map((line) => renderChordLine(line, song.transposeValue || 0)).join("");
+    el.stageContent.innerHTML = renderChartLines(song.lines, song.transposeValue || 0);
     el.stageContent.scrollTop = 0;
   }
 }
 
 function handleStageTouchStart(event) {
   if (isMobileSongMenuOpen || event.touches.length !== 1) return;
-  if (event.target.closest("button, input, textarea, select, .mobile-song-menu, .stage-mode-bar, .stage-mode-footer")) return;
+  if (event.target.closest("button, input, textarea, select, .mobile-song-menu, .stage-mode-bar, .stage-mode-footer, .setlist-play-exit")) return;
   const touch = event.touches[0];
   stageTouchStart = { x: touch.clientX, y: touch.clientY };
   stageTouchUsed = false;
+}
+
+function handleSongSetlistTouchStart(event) {
+  if (event.touches.length !== 1) return;
+  if (event.target.closest("button, input, textarea, select, .song-tools-panel, .song-read-bar, .song-read-menu, .song-key-stepper, .setlist-play-exit")) return;
+  const touch = event.touches[0];
+  stageTouchStart = { x: touch.clientX, y: touch.clientY };
+}
+
+function handleSongSetlistTouchEnd(event) {
+  if (!stageTouchStart) return;
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - stageTouchStart.x;
+  const dy = touch.clientY - stageTouchStart.y;
+  stageTouchStart = null;
+  if (!el.appShell.classList.contains("song-active")) return;
+  if (Math.abs(dx) >= 70 && Math.abs(dx) >= Math.abs(dy) * 1.35 && activeSetlist()) {
+    moveSetlistStage(dx < 0 ? 1 : -1);
+  }
 }
 
 function handleStageTouchEnd(event) {
@@ -1879,10 +2157,77 @@ function setStageFocus(on) {
 function setSongToolsOpen(on) {
   isSongToolsOpen = Boolean(on);
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
+  if (el.songToolsHandle) el.songToolsHandle.setAttribute("aria-expanded", isSongToolsOpen ? "true" : "false");
+  if (el.songToolsPanel) el.songToolsPanel.style.transform = "";
 }
 
 function toggleSongTools() {
   setSongToolsOpen(!isSongToolsOpen);
+}
+
+function bindSongToolsSheet() {
+  const panel = el.songToolsPanel;
+  const handle = el.songToolsHandle;
+  if (!panel || !handle) return;
+  let startY = 0;
+  let origin = 0;
+  let lastY = 0;
+  let lastAt = 0;
+  let velocity = 0;
+  let dragging = false;
+  let moved = 0;
+
+  const phone = () => window.matchMedia("(max-width: 767px)").matches;
+  const closedShift = () => Math.max(0, panel.offsetHeight - handle.offsetHeight);
+
+  const onDown = (event) => {
+    if (!phone() || event.button) return;
+    dragging = true;
+    moved = 0;
+    startY = event.clientY;
+    lastY = event.clientY;
+    lastAt = Date.now();
+    velocity = 0;
+    origin = isSongToolsOpen ? 0 : closedShift();
+    panel.classList.add("is-dragging");
+    panel.style.transform = `translate3d(0, ${origin}px, 0)`;
+    handle.setPointerCapture(event.pointerId);
+  };
+
+  const onMove = (event) => {
+    if (!dragging) return;
+    const now = Date.now();
+    velocity = (event.clientY - lastY) / Math.max(1, now - lastAt);
+    lastY = event.clientY;
+    lastAt = now;
+    moved = Math.max(moved, Math.abs(event.clientY - startY));
+    const shift = Math.max(0, Math.min(closedShift(), origin + (event.clientY - startY)));
+    panel.style.transform = `translate3d(0, ${shift}px, 0)`;
+  };
+
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    panel.classList.remove("is-dragging");
+    const shift = Math.max(0, Math.min(closedShift(), origin + (lastY - startY)));
+    const open = velocity < -0.4 || shift < closedShift() * 0.55;
+    panel.style.transform = "";
+    setSongToolsOpen(open);
+  };
+
+  handle.addEventListener("pointerdown", onDown);
+  handle.addEventListener("pointermove", onMove);
+  handle.addEventListener("pointerup", onUp);
+  handle.addEventListener("pointercancel", onUp);
+  handle.addEventListener("click", (event) => {
+    if (!phone()) return;
+    if (moved > 12) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    toggleSongTools();
+  });
 }
 
 function toggleStageFocus() {
@@ -2068,20 +2413,12 @@ function renderMobileSongMenu() {
   const listHtml = listSongs.length
     ? listSongs.map((song) => stageMenuSongRow(song, order)).join("")
     : `<p class="stage-menu-hint">${query ? t("stage.noMatch") : t("stage.listHint")}</p>`;
-  const cueTitle = setlist?.title || t("stage.setlistLabel");
-  const showSearch = !order.length || query;
+  const cueTitle = setlist?.title || (order.length ? t("stage.setlistLabel") : t("stage.recentLabel"));
+  const showSearch = !order.length;
   el.mobileSongMenu.innerHTML = `
     <div class="stage-cue">
       <small>${escapeHtml(cueTitle)}</small>
-    </div>
-    <div class="stage-menu-toolbar">
-      <button type="button" class="${isAutoScrolling ? "on" : ""}" data-stage-action="scroll">${isAutoScrolling ? t("stage.stopScroll") : t("stage.startScroll")}</button>
-      <button type="button" data-stage-action="focus">${t("stage.focus")}</button>
-      <div class="stage-speed-row">
-        <button type="button" data-stage-action="speed-down" ${scrollSpeed <= 10 ? "disabled" : ""}>−</button>
-        <span>${Math.round(scrollSpeed)}%</span>
-        <button type="button" data-stage-action="speed-up" ${scrollSpeed >= 100 ? "disabled" : ""}>+</button>
-      </div>
+      <span>${escapeHtml(t("stage.listHint"))}</span>
     </div>
     ${showSearch ? `<input id="stageSongSearch" type="search" placeholder="${escapeHtml(t("stage.searchPh"))}" value="${escapeHtml(stageMenuQuery)}" />` : ""}
     <div class="mobile-song-menu-list">${listHtml}</div>
@@ -2096,18 +2433,6 @@ function renderMobileSongMenu() {
       const caret = stageMenuQuery.length;
       next.setSelectionRange(caret, caret);
     }
-  });
-  el.mobileSongMenu.querySelectorAll("[data-stage-action]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const action = button.dataset.stageAction;
-      if (action === "scroll") {
-        if (isAutoScrolling) stopAutoScroll();
-        else startAutoScroll();
-      }
-      if (action === "focus") setStageFocus(true);
-      if (action === "speed-down") changeScrollSpeed(-10);
-      if (action === "speed-up") changeScrollSpeed(10);
-    });
   });
   el.mobileSongMenu.querySelectorAll("[data-mobile-song-id]").forEach((button) => {
     button.addEventListener("click", () => jumpToStageSong(button.dataset.mobileSongId));
@@ -2170,23 +2495,43 @@ function renderSetlists() {
     ? setlists.map(setlistRow).join("")
     : `<p class="empty">${setlistFilter === "recent" ? t("setlists.emptyRecent") : t("setlists.empty")}</p>`;
   el.setlistList.querySelectorAll("[data-setlist-id]").forEach((button) => {
-    button.addEventListener("click", () => openSetlistEditor(button.dataset.setlistId));
+    button.addEventListener("click", () => {
+      isSetlistDetailsOpen = false;
+      isSetlistAddOpen = false;
+      isSetlistDayMenuOpen = false;
+      openSetlistEditor(button.dataset.setlistId);
+    });
   });
   el.setlistList.querySelectorAll("[data-open-stage-id]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
       selectedSetlistId = button.dataset.openStageId;
-      openSelectedSetlistOnStage();
+      askSetlistPlayMode();
     });
   });
   const setlist = selectedSetlist();
   el.setlistTitle.value = setlist?.title ?? "";
   el.setlistNotes.value = setlist?.notes ?? "";
-  if (el.serviceEditorTitle) {
-    el.serviceEditorTitle.textContent = setlist?.title || t("nav.setlists");
-  }
   writeServiceToForm(setlist?.service);
+  const heading = setlist?.service?.leader?.trim() || setlist?.title || t("nav.setlists");
+  if (el.serviceEditorTitle) el.serviceEditorTitle.textContent = heading;
+  if (el.setlistDayMeta) el.setlistDayMeta.textContent = formatSetlistDayDate(setlist?.service?.date);
+  if (el.setlistDayLead) {
+    const bits = [];
+    const leader = setlist?.service?.leader?.trim();
+    const worship = setlist?.service?.worship?.trim();
+    const preacher = setlist?.service?.preacher?.trim();
+    if (leader && leader !== heading) bits.push(`${t("service.leader")}: ${leader}`);
+    if (worship) bits.push(`${t("service.worship")}: ${worship}`);
+    if (preacher) bits.push(`${t("service.preacher")}: ${preacher}`);
+    el.setlistDayLead.textContent = bits.join(" · ");
+    el.setlistDayLead.hidden = !bits.length;
+  }
+  if (el.setlistDetails) el.setlistDetails.hidden = !isSetlistDetailsOpen;
+  el.setlistEditDetails?.classList.toggle("on", isSetlistDetailsOpen);
+  el.setlistAdd?.classList.toggle("on", isSetlistAddOpen);
+  el.setlistMore?.classList.toggle("on", isSetlistDayMenuOpen);
   const editorFields = [
     el.setlistTitle, el.setlistNotes, el.saveSetlist, el.openSetlist, el.deleteSetlist,
     el.shareService, el.whatsappService, el.serviceDate, el.serviceOpening, el.serviceLeader,
@@ -2202,8 +2547,26 @@ function renderSetlists() {
   const availableSongs = state.songs.filter((song) => !selectedIds.includes(song.id));
 
   el.setlistPicker.innerHTML = selectedSongs.length
-    ? selectedSongs.map((song, index) => orderedSetlistSongRow(song, index, selectedSongs.length)).join("")
+    ? selectedSongs.map((song, index) => orderedSetlistSongRow(song, index)).join("")
     : `<p class="empty compact">${t("setlists.noSongs")}</p>`;
+  bindSetlistSwipe(el.setlistPicker);
+  if (el.setlistAddList) {
+    el.setlistAddList.innerHTML = availableSongs.length
+      ? availableSongs.map((song) => `
+          <button type="button" data-add-song-id="${song.id}">
+            <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
+            ${song.artist ? `<small>${escapeHtml(song.artist)}</small>` : ""}
+          </button>
+        `).join("")
+      : `<p class="empty compact">${t("setlists.allAdded")}</p>`;
+    el.setlistAddList.querySelectorAll("[data-add-song-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        isSetlistAddOpen = false;
+        addSongToSetlist(button.dataset.addSongId);
+      });
+    });
+  }
+  if (el.setlistAddSheet) el.setlistAddSheet.hidden = !isSetlistAddOpen;
   if (el.setlistAddSong) {
     el.setlistAddSong.innerHTML = availableSongs.length
       ? `<option value="">${t("setlists.addSong")}</option>${availableSongs.map((song) => `<option value="${song.id}">${escapeHtml(song.title)}</option>`).join("")}`
@@ -2222,6 +2585,7 @@ function renderSetlists() {
   el.setlistPicker.querySelectorAll("[data-open-song-id]").forEach((button) => {
     button.addEventListener("click", () => openSetlistSong(button.dataset.openSongId));
   });
+  renderSetlistDayMenu();
 }
 
 function visibleSetlists() {
@@ -2236,46 +2600,124 @@ function visibleSetlists() {
 
 function setlistRow(setlist) {
   const songs = setlistSongs(setlist);
-  const dateLabel = formatServiceDate(setlist.service?.date);
-  const preview = songs.slice(0, 3).map((song) => song.title).join(" · ") || setlist.notes || t("setlists.emptyList");
-  const meta = [dateLabel, preview].filter(Boolean).join(" · ");
+  const dateLabel = formatSetlistListDate(setlist.service?.date);
+  const count = songs.length
+    ? countLabel(songs.length, "setlists.songsOne", "setlists.songsMany")
+    : t("setlists.emptyList");
+  const meta = [dateLabel, count].filter(Boolean).join(" · ");
   const canOpen = Boolean(songs.length);
   return `
-    <div class="song-row ${setlist.id === selectedSetlistId ? "active" : ""}">
-      <button type="button" class="song-open-main" data-setlist-id="${setlist.id}">
-        <span class="song-main">
-          <strong>${escapeHtml(setlist.title)}</strong>
-          <small>${escapeHtml(meta)}</small>
-        </span>
+    <div class="setlist-row ${setlist.id === selectedSetlistId ? "active" : ""}">
+      <button type="button" class="setlist-row-main" data-setlist-id="${setlist.id}">
+        <strong>${escapeHtml(setlist.title || t("nav.setlists"))}</strong>
+        <small>${escapeHtml(meta)}</small>
       </button>
-      <span class="song-key">${songs.length}</span>
       <button type="button" class="setlist-play" data-open-stage-id="${setlist.id}" ${canOpen ? "" : "disabled"} aria-label="${t("setlists.openStage")}" title="${t("setlists.openStage")}">▶</button>
     </div>
   `;
 }
 
-function orderedSetlistSongRow(song, index, total) {
-  const meta = [song.artist, songKey(song)].filter(Boolean).join(" · ");
+function orderedSetlistSongRow(song, index) {
+  const key = songWrittenKey(song);
   return `
-    <div class="ordered-row">
-      <span>${index + 1}</span>
-      <button type="button" class="setlist-song-open" data-open-song-id="${song.id}">
-        <strong>${escapeHtml(song.title)}</strong>
-        ${meta ? `<small>${escapeHtml(meta)}</small>` : ""}
-      </button>
-      <div class="mini-actions">
-        <button data-setlist-action="up" data-song-id="${song.id}" ${index === 0 ? "disabled" : ""}>↑</button>
-        <button data-setlist-action="down" data-song-id="${song.id}" ${index === total - 1 ? "disabled" : ""}>↓</button>
-        <button data-setlist-action="remove" data-song-id="${song.id}">×</button>
+    <div class="setlist-swipe">
+      <button type="button" class="setlist-swipe-delete" data-setlist-action="remove" data-song-id="${song.id}">${t("setlists.remove")}</button>
+      <div class="setlist-swipe-main">
+        <span class="setlist-num">${index + 1}</span>
+        <button type="button" class="setlist-song-open" data-open-song-id="${song.id}">
+          <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
+          ${song.artist ? `<small>${escapeHtml(song.artist)}</small>` : ""}
+        </button>
+        <span class="setlist-song-key ${key ? "" : "muted"}">${escapeHtml(key || "—")}</span>
+        <button type="button" class="setlist-row-remove" data-setlist-action="remove" data-song-id="${song.id}" aria-label="${t("setlists.remove")}">×</button>
       </div>
     </div>
   `;
 }
 
+function bindSetlistSwipe(root) {
+  if (!root) return;
+  root.querySelectorAll(".setlist-swipe").forEach((row) => {
+    const main = row.querySelector(".setlist-swipe-main");
+    if (!main) return;
+    let startX = 0;
+    let startY = 0;
+    let dx = 0;
+    let tracking = false;
+    let axis = "";
+    const max = 96;
+    const closeOthers = () => {
+      root.querySelectorAll(".setlist-swipe-main").forEach((item) => {
+        if (item !== main) item.style.transform = "";
+      });
+    };
+    row.addEventListener("touchstart", (event) => {
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      dx = 0;
+      tracking = true;
+      axis = "";
+    }, { passive: true });
+    row.addEventListener("touchmove", (event) => {
+      if (!tracking) return;
+      const touch = event.touches[0];
+      const x = touch.clientX - startX;
+      const y = touch.clientY - startY;
+      if (!axis) {
+        if (Math.abs(x) < 10 && Math.abs(y) < 10) return;
+        axis = Math.abs(x) > Math.abs(y) * 1.15 ? "x" : "y";
+      }
+      if (axis !== "x") return;
+      event.preventDefault();
+      dx = Math.min(0, Math.max(-max, x));
+      main.style.transform = `translateX(${dx}px)`;
+    }, { passive: false });
+    row.addEventListener("touchend", () => {
+      if (!tracking) return;
+      tracking = false;
+      if (axis !== "x") return;
+      closeOthers();
+      main.style.transform = dx < -max / 2 ? `translateX(${-max}px)` : "";
+    });
+  });
+}
+
+function renderSetlistDayMenu() {
+  if (!el.setlistDayMenu) return;
+  el.setlistDayMenu.hidden = !isSetlistDayMenuOpen;
+  if (!isSetlistDayMenuOpen) return;
+  el.setlistDayMenu.innerHTML = `
+    <button type="button" data-day-action="play">${t("setlists.openStage")}</button>
+    <button type="button" data-day-action="details">${t("setlists.details")}</button>
+    <button type="button" data-day-action="share">${t("service.send")}</button>
+    <button type="button" data-day-action="whatsapp">${t("service.whatsapp")}</button>
+    <button type="button" class="danger-action" data-day-action="delete">${t("setlists.delete")}</button>
+  `;
+  el.setlistDayMenu.querySelectorAll("[data-day-action]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const action = button.dataset.dayAction;
+      isSetlistDayMenuOpen = false;
+      if (action === "play") askSetlistPlayMode();
+      if (action === "details") {
+        isSetlistDetailsOpen = true;
+        renderSetlists();
+        requestAnimationFrame(() => el.setlistTitle?.focus());
+        return;
+      }
+      if (action === "share") shareServiceProgram();
+      if (action === "whatsapp") shareServiceWhatsApp();
+      if (action === "delete") deleteSetlist();
+      renderSetlistDayMenu();
+    });
+  });
+}
+
 function createSong() {
   const song = normalizeSong({
     id: makeId(),
-    title: "Nova musica",
+    title: t("nav.newSong"),
     artist: "",
     category: "Geral",
     capo: 0,
@@ -2302,7 +2744,7 @@ function createSong() {
 }
 
 function isPlaceholderTitle(value) {
-  const title = String(value || "").trim().toLowerCase();
+  const title = normalize(value).trim();
   return !title || ["nova musica", "nueva cancion", "new song", "cancao", "cancion", "song", "sem titulo", "sin titulo", "untitled"].includes(title);
 }
 
@@ -2391,7 +2833,7 @@ function parsePastedChart(raw) {
       continue;
     }
 
-    const tom = trimmed.match(/^(?:tom|tono|tonalidade|tonalidad|key)\s*[:.\-]?\s*([A-G](?:#|b)?m?)/i);
+    const tom = trimmed.match(/^(?:tom|tono|tonalidade|tonalidad|key)\s*(?:de\s+|of\s+|[:.\-]\s*)([A-G](?:#|b)?m?)\s*$/i);
     if (tom) {
       key = key || tom[1];
       continue;
@@ -2401,6 +2843,8 @@ function parsePastedChart(raw) {
       capo = Number(trimmed.match(/\d+/)[0]) || capo;
       continue;
     }
+
+    if (/^\|+$/.test(trimmed) || /\bbpm\b/i.test(trimmed) || /^\d+\/\d+\b/.test(trimmed)) continue;
 
     const artistLine = trimmed.match(/^(?:artista|artist|autor|interprete|int[eé]rprete)\s*[:\-]\s*(.+)$/i);
     if (artistLine) {
@@ -2445,7 +2889,7 @@ function parsePastedChart(raw) {
     cleaned.unshift(`{key: ${detected}}`);
   }
 
-  return { title, artist, key: detected, capo, lines: cleaned };
+  return { title, artist, key: detected, capo, lines: foldStackedChords(cleaned) };
 }
 
 function looksLikePastedTitle(line) {
@@ -2487,7 +2931,7 @@ function saveSong(event) {
     category: el.category.value.trim() || "Geral",
     capo: Number(el.capo.value || 0),
     cue: String(el.cue?.value || "").trim().slice(0, 80),
-    lines: el.lines.value.replace(/\r/g, "").split("\n"),
+    lines: foldStackedChords(el.lines.value.replace(/\r/g, "").split("\n")),
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
   });
@@ -2628,18 +3072,64 @@ function transposeSelected(delta) {
   render();
 }
 
-function changeStageFont(delta) {
-  stageFont = clamp(stageFont + delta, 16, 42);
+function setStageFont(px, persist = true) {
+  stageFont = clamp(Math.round(Number(px) || stageFont), 14, 42);
   savedLook = { ...savedLook, stageFont };
   lookDraft = { ...lookDraft, stageFont };
-  persistLook(savedLook);
   applyLook(document.documentElement, savedLook);
   if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
-  renderMore();
+  if (persist) {
+    persistLook(savedLook);
+    renderMore();
+  }
+}
+
+function changeStageFont(delta) {
+  setStageFont(stageFont + delta, true);
+}
+
+function pinchDistance(touches) {
+  return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+}
+
+function bindChartPinch(node) {
+  if (!node) return;
+  node.addEventListener("touchstart", handleChartPinchStart, { passive: true });
+  node.addEventListener("touchmove", handleChartPinchMove, { passive: false });
+  node.addEventListener("touchend", handleChartPinchEnd, { passive: true });
+  node.addEventListener("touchcancel", handleChartPinchEnd, { passive: true });
+}
+
+function handleChartPinchStart(event) {
+  if (event.touches.length !== 2) return;
+  if (event.target.closest("button, input, textarea, select, .song-read-bar, .stage-mode-bar, .stage-mode-footer, .mobile-song-menu")) return;
+  stageTouchStart = null;
+  stageTouchUsed = true;
+  stopAutoScroll();
+  chartPinch = {
+    startDist: Math.max(24, pinchDistance(event.touches)),
+    startFont: stageFont,
+  };
+}
+
+function handleChartPinchMove(event) {
+  if (event.touches.length !== 2) return;
+  if (!chartPinch) handleChartPinchStart(event);
+  if (!chartPinch) return;
+  event.preventDefault();
+  const scale = pinchDistance(event.touches) / chartPinch.startDist;
+  setStageFont(chartPinch.startFont * scale, false);
+}
+
+function handleChartPinchEnd(event) {
+  if (!chartPinch) return;
+  if (event.touches.length >= 2) return;
+  setStageFont(stageFont, true);
+  chartPinch = null;
 }
 
 function changeLookFont(delta) {
-  lookDraft = { ...lookDraft, stageFont: clamp(Number(lookDraft.stageFont || 22) + delta, 16, 42) };
+  lookDraft = { ...lookDraft, stageFont: clamp(Number(lookDraft.stageFont || 22) + delta, 14, 42) };
   renderLookStudio();
 }
 
@@ -2663,7 +3153,7 @@ function normalizeLook(look) {
     stageBg: LOOK_BG.includes(look?.stageBg) ? look.stageBg : look?.stageBg || defaultLook().stageBg,
     lyricColor: look?.lyricColor || defaultLook().lyricColor,
     chordColor: look?.chordColor || defaultLook().chordColor,
-    stageFont: clamp(Number(look?.stageFont) || defaultStageFont(), 16, 42),
+    stageFont: clamp(Number(look?.stageFont) || defaultStageFont(), 14, 42),
     stageGap: gap === 1.18 || gap === 1.55 ? gap : 1.35,
   };
 }
@@ -2791,7 +3281,7 @@ function renderLookStudio() {
 }
 
 function defaultStageFont() {
-  if (matchMedia("(max-width: 767px)").matches) return 22;
+  if (matchMedia("(max-width: 767px)").matches) return 17;
   return 22;
 }
 
@@ -2884,9 +3374,14 @@ function createSetlist() {
   setlistFilter = "all";
   el.setlistFilters.forEach((button) => button.classList.toggle("active", button.dataset.setlistFilter === setlistFilter));
   persist();
+  isSetlistDetailsOpen = true;
+  isSetlistAddOpen = false;
+  isSetlistDayMenuOpen = false;
   openSetlistEditor(setlist.id);
-  el.setlistTitle.focus();
-  el.setlistTitle.select();
+  requestAnimationFrame(() => {
+    el.setlistTitle?.focus();
+    el.setlistTitle?.select();
+  });
 }
 
 function openSetlistEditor(setlistId) {
@@ -2899,6 +3394,9 @@ function openSetlistEditor(setlistId) {
 function closeSetlistEditor() {
   saveSetlist(true);
   isEditingSetlist = false;
+  isSetlistDetailsOpen = false;
+  isSetlistAddOpen = false;
+  isSetlistDayMenuOpen = false;
   el.appShell.classList.remove("editing-setlist");
 }
 
@@ -2913,6 +3411,7 @@ function saveSetlist(silent) {
   setlist.service = readServiceFromForm();
   setlist.updatedAt = new Date().toISOString();
   persist();
+  if (silent !== true) isSetlistDetailsOpen = false;
   renderSetlists();
   if (silent !== true) {
     logFile(t("setlists.saved"));
@@ -2988,7 +3487,52 @@ function updateSetlistSongOrder(songId, action) {
   renderSetlists();
 }
 
-function openSelectedSetlistOnStage() {
+function lastSetlistPlayMode() {
+  try {
+    return localStorage.getItem(SETLIST_PLAY_KEY) === "stage" ? "stage" : "song";
+  } catch {
+    return "song";
+  }
+}
+
+function rememberSetlistPlayMode(mode) {
+  try {
+    localStorage.setItem(SETLIST_PLAY_KEY, mode === "stage" ? "stage" : "song");
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+function askSetlistPlayMode() {
+  const setlist = selectedSetlist();
+  const firstSongId = setlist?.songIds.find((id) => state.songs.some((song) => song.id === id));
+  if (!firstSongId) {
+    notify(t("setlists.needSongs"));
+    return;
+  }
+  const last = lastSetlistPlayMode();
+  el.setlistPlaySheet?.querySelectorAll("[data-play-mode]").forEach((button) => {
+    button.classList.toggle("on", button.dataset.playMode === last);
+  });
+  if (el.setlistPlaySheet) el.setlistPlaySheet.hidden = false;
+}
+
+function closeSetlistPlaySheet() {
+  if (el.setlistPlaySheet) el.setlistPlaySheet.hidden = true;
+}
+
+function syncSetlistPlayChrome() {
+  const playing = isSetlistPlaying && (el.appShell.classList.contains("song-active") || el.appShell.classList.contains("stage-active"));
+  el.appShell.classList.toggle("setlist-playing", playing);
+  if (!el.setlistPlayExit) return;
+  el.setlistPlayExit.hidden = !playing;
+  el.setlistPlayExit.classList.toggle("is-end", playing && setlistPlayFinished);
+  el.setlistPlayExit.textContent = playing && setlistPlayFinished ? t("setlists.playDone") : "‹";
+  el.setlistPlayExit.setAttribute("aria-label", playing && setlistPlayFinished ? t("setlists.playDone") : t("setlists.playExit"));
+}
+
+function openSelectedSetlist(mode) {
+  const playMode = mode === "stage" ? "stage" : "song";
   const setlist = selectedSetlist();
   const firstSongId = setlist?.songIds.find((id) => state.songs.some((song) => song.id === id));
   if (!firstSongId) {
@@ -2998,9 +3542,17 @@ function openSelectedSetlistOnStage() {
   setlist.lastOpenedAt = new Date().toISOString();
   activeSetlistId = setlist.id;
   selectedSongId = firstSongId;
+  isSetlistPlaying = true;
+  setlistPlayFinished = false;
+  rememberSetlistPlayMode(playMode);
+  closeSetlistPlaySheet();
   persist();
   render();
-  switchView("stage");
+  switchView(playMode);
+}
+
+function openSelectedSetlistOnStage() {
+  askSetlistPlayMode();
 }
 
 function deleteSetlist() {
@@ -3033,9 +3585,14 @@ function moveSetlistStage(delta) {
   const currentIndex = songs.findIndex((item) => item.id === song.id);
   const nextSong = songs[currentIndex + delta];
   if (!nextSong) {
+    if (delta > 0 && isSetlistPlaying) {
+      setlistPlayFinished = true;
+      syncSetlistPlayChrome();
+    }
     notify(delta > 0 ? t("stage.end") : t("stage.start"));
     return;
   }
+  setlistPlayFinished = false;
   selectedSongId = nextSong.id;
   const keepScroll = isAutoScrolling;
   stopAutoScroll();
@@ -3046,10 +3603,18 @@ function moveSetlistStage(delta) {
 }
 
 function applyStageStep(delta) {
-  if (!el.appShell.classList.contains("stage-active")) return false;
-  if (!activeSetlist()) return false;
+  const playingSetlist = el.appShell.classList.contains("stage-active")
+    || el.appShell.classList.contains("song-active");
+  if (!playingSetlist || !activeSetlist()) return false;
   moveSetlistStage(delta);
   return true;
+}
+
+function handleEditorSaveHotkey(event) {
+  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "s") return;
+  if (!isEditingSong) return;
+  event.preventDefault();
+  el.form?.requestSubmit();
 }
 
 function handleStageHotkeys(event) {
@@ -3090,6 +3655,7 @@ function renderMore() {
   if (el.fileLog && el.fileLog.textContent === "Pronto.") el.fileLog.textContent = t("more.ready");
   renderLookStudio();
   syncChartPrefs();
+  updateSyncUi();
 }
 
 function exportLibrary() {
@@ -3185,6 +3751,35 @@ function mergeSetlists(setlists) {
   selectedSetlistId ||= state.setlists[0]?.id ?? null;
 }
 
+function renderChartLines(lines, semitones) {
+  const html = [];
+  const source = Array.isArray(lines) ? lines : [];
+  for (let index = 0; index < source.length; index += 1) {
+    let line = source[index];
+    if (isChartMetaLine(line)) continue;
+    const labeled = splitLabeledChordLine(line);
+    if (labeled) {
+      html.push(renderChordLine(labeled[0], semitones));
+      line = labeled[1];
+    }
+    if (isChordProLine(line)) {
+      html.push(renderChordLine(line, semitones));
+      continue;
+    }
+    line = expandGluedChords(line);
+    const partnerAt = nextLyricPartnerIndex(source, index);
+    if (isChordOnlyLine(line) && partnerAt >= 0) {
+      const pair = mergeChordLyricPair(line, source[partnerAt]);
+      if (pair.heading) html.push(renderChordLine(pair.heading, semitones));
+      html.push(renderChordLine(pair.merged, semitones));
+      index = partnerAt;
+      continue;
+    }
+    html.push(renderChordLine(line, semitones));
+  }
+  return html.join("");
+}
+
 function renderChordLine(line, semitones) {
   if (/^\{[^}]+\}$/.test(line.trim())) {
     return "";
@@ -3198,16 +3793,311 @@ function renderChordLine(line, semitones) {
     return `<div class="stage-line chord-only"><span class="chord">${escapeHtml(transposeChordLine(line, semitones))}</span></div>`;
   }
 
-  const parsed = alignChordProLine(line, semitones);
-  if (!parsed.chords.trim() && !parsed.lyrics.trim()) {
+  if (/\[[^\]]+\]/.test(line)) {
+    return renderChordProChunks(line, semitones);
+  }
+
+  if (!String(line || "").trim()) {
     return `<div class="stage-line blank"></div>`;
   }
 
-  if (!parsed.lyrics.trim()) {
-    return `<div class="stage-line chord-only"><span class="chord">${escapeHtml(parsed.chords)}</span></div>`;
-  }
+  return `<div class="stage-line"><span class="lyric-row">${escapeHtml(line)}</span></div>`;
+}
 
-  return `<div class="stage-line chordpro-line"><div class="chord-row">${escapeHtml(parsed.chords)}</div><div class="lyric-row">${escapeHtml(parsed.lyrics)}</div></div>`;
+function renderChordProChunks(line, semitones) {
+  const chunks = splitChordProWordChunks(line, semitones);
+  if (!chunks.some((chunk) => chunk.chord)) {
+    return `<div class="stage-line"><span class="lyric-row">${escapeHtml(line.replace(/\[[^\]]+\]/g, ""))}</span></div>`;
+  }
+  return `<div class="stage-line chordpro-line">${chunks.map((chunk) => {
+    return `<span class="chord-lyric"><span class="chord">${escapeHtml(chunk.chord)}</span><span class="lyric">${escapeHtml(chunk.lyric || " ")}</span></span>`;
+  }).join("")}</div>`;
+}
+
+function isChordProLine(line) {
+  return /\[[^\]]+\]/.test(String(line || ""));
+}
+
+function splitChordProWordChunks(line, semitones) {
+  const source = normalizeChordProToWords(line);
+  const chunks = [];
+  const tokenRe = /\[([^\]]+)\]|(\s+)|(\S+)/g;
+  let pending = [];
+  let match;
+  while ((match = tokenRe.exec(source)) !== null) {
+    if (match[1] != null) {
+      pending.push(transposeChord(match[1].trim(), semitones));
+      continue;
+    }
+    chunks.push({
+      chord: pending.join(" "),
+      lyric: match[2] || match[3] || " ",
+    });
+    pending = [];
+  }
+  if (pending.length) chunks.push({ chord: pending.join(" "), lyric: " " });
+  return chunks.length ? chunks : [{ chord: "", lyric: source.replace(/\[[^\]]+\]/g, "") }];
+}
+
+function normalizeChordProToWords(line) {
+  const source = String(line || "");
+  if (!isChordProLine(source)) return source;
+  let lyric = "";
+  const marks = [];
+  const chordRe = /\[([^\]]+)\]/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = chordRe.exec(source)) !== null) {
+    lyric += source.slice(lastIndex, match.index);
+    marks.push({ chord: match[1].trim(), index: lyric.length });
+    lastIndex = chordRe.lastIndex;
+  }
+  lyric += source.slice(lastIndex);
+  if (!marks.length) return source;
+
+  const words = [];
+  const wordRe = /\S+/g;
+  let word;
+  while ((word = wordRe.exec(lyric)) !== null) {
+    words.push({ start: word.index, end: word.index + word[0].length, text: word[0], chords: [] });
+  }
+  if (!words.length) return `${marks.map((mark) => `[${mark.chord}]`).join("")}${lyric}`;
+
+  marks.forEach((mark) => {
+    const inside = words.find((item) => mark.index >= item.start && mark.index < item.end);
+    const after = words.find((item) => item.start >= mark.index);
+    const before = [...words].reverse().find((item) => item.end <= mark.index);
+    let target = inside;
+    if (!target && before && after) {
+      target = (mark.index - before.end) <= (after.start - mark.index) ? before : after;
+    }
+    target = target || before || after || words[words.length - 1];
+    if (target && mark.chord) target.chords.push(mark.chord);
+  });
+
+  let out = "";
+  let cursor = 0;
+  words.forEach((item) => {
+    out += lyric.slice(cursor, item.start);
+    out += item.chords.map((chord) => `[${chord}]`).join("");
+    out += item.text;
+    cursor = item.end;
+  });
+  return out + lyric.slice(cursor);
+}
+
+function foldStackedChords(lines) {
+  const out = [];
+  const source = Array.isArray(lines) ? lines : [];
+  for (let index = 0; index < source.length; index += 1) {
+    let line = source[index];
+    if (isChartMetaLine(line)) continue;
+    const labeled = splitLabeledChordLine(line);
+    if (labeled) {
+      out.push(labeled[0]);
+      line = labeled[1];
+    }
+    if (isChordProLine(line)) {
+      out.push(normalizeChordProToWords(line));
+      continue;
+    }
+    line = expandGluedChords(line);
+    const partnerAt = nextLyricPartnerIndex(source, index);
+    if (isChordOnlyLine(line) && partnerAt >= 0) {
+      const pair = mergeChordLyricPair(line, source[partnerAt]);
+      if (pair.heading) out.push(pair.heading);
+      out.push(pair.merged);
+      index = partnerAt;
+      continue;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
+function nextLyricPartnerIndex(source, index) {
+  for (let cursor = index + 1; cursor < source.length; cursor += 1) {
+    if (!String(source[cursor] || "").trim()) continue;
+    return isLyricPartner(source[cursor]) ? cursor : -1;
+  }
+  return -1;
+}
+
+function splitLabeledChordLine(line) {
+  const match = String(line || "").match(/^(intro|introducci[oó]n|outro|coda|solo|puente|bridge|instr(?:umental)?|interludio|inst)\s*[:.]?\s+(.+)$/i);
+  if (!match || !isChordOnlyLine(match[2])) return null;
+  const raw = match[1].trim();
+  const label = `${raw.charAt(0).toUpperCase()}${raw.slice(1).toLowerCase()}:`;
+  return [label, match[2].trim()];
+}
+
+function isLyricPartner(line) {
+  if (line == null) return false;
+  const trimmed = String(line).trim();
+  if (!trimmed || /^\{/.test(trimmed) || isChordOnlyLine(trimmed) || isSectionHeading(trimmed)) return false;
+  if (isChartMetaLine(trimmed) || /^\([^)]*\)$/.test(trimmed)) return false;
+  return /[A-Za-zÀ-ÿ]/.test(trimmed);
+}
+
+function isChartMetaLine(line) {
+  const trimmed = String(line || "").trim();
+  if (!trimmed) return false;
+  if (/^\d+\/\d+\b/.test(trimmed) || /\bbpm\b/i.test(trimmed)) return true;
+  if (/^transpor tom$/i.test(trimmed) || /^[+\-−]+$/.test(trimmed)) return true;
+  return false;
+}
+
+function mergeChordLyricPair(chordLine, lyricLine) {
+  let lyrics = String(lyricLine || "");
+  let heading = "";
+  let prefixLength = 0;
+  const prefix = lyrics.match(/^(intro|introducci[oó]n|verso|verse|estrofa|coro|chorus|estribillo|puente|bridge|outro|coda|pre-?coro|pre-?chorus|final|tag|interludio|solo)\s*\d*\s*[:.\-]?\s+/i);
+  if (prefix) {
+    heading = prefix[0].trim().replace(/[:.\-]+$/, "");
+    if (!/:$/.test(heading)) heading += ":";
+    prefixLength = prefix[0].length;
+    lyrics = lyrics.slice(prefixLength);
+  }
+  const turnaround = splitChordTurnaround(expandGluedChords(chordLine));
+  const mainLine = turnaround.main;
+  const extraChords = turnaround.extra;
+  let merged = chordLineHasAlignment(mainLine)
+    ? mergeChordsByColumns(mainLine, lyrics, prefixLength)
+    : mergeChordsByWords(mainLine, lyrics);
+  if (extraChords.length) merged += extraChords.map((chord) => `[${chord}]`).join("");
+  return { heading, merged: normalizeChordProToWords(merged) };
+}
+
+function splitChordTurnaround(chordLine) {
+  const source = String(chordLine || "");
+  const pipeIndex = source.search(/\S.*\|/);
+  if (pipeIndex < 0) return { main: source, extra: [] };
+  const mark = source.indexOf("|", pipeIndex);
+  if (mark <= 0 || !chordMarkers(source.slice(0, mark)).length) {
+    return { main: source.replace(/\|/g, " "), extra: [] };
+  }
+  return {
+    main: source.slice(0, mark),
+    extra: chordMarkers(source.slice(mark + 1)).map((token) => token.chord),
+  };
+}
+
+function chordLineHasAlignment(line) {
+  return /^\s{2,}/.test(line) || /\S\s{2,}\S/.test(line);
+}
+
+function chordMarkers(line) {
+  const tokens = [];
+  const source = String(line || "").replace(/\t/g, "  ");
+  const regex = new RegExp(CHORD_FIND_RE.source, "g");
+  let match;
+  while ((match = regex.exec(source)) !== null) {
+    tokens.push({ chord: match[0], index: match.index });
+  }
+  return tokens;
+}
+
+function mergeChordsByColumns(chordLine, lyrics, shift = 0) {
+  const tokens = chordMarkers(chordLine);
+  if (!tokens.length) return lyrics;
+  const spans = wordSpans(lyrics);
+  const used = new Set();
+  const placed = tokens.map((token) => {
+    const raw = Math.min(Math.max(token.index - shift, 0), lyrics.length);
+    const at = snapToUnusedWordStart(spans, raw, used);
+    used.add(at);
+    return { chord: token.chord, at };
+  });
+  placed.sort((a, b) => b.at - a.at);
+  let result = lyrics;
+  placed.forEach((item) => {
+    result = `${result.slice(0, item.at)}[${item.chord}]${result.slice(item.at)}`;
+  });
+  return result;
+}
+
+function wordSpans(lyrics) {
+  const spans = [];
+  const word = /\S+/g;
+  let match;
+  while ((match = word.exec(lyrics)) !== null) {
+    spans.push({ start: match.index, end: match.index + match[0].length });
+  }
+  return spans;
+}
+
+function allWordStarts(lyrics) {
+  return wordSpans(lyrics).map((span) => span.start);
+}
+
+function snapToUnusedWordStart(spans, index, used) {
+  if (!spans.length) return index;
+  const starts = spans.map((span) => span.start);
+  const inside = spans.find((span) => index >= span.start && index < span.end);
+  let best = inside ? inside.start : starts[0];
+  if (!inside) {
+    const previous = [...spans].reverse().find((span) => span.end <= index);
+    const next = spans.find((span) => span.start >= index);
+    if (previous && next) {
+      const toPrev = index - previous.end;
+      const toNext = next.start - index;
+      best = toPrev <= toNext ? previous.start : next.start;
+    } else {
+      best = (previous || next || spans[0]).start;
+    }
+  }
+  if (!used.has(best)) return best;
+  const after = starts.find((start) => start > best && !used.has(start));
+  if (after != null) return after;
+  const before = [...starts].reverse().find((start) => start < best && !used.has(start));
+  return before != null ? before : best;
+}
+
+function mergeChordsByWords(chordLine, lyrics) {
+  const chords = chordMarkers(expandGluedChords(chordLine)).map((token) => token.chord);
+  if (!chords.length) return lyrics;
+  let starts = allWordStarts(lyrics);
+  if (!starts.length) return `${chords.map((chord) => `[${chord}]`).join(" ")} ${lyrics}`.trim();
+  const targets = uniqueSpreadStarts(starts, chords.length);
+  let result = lyrics;
+  for (let index = chords.length - 1; index >= 0; index -= 1) {
+    const at = targets[index];
+    const stacked = index < chords.length - 1 && targets[index] === targets[index + 1];
+    result = `${result.slice(0, at)}[${chords[index]}]${stacked ? " " : ""}${result.slice(at)}`;
+  }
+  return result;
+}
+
+function lyricWordStarts(lyrics) {
+  const filler = /^(es|y|o|a|e|u|de|da|do|el|la|las|los|un|una|um|uma|the|of|and|oh|que|hay|en|al|si|te|se|su|sus|con|por|para|hoy|ven|ante|tus|mi|mis|nos|le|les|lo|ha|han)$/i;
+  const all = [];
+  const significant = [];
+  const word = /\S+/g;
+  let match;
+  while ((match = word.exec(lyrics)) !== null) {
+    all.push(match.index);
+    const token = match[0].replace(/^[^\wÀ-ÿ]+|[^\wÀ-ÿ]+$/g, "");
+    if (token && !filler.test(token)) significant.push(match.index);
+  }
+  return significant.length ? significant : all;
+}
+
+function uniqueSpreadStarts(starts, count) {
+  if (count <= 1) return [starts[0]];
+  if (starts.length === 1) return Array.from({ length: count }, () => starts[0]);
+  const used = new Set();
+  return Array.from({ length: count }, (_, index) => {
+    let pick = starts.length >= count
+      ? starts[Math.round((index * (starts.length - 1)) / (count - 1))]
+      : starts[Math.min(index, starts.length - 1)];
+    if (used.has(pick)) {
+      pick = starts.find((start) => start > pick && !used.has(start))
+        ?? starts.find((start) => !used.has(start))
+        ?? pick;
+    }
+    used.add(pick);
+    return pick;
+  });
 }
 
 function isSectionHeading(line) {
@@ -3218,22 +4108,50 @@ function isSectionHeading(line) {
 }
 
 function isChordOnlyLine(line) {
-  const trimmed = line.trim();
+  const trimmed = expandGluedChords(String(line || "")).replace(/\|/g, " ").trim();
   if (!trimmed) return false;
   if (/:$/.test(trimmed)) return false;
-  const tokens = trimmed.split(/\s+/).filter((token) => token !== "|");
+  const tokens = trimmed.split(/\s+/).filter(Boolean);
   if (!tokens.length) return false;
-  return tokens.every((token) => /^[A-G](?:#|b)?(?:m|maj|min|sus|dim|aug|add)?\d*(?:\/[A-G](?:#|b)?)?$/.test(token));
+  return tokens.every((token) => CHORD_TOKEN_RE.test(token));
+}
+
+function expandGluedChords(line) {
+  return String(line || "").replace(/[A-G][^\s|]*/g, (token) => {
+    const parts = splitGluedChordToken(token);
+    return parts && parts.length > 1 ? parts.join(" ") : token;
+  });
+}
+
+function splitGluedChordToken(token) {
+  const source = String(token || "");
+  if (!source) return null;
+  if (CHORD_TOKEN_RE.test(source)) return [source];
+  const parts = [];
+  let rest = source;
+  while (rest) {
+    let found = "";
+    for (let len = rest.length; len >= 1; len -= 1) {
+      if (CHORD_TOKEN_RE.test(rest.slice(0, len))) {
+        found = rest.slice(0, len);
+        break;
+      }
+    }
+    if (!found) return null;
+    parts.push(found);
+    rest = rest.slice(found.length);
+  }
+  return parts.length ? parts : null;
 }
 
 function transposeChordLine(line, semitones) {
-  return line.replace(/[A-G](?:#|b)?(?:m|maj|min|sus|dim|aug|add)?\d*(?:\/[A-G](?:#|b)?)?/g, (chord) => transposeChord(chord, semitones));
+  return line.replace(new RegExp(CHORD_FIND_RE.source, "g"), (chord) => transposeChord(chord, semitones));
 }
 
 function renderMobileSongHeading(song) {
   const key = songKey(song);
   const meta = [song.capo ? `Capo ${song.capo}` : "", song.artist].filter(Boolean).join(" ");
-  return `<section class="mobile-chart-heading"><h2>${escapeHtml(song.title || "Sem titulo")}</h2>${meta ? `<p>${escapeHtml(meta)}</p>` : ""}${key ? `<p>Tonalidad: ${escapeHtml(transposeChord(key, song.transposeValue || 0))}</p>` : ""}</section>`;
+  return `<section class="mobile-chart-heading"><h2>${escapeHtml(song.title || t("song.noTitle"))}</h2>${meta ? `<p>${escapeHtml(meta)}</p>` : ""}${key ? `<p>${escapeHtml(t("song.key", { key: transposeChord(key, song.transposeValue || 0) }))}</p>` : ""}</section>`;
 }
 
 function songKey(song) {
@@ -3580,10 +4498,375 @@ function demoLibrary() {
   return { songs, setlists, theme: "light", language: "pt", showChords: true, showLyrics: true, focusChart: false, preferAutoScroll: false };
 }
 
-function persist() {
+function persist(options = {}) {
   state.songs = uniqueById(state.songs);
   state.setlists = uniqueById(state.setlists);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!options.fromSync) scheduleSyncPush();
+}
+
+function isDesktopComputer() {
+  return window.matchMedia("(min-width: 768px)").matches && !window.ChordBookAndroid;
+}
+
+function formatSyncCode(code) {
+  const digits = String(code || "").replace(/\D/g, "").slice(0, 6);
+  return digits.length > 3 ? `${digits.slice(0, 3)} ${digits.slice(3)}` : digits;
+}
+
+function syncPeerId(code) {
+  return `${SYNC_PEER_PREFIX}${String(code || "").replace(/\D/g, "")}`;
+}
+
+function loadPeerJs() {
+  if (window.Peer) return Promise.resolve(window.Peer);
+  if (loadPeerJs.pending) return loadPeerJs.pending;
+  loadPeerJs.pending = new Promise((resolve, reject) => {
+    const local = document.createElement("script");
+    local.src = "./vendor/peerjs.min.js";
+    local.onload = () => (window.Peer ? resolve(window.Peer) : reject(new Error("peerjs")));
+    local.onerror = () => {
+      local.remove();
+      const remote = document.createElement("script");
+      remote.src = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
+      remote.onload = () => (window.Peer ? resolve(window.Peer) : reject(new Error("peerjs")));
+      remote.onerror = () => reject(new Error("peerjs"));
+      document.head.appendChild(remote);
+    };
+    document.head.appendChild(local);
+  }).catch((error) => {
+    loadPeerJs.pending = null;
+    throw error;
+  });
+  return loadPeerJs.pending;
+}
+
+function setPairingStayAwake(on) {
+  try {
+    window.ChordBookAndroid?.setKeepScreenOn?.(Boolean(on));
+  } catch {
+    /* Android bridge is optional. */
+  }
+  if (on) {
+    if (navigator.wakeLock && document.visibilityState === "visible") {
+      navigator.wakeLock.request("screen").catch(() => {});
+    }
+    return;
+  }
+  if (!el.appShell.classList.contains("stage-active") && !isSetlistPlaying) releaseStageWakeLock();
+}
+
+function librarySnapshot() {
+  return {
+    songs: state.songs,
+    setlists: state.setlists,
+    selectedSongId,
+    selectedSetlistId,
+  };
+}
+
+function sendSyncMessage(message) {
+  if (!syncLink.conn || syncLink.conn.open === false) return false;
+  try {
+    syncLink.conn.send(message);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function scheduleSyncPush() {
+  if (!syncLink.authorized || !syncLink.conn) return;
+  clearTimeout(syncLink.pushTimer);
+  syncLink.pushTimer = setTimeout(() => {
+    if (!syncLink.authorized) return;
+    sendSyncMessage({ type: "state", payload: librarySnapshot() });
+  }, 280);
+}
+
+function applySyncState(payload, notifyKey) {
+  if (!payload || !Array.isArray(payload.songs)) return;
+  state.songs = uniqueById((payload.songs || []).map(normalizeSong));
+  state.setlists = uniqueById((payload.setlists || []).map(normalizeSetlist));
+  if (payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId)) {
+    selectedSongId = payload.selectedSongId;
+  } else if (!state.songs.some((song) => song.id === selectedSongId)) {
+    selectedSongId = state.songs[0]?.id ?? null;
+  }
+  if (payload.selectedSetlistId && state.setlists.some((setlist) => setlist.id === payload.selectedSetlistId)) {
+    selectedSetlistId = payload.selectedSetlistId;
+  } else if (!state.setlists.some((setlist) => setlist.id === selectedSetlistId)) {
+    selectedSetlistId = state.setlists[0]?.id ?? null;
+  }
+  persist({ fromSync: true });
+  render();
+  if (notifyKey) notify(t(notifyKey));
+}
+
+function handleSyncMessage(message) {
+  if (!message || typeof message !== "object") return;
+  if (message.type === "hello" && syncLink.role === "host") {
+    syncLink.status = "auth";
+    updateSyncUi();
+    return;
+  }
+  if (message.type === "auth-ok" && syncLink.role === "host") {
+    syncLink.authorized = true;
+    syncLink.status = "linked";
+    setSyncHostSheetOpen(false);
+    applySyncState(message.payload, "sync.received");
+    updateSyncUi();
+    setPairingStayAwake(false);
+    return;
+  }
+  if (message.type === "auth-deny" && syncLink.role === "host") {
+    notify(t("sync.denied"));
+    stopSyncLink(true);
+    return;
+  }
+  if (message.type === "state" && syncLink.authorized) {
+    applySyncState(message.payload);
+  }
+}
+
+function bindSyncConnection(conn) {
+  syncLink.conn = conn;
+  conn.on("data", handleSyncMessage);
+  conn.on("close", () => {
+    if (syncLink.conn !== conn) return;
+    const wasLinked = syncLink.authorized;
+    stopSyncLink(false);
+    if (wasLinked) notify(t("sync.disconnected"));
+  });
+  conn.on("error", () => {
+    if (syncLink.conn !== conn) return;
+    notify(t("sync.fail"));
+    stopSyncLink(true);
+  });
+}
+
+function destroySyncPeer() {
+  try {
+    syncLink.conn?.close?.();
+  } catch {
+    /* already closed */
+  }
+  try {
+    syncLink.peer?.destroy?.();
+  } catch {
+    /* already destroyed */
+  }
+  syncLink.peer = null;
+  syncLink.conn = null;
+}
+
+function stopSyncLink(notifyStop) {
+  clearTimeout(syncLink.pushTimer);
+  const wasActive = syncLink.status !== "idle";
+  destroySyncPeer();
+  syncLink.role = "";
+  syncLink.code = "";
+  syncLink.status = "idle";
+  syncLink.authorized = false;
+  syncLink.hostRetries = 0;
+  if (el.syncAuthSheet) el.syncAuthSheet.hidden = true;
+  setSyncHostSheetOpen(false);
+  setPairingStayAwake(false);
+  updateSyncUi();
+  if (notifyStop && wasActive) notify(t("sync.disconnected"));
+}
+
+function setSyncHostSheetOpen(open) {
+  if (!el.syncHostSheet) return;
+  el.syncHostSheet.hidden = !open;
+}
+
+function handleSyncBannerClick() {
+  if (syncLink.status === "linked") {
+    stopSyncLink(true);
+    return;
+  }
+  if (syncLink.role === "host") {
+    setSyncHostSheetOpen(true);
+    return;
+  }
+  startComputerHost({ openSheet: true });
+}
+
+function formatSyncCodeInput() {
+  if (!el.syncJoinInput) return;
+  const formatted = formatSyncCode(el.syncJoinInput.value);
+  if (el.syncJoinInput.value !== formatted) el.syncJoinInput.value = formatted;
+}
+
+async function startComputerHost({ openSheet = false, retry = false } = {}) {
+  if (syncLink.role === "guest" && syncLink.status !== "idle") stopSyncLink(false);
+  if (syncLink.role === "host" && syncLink.peer && !retry) {
+    if (openSheet) setSyncHostSheetOpen(true);
+    updateSyncUi();
+    return;
+  }
+  try {
+    await loadPeerJs();
+  } catch {
+    notify(t("sync.fail"));
+    return;
+  }
+  destroySyncPeer();
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  syncLink.role = "host";
+  syncLink.code = code;
+  syncLink.status = "hosting";
+  syncLink.authorized = false;
+  if (openSheet) setSyncHostSheetOpen(true);
+  updateSyncUi();
+  const peer = new window.Peer(syncPeerId(code), { debug: 0 });
+  syncLink.peer = peer;
+  peer.on("open", () => {
+    syncLink.hostRetries = 0;
+    updateSyncUi();
+  });
+  peer.on("connection", (conn) => {
+    if (syncLink.authorized && syncLink.conn && syncLink.conn.open) {
+      try { conn.close(); } catch { /* ignore extra guest */ }
+      return;
+    }
+    bindSyncConnection(conn);
+    conn.on("open", () => {
+      syncLink.status = "auth";
+      updateSyncUi();
+    });
+  });
+  peer.on("error", (error) => {
+    if (error?.type === "unavailable-id" && syncLink.hostRetries < 6) {
+      syncLink.hostRetries += 1;
+      notify(t("sync.peerBusy"));
+      startComputerHost({ openSheet, retry: true });
+      return;
+    }
+    notify(t("sync.fail"));
+    stopSyncLink(false);
+  });
+  peer.on("disconnected", () => {
+    if (syncLink.status === "idle") return;
+    try { peer.reconnect(); } catch { /* ignore */ }
+  });
+}
+
+async function joinComputerHost() {
+  const code = String(el.syncJoinInput?.value || "").replace(/\D/g, "");
+  if (code.length !== 6) {
+    notify(t("sync.needCode"));
+    return;
+  }
+  if (syncLink.role === "host") stopSyncLink(false);
+  try {
+    await loadPeerJs();
+  } catch {
+    notify(t("sync.fail"));
+    return;
+  }
+  destroySyncPeer();
+  syncLink.role = "guest";
+  syncLink.code = code;
+  syncLink.status = "joining";
+  syncLink.authorized = false;
+  setPairingStayAwake(true);
+  updateSyncUi();
+  const peer = new window.Peer({ debug: 0 });
+  syncLink.peer = peer;
+  peer.on("open", () => {
+    const conn = peer.connect(syncPeerId(code), { reliable: true });
+    bindSyncConnection(conn);
+    conn.on("open", () => {
+      sendSyncMessage({ type: "hello" });
+      syncLink.status = "auth";
+      if (el.syncAuthSheet) el.syncAuthSheet.hidden = false;
+      updateSyncUi();
+    });
+  });
+  peer.on("error", () => {
+    notify(t("sync.fail"));
+    stopSyncLink(false);
+  });
+}
+
+function allowSyncComputer() {
+  if (syncLink.role !== "guest" || !syncLink.conn) return;
+  syncLink.authorized = true;
+  syncLink.status = "linked";
+  if (el.syncAuthSheet) el.syncAuthSheet.hidden = true;
+  sendSyncMessage({ type: "auth-ok", payload: librarySnapshot() });
+  setPairingStayAwake(true);
+  updateSyncUi();
+  notify(t("sync.connected"));
+}
+
+function denySyncComputer() {
+  sendSyncMessage({ type: "auth-deny" });
+  if (el.syncAuthSheet) el.syncAuthSheet.hidden = true;
+  stopSyncLink(true);
+}
+
+function updateEditorPreview() {
+  if (!el.editorPreviewBody) return;
+  const song = selectedSong();
+  const title = el.title?.value.trim() || song?.title || t("song.noTitle");
+  const artist = el.artist?.value.trim() || song?.artist || "";
+  const capo = Number(el.capo?.value || song?.capo || 0);
+  const draft = {
+    title,
+    artist,
+    capo,
+    transposeValue: song?.transposeValue || 0,
+    lines: foldStackedChords(String(el.lines?.value || song?.lines?.join("\n") || "").replace(/\r/g, "").split("\n")),
+  };
+  if (el.editorPreviewTitle) el.editorPreviewTitle.textContent = title;
+  if (el.editorPreviewMeta) {
+    el.editorPreviewMeta.textContent = [artist, capo ? t("capo.short", { capo }) : ""].filter(Boolean).join(" · ");
+  }
+  el.editorPreviewBody.innerHTML = songChartHtml(draft);
+}
+
+function updateSyncUi() {
+  const code = formatSyncCode(syncLink.code);
+  const hosting = syncLink.role === "host" && syncLink.status !== "idle";
+  const joining = syncLink.role === "guest" && syncLink.status !== "idle";
+  const linked = syncLink.status === "linked";
+  if (el.syncCodeDisplay) {
+    el.syncCodeDisplay.hidden = !hosting || !syncLink.code;
+    el.syncCodeDisplay.textContent = code || "—";
+  }
+  if (el.syncHostSheetCode) el.syncHostSheetCode.textContent = code || "—";
+  let statusText = "";
+  if (syncLink.status === "hosting") statusText = t("sync.waiting");
+  else if (syncLink.status === "joining") statusText = t("sync.joining");
+  else if (syncLink.status === "auth" && syncLink.role === "host") statusText = t("sync.waitingAuth");
+  else if (syncLink.status === "auth" && syncLink.role === "guest") statusText = t("sync.authTitle");
+  else if (linked) statusText = t("sync.connected");
+  if (el.syncStatus) el.syncStatus.textContent = statusText;
+  if (el.syncHostSheetStatus) el.syncHostSheetStatus.textContent = statusText;
+  if (el.syncStopBtn) el.syncStopBtn.hidden = syncLink.status === "idle";
+  if (el.syncHostBtn) el.syncHostBtn.disabled = joining;
+  if (el.syncJoinBtn) el.syncJoinBtn.disabled = hosting && !linked;
+  if (el.syncJoinInput) el.syncJoinInput.disabled = hosting && !linked;
+  const showBanner = linked || hosting || isDesktopComputer();
+  if (el.syncBanner) {
+    el.syncBanner.hidden = !showBanner;
+    el.syncBanner.classList.toggle("linked", linked);
+  }
+  if (el.syncBannerText && el.syncBannerBtn) {
+    if (linked) {
+      el.syncBannerText.textContent = syncLink.role === "guest" ? t("sync.bannerPhone") : t("sync.bannerOn");
+      el.syncBannerBtn.textContent = t("sync.stop");
+    } else if (hosting) {
+      el.syncBannerText.textContent = t("sync.bannerWait", { code });
+      el.syncBannerBtn.textContent = t("sync.bannerOpen");
+    } else {
+      el.syncBannerText.textContent = t("sync.bannerIdle");
+      el.syncBannerBtn.textContent = t("sync.bannerStart");
+    }
+  }
 }
 
 function normalizeSong(song) {
@@ -3667,6 +4950,23 @@ function toLocalIsoDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function formatSetlistListDate(iso) {
+  if (!iso) return "";
+  const parts = String(iso).split("-").map(Number);
+  if (parts.length < 3 || parts.some((value) => Number.isNaN(value))) return "";
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+  if (Number.isNaN(date.getTime())) return "";
+  const locale = { pt: "pt-BR", es: "es-ES", en: "en-US" }[state.language] || "pt-BR";
+  return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
+}
+
+function formatSetlistDayDate(iso) {
+  if (!iso) return "";
+  const parts = String(iso).split("-").map(Number);
+  if (parts.length < 3 || parts.some((value) => Number.isNaN(value))) return "";
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
 function formatServiceDate(iso) {
@@ -3814,9 +5114,15 @@ function clamp(value, min, max) {
 }
 
 function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  }
+  if (!("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (sessionStorage.getItem("cb-sw-reloaded")) return;
+    sessionStorage.setItem("cb-sw-reloaded", "1");
+    location.reload();
+  });
+  navigator.serviceWorker.register("./sw.js?v=72").then((reg) => {
+    reg.update().catch(() => {});
+  }).catch(() => {});
 }
 
 function nativeKeepScreenOn(on) {

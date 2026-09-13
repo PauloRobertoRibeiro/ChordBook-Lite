@@ -9,11 +9,11 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=33" />
+    <link rel="stylesheet" href="./styles.css?v=72" />
   </head>
   <body>
     <div class="app-shell library-active">
-      <aside class="sidebar" aria-label="Navegacao principal" data-i18n-aria="aria.nav">
+      <aside class="sidebar" aria-label="Navegação principal" data-i18n-aria="aria.nav">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">CB</span>
           <div>
@@ -22,7 +22,7 @@
           </div>
         </div>
         <nav id="libraryRail" class="library-rail" aria-label="Filtro da biblioteca"></nav>
-        <nav class="nav-tabs" aria-label="Secoes" data-i18n-aria="aria.sections">
+        <nav class="nav-tabs" aria-label="Seções" data-i18n-aria="aria.sections">
           <button class="nav-tab active" data-view="library" data-i18n="nav.songs">Músicas</button>
           <button class="nav-tab" data-view="setlists" data-i18n="nav.setlists">Setlists</button>
           <button class="nav-tab" data-view="import" data-i18n="nav.more">Mais</button>
@@ -47,10 +47,15 @@
           </div>
           <div class="toolbar-group home-shortcuts">
             <button type="button" data-view="setlists" data-i18n="nav.setlists">Setlists</button>
-            <button type="button" id="toolbarFavsBtn" data-i18n="library.favorites">Favoritos</button>
+            <button type="button" id="toolbarFavsBtn" data-i18n="library.favorites">Favoritas</button>
+            <button type="button" id="toolbarSyncBtn" data-i18n="sync.title">Computador</button>
             <button type="button" data-view="import" data-i18n="nav.more">Mais</button>
           </div>
         </section>
+        <div id="syncBanner" class="sync-banner" hidden>
+          <span id="syncBannerText"></span>
+          <button type="button" id="syncBannerBtn"></button>
+        </div>
 
         <section id="libraryView" class="view active">
           <div class="library-layout">
@@ -60,18 +65,8 @@
                   <h1 data-i18n="nav.songs">Músicas</h1>
                   <p id="libraryCount">0 cifras</p>
                 </div>
-                <div class="library-tools">
-                  <select id="categoryFilter" aria-label="Filtrar categoria" data-i18n-aria="library.filterCategory"></select>
-                </div>
+                <select id="categoryFilter" hidden aria-hidden="true"></select>
               </div>
-              <button id="pasteChartLibraryBtn" class="paste-library-btn song-phone-only" type="button" data-open-paste data-i18n="paste.open">Colar cifra</button>
-              <div class="library-filters" role="tablist" aria-label="Filtro da biblioteca" data-i18n-aria="library.filter">
-                <button type="button" class="library-filter active" data-library-filter="all"><span data-i18n="library.allSongs">Todas</span> <span class="filter-count">0</span></button>
-                <button type="button" class="library-filter" data-library-filter="recent"><span data-i18n="library.recent">Recentes</span> <span class="filter-count">0</span></button>
-                <button type="button" class="library-filter" data-library-filter="favorites"><span data-i18n="library.favorites">Favoritos</span> <span class="filter-count">0</span></button>
-              </div>
-              <div id="categoryFilters" class="key-filters category-filters" role="listbox" aria-label="Filtrar categoria" data-i18n-aria="library.filterCategory"></div>
-              <div id="keyFilters" class="key-filters" role="listbox" aria-label="Filtrar tom" data-i18n-aria="library.filterKey"></div>
               <div id="songList" class="song-list"></div>
               <button id="libraryFab" class="library-fab" type="button" title="Nova música" data-i18n-title="nav.newSong">+</button>
             </section>
@@ -79,13 +74,16 @@
             <section class="editor-panel">
               <form id="songForm" class="song-form">
                 <div class="editor-titlebar">
-                  <h2 data-i18n="editor.title">Editar musica</h2>
-                  <button id="closeEditorBtn" type="button" data-i18n="common.back">Voltar</button>
+                  <h2 data-i18n="editor.title">Editar música</h2>
+                  <div class="editor-titlebar-actions">
+                    <button type="submit" class="primary-action" data-i18n="common.save">Salvar</button>
+                    <button id="closeEditorBtn" type="button" data-i18n="common.back">Voltar</button>
+                  </div>
                 </div>
                 <div class="form-grid">
-                  <label><span data-i18n="editor.name">Nome da musica</span> <input id="titleInput" required placeholder="Ex.: Esperanca Viva" data-i18n-placeholder="editor.namePh" /></label>
-                  <label><span data-i18n="editor.artist">Autor / artista</span> <input id="artistInput" placeholder="Ex.: Demo ChordBook" data-i18n-placeholder="editor.artistPh" /></label>
-                  <label><span data-i18n="editor.category">Categoria</span> <input id="categoryInput" placeholder="Ex.: Louvor, Celebracao" data-i18n-placeholder="editor.categoryPh" /></label>
+                  <label><span data-i18n="editor.name">Nome da música</span> <input id="titleInput" required placeholder="Ex.: Esperança Viva" data-i18n-placeholder="editor.namePh" /></label>
+                  <label><span data-i18n="editor.artist">Autor / artista</span> <input id="artistInput" placeholder="Ex.: Ministério de louvor" data-i18n-placeholder="editor.artistPh" /></label>
+                  <label><span data-i18n="editor.category">Categoria</span> <input id="categoryInput" placeholder="Ex.: Louvor, Celebração" data-i18n-placeholder="editor.categoryPh" /></label>
                   <label><span data-i18n="editor.capo">Capo</span> <input id="capoInput" type="number" min="0" max="12" value="0" /></label>
                 </div>
                 <label class="cue-field">
@@ -104,6 +102,13 @@
                   <button type="button" id="deleteBtn" class="danger-action" data-i18n="editor.delete">Excluir</button>
                 </div>
               </form>
+              <aside id="editorPreview" class="editor-preview" aria-label="Pré-visualização">
+                <header class="editor-preview-head">
+                  <strong id="editorPreviewTitle"></strong>
+                  <span id="editorPreviewMeta"></span>
+                </header>
+                <div id="editorPreviewBody" class="song-read-content"></div>
+              </aside>
             </section>
           </div>
         </section>
@@ -114,10 +119,8 @@
               <button id="songBackBtn" type="button" data-i18n="nav.libraryBack">‹ Biblioteca</button>
               <div class="song-read-shortcuts">
                 <button id="songFavBtn" type="button" aria-label="Favorito" data-i18n-aria="library.favorite">★</button>
-                <button id="songTomChip" class="song-wide-only song-chip" type="button">Tom</button>
-                <button id="songCapoChip" class="song-wide-only song-chip" type="button">Capo</button>
+                <button id="songEditBtn" type="button" data-i18n="song.editShort">Editar</button>
                 <button id="songScrollBtn" class="song-wide-only" type="button" data-i18n="song.scroll">Rolagem</button>
-                <button id="songToolsToggle" class="song-phone-only" type="button" data-i18n="song.tools">Ajustes</button>
                 <button id="songOpenStageBtn" type="button" class="primary-action" data-i18n="nav.stage">Palco</button>
                 <button id="songMoreBtn" class="song-wide-only" type="button" data-i18n="nav.more">Mais</button>
               </div>
@@ -127,30 +130,37 @@
               <div class="song-sheet">
                 <header class="song-sheet-head">
                   <div>
-                    <strong id="songReadTitle">Cancao</strong>
+                    <strong id="songReadTitle">Canção</strong>
                     <span id="songReadMeta"></span>
                     <span id="songCueNote" class="song-cue-note" hidden></span>
                   </div>
-                  <span id="songKeyBadge" class="song-key-badge" hidden></span>
+                  <div class="song-sheet-controls">
+                    <div id="songKeyStepper" class="song-key-stepper" hidden>
+                      <button id="songKeyBadgeDown" type="button" aria-label="Tom -" data-i18n-aria="song.transposeDown">−</button>
+                      <strong id="songKeyBadge">Tom</strong>
+                      <button id="songKeyBadgeUp" type="button" aria-label="Tom +" data-i18n-aria="song.transposeUp">+</button>
+                    </div>
+                    <div id="songCapoStepper" class="song-key-stepper song-capo-stepper">
+                      <button id="songCapoDown" type="button" aria-label="Capo -">−</button>
+                      <strong id="songCapoValue">Capo 0</strong>
+                      <button id="songCapoUp" type="button" aria-label="Capo +">+</button>
+                    </div>
+                  </div>
                 </header>
                 <article id="songReadContent" class="song-read-content"></article>
                 <p id="songCapoHint" class="song-capo-hint" hidden></p>
               </div>
-              <aside class="song-tools-panel" aria-label="Atalhos">
-                <div class="tool-block">
+              <aside class="song-tools-panel" id="songToolsPanel" aria-label="Esta cifra">
+                <button type="button" class="song-tools-handle" id="songToolsHandle" aria-expanded="false" aria-label="Puxar capo e letra" data-i18n-aria="song.toolsPull">
+                  <span class="song-tools-handle-bar" aria-hidden="true"></span>
+                </button>
+                <div class="song-tools-body">
+                <div class="tool-block song-tools-transpose" hidden>
                   <span data-i18n="song.transpose">Transpor tom</span>
                   <div class="tool-stepper">
                     <button id="songTransposeDown" type="button" aria-label="Tom -" data-i18n-aria="song.transposeDown">−</button>
                     <strong id="songKeyValue">—</strong>
                     <button id="songTransposeUp" type="button" aria-label="Tom +" data-i18n-aria="song.transposeUp">+</button>
-                  </div>
-                </div>
-                <div class="tool-block">
-                  <span data-i18n="editor.capo">Capo</span>
-                  <div class="tool-stepper">
-                    <button id="songCapoDown" type="button">−</button>
-                    <strong id="songCapoValue">0</strong>
-                    <button id="songCapoUp" type="button">+</button>
                   </div>
                 </div>
                 <div class="tool-block">
@@ -161,14 +171,16 @@
                     <button id="songFontUp" type="button">A+</button>
                   </div>
                 </div>
-                <label class="switch-row"><span data-i18n="song.autoScroll">Rolagem automatica</span><input id="songAutoScrollSwitch" type="checkbox" /></label>
-                <label class="switch-row"><span data-i18n="song.focus">Modo foco</span><input id="songFocusSwitch" type="checkbox" /></label>
-                <label class="switch-row"><span data-i18n="song.showChords">Mostrar acordes</span><input id="songShowChordsSwitch" type="checkbox" checked /></label>
-                <label class="switch-row"><span data-i18n="song.showLyrics">Mostrar letra</span><input id="songShowLyricsSwitch" type="checkbox" checked /></label>
+                <label class="switch-row song-tools-scroll"><span data-i18n="song.autoScroll">Rolagem automática</span><input id="songAutoScrollSwitch" type="checkbox" /></label>
+                <div class="song-tools-switches">
+                  <label class="switch-row"><span data-i18n="song.focus">Modo foco</span><input id="songFocusSwitch" type="checkbox" /></label>
+                  <label class="switch-row"><span data-i18n="song.showChords">Mostrar acordes</span><input id="songShowChordsSwitch" type="checkbox" checked /></label>
+                  <label class="switch-row"><span data-i18n="song.showLyrics">Mostrar letra</span><input id="songShowLyricsSwitch" type="checkbox" checked /></label>
+                </div>
                 <button id="songChordsBtn" type="button" data-i18n="song.chords">Acordes</button>
                 <button id="songSetlistBtn" type="button" data-i18n="song.addToSetlist">Adicionar ao setlist</button>
-                <button id="songEditToolsBtn" class="song-phone-only" type="button" data-i18n="song.edit">Editar musica</button>
                 <button id="songOpenStageBtn2" type="button" class="primary-action" data-i18n="song.stageGo">Modo palco</button>
+                </div>
               </aside>
             </div>
             <div id="chordSheet" class="chord-sheet" hidden>
@@ -186,10 +198,10 @@
             <header class="stage-mode-bar">
               <button id="stageExitBtn" class="stage-chrome" type="button" data-i18n="stage.exit">Voltar</button>
               <div class="stage-mode-title">
-                <strong id="stageSongTitle">Cancao</strong>
+                <strong id="stageSongTitle">Canção</strong>
                 <span id="stageNowHint"></span>
               </div>
-              <button id="stageMenuBtn" class="stage-chrome" type="button" data-i18n="stage.list">Ordem</button>
+              <button id="stageMenuBtn" class="stage-chrome" type="button" data-i18n="stage.list">Lista</button>
             </header>
             <p id="stageCueNote" class="stage-cue-note stage-chrome" hidden></p>
             <span id="stageCapoBadge" class="stage-capo-badge" hidden></span>
@@ -226,49 +238,63 @@
                 <button type="button" class="library-filter active" data-setlist-filter="all" data-i18n="setlists.mine">Meus setlists</button>
                 <button type="button" class="library-filter" data-setlist-filter="recent" data-i18n="setlists.recent">Recentes</button>
               </div>
-              <div id="setlistList" class="song-list"></div>
+              <div id="setlistList" class="song-list setlist-list"></div>
               <button id="setlistFab" class="library-fab" type="button" title="Novo setlist" data-i18n-title="setlists.new">+</button>
             </section>
             <section class="setlist-editor">
-              <div class="editor-titlebar">
-                <h2 id="serviceEditorTitle">Culto</h2>
-                <button id="closeSetlistBtn" type="button" data-i18n="common.back">Voltar</button>
-              </div>
-              <div class="setlist-fields">
-                <label><span data-i18n="service.name">Nome do culto</span> <input id="setlistTitleInput" placeholder="Ex.: Culto Domingo" data-i18n-placeholder="service.namePh" /></label>
-                <label><span data-i18n="service.date">Data</span> <input id="serviceDate" type="date" /></label>
-              </div>
-              <div class="service-grid">
-                <label><span data-i18n="service.opening">Abertura (preludio, quem toca)</span> <input id="serviceOpening" /></label>
-                <label><span data-i18n="service.leader">Dirigente</span> <input id="serviceLeader" /></label>
-                <label><span data-i18n="service.announcements">Anuncios e leitura da palavra</span> <input id="serviceAnnouncements" /></label>
-                <label><span data-i18n="service.worship">Grupo de adoracao</span> <input id="serviceWorship" /></label>
-                <label><span data-i18n="service.preacher">Predicador</span> <input id="servicePreacher" /></label>
-                <label>
-                  <span data-i18n="service.preacherRole">Pastor ou convidado</span>
-                  <select id="servicePreacherRole">
-                    <option value="pastor" data-i18n="service.pastor">Pastor</option>
-                    <option value="convidado" data-i18n="service.guest">Convidado</option>
-                  </select>
-                </label>
-                <label><span data-i18n="service.communion">Santa Ceia</span> <input id="serviceCommunion" /></label>
-                <label><span data-i18n="setlists.notes">Notas</span> <input id="setlistNotesInput" /></label>
-              </div>
-              <div class="setlist-actions">
-                <button id="shareServiceBtn" class="primary-action" data-i18n="service.send">Enviar programa</button>
-                <button id="whatsappServiceBtn" type="button" data-i18n="service.whatsapp">WhatsApp</button>
-                <button id="openSetlistBtn" data-i18n="setlists.openStage">Abrir no palco</button>
-                <button id="saveSetlistBtn" data-i18n="setlists.save">Salvar</button>
-                <button id="deleteSetlistBtn" class="danger-action" data-i18n="setlists.delete">Excluir</button>
+              <header class="setlist-day-bar">
+                <button id="closeSetlistBtn" type="button" aria-label="Voltar" data-i18n-aria="common.back">‹</button>
+                <div class="setlist-day-actions">
+                  <button id="setlistEditDetailsBtn" type="button" title="Dados do culto" data-i18n-title="setlists.details" aria-label="Editar">✎</button>
+                  <button id="setlistAddBtn" type="button" title="Acrescentar música" data-i18n-title="setlists.addSong" aria-label="Adicionar">+</button>
+                  <button id="openSetlistBtn" type="button" title="Tocar" data-i18n-title="setlists.openStage" aria-label="Tocar">▶</button>
+                  <button id="setlistMoreBtn" type="button" title="Mais" data-i18n-title="nav.more" aria-label="Mais">⋯</button>
+                </div>
+              </header>
+              <div id="setlistDayMenu" class="setlist-day-menu" hidden></div>
+              <header class="setlist-day-head">
+                <h2 id="serviceEditorTitle">Programa de culto</h2>
+                <p id="setlistDayMeta"></p>
+                <p id="setlistDayLead"></p>
+              </header>
+              <div id="setlistDetails" class="setlist-details" hidden>
+                <div class="setlist-fields">
+                  <label><span data-i18n="service.name">Nome do culto</span> <input id="setlistTitleInput" placeholder="Ex.: Culto Domingo" data-i18n-placeholder="service.namePh" /></label>
+                  <label><span data-i18n="service.date">Data</span> <input id="serviceDate" type="date" /></label>
+                </div>
+                <div class="service-grid">
+                  <label><span data-i18n="service.opening">Abertura (prelúdio, quem toca)</span> <input id="serviceOpening" /></label>
+                  <label><span data-i18n="service.leader">Dirigente</span> <input id="serviceLeader" /></label>
+                  <label><span data-i18n="service.announcements">Anúncios e leitura da palavra</span> <input id="serviceAnnouncements" /></label>
+                  <label><span data-i18n="service.worship">Grupo de adoração</span> <input id="serviceWorship" /></label>
+                  <label><span data-i18n="service.preacher">Predicador</span> <input id="servicePreacher" /></label>
+                  <label>
+                    <span data-i18n="service.preacherRole">Pastor ou convidado</span>
+                    <select id="servicePreacherRole">
+                      <option value="pastor" data-i18n="service.pastor">Pastor</option>
+                      <option value="convidado" data-i18n="service.guest">Convidado</option>
+                    </select>
+                  </label>
+                  <label><span data-i18n="service.communion">Santa Ceia</span> <input id="serviceCommunion" /></label>
+                  <label><span data-i18n="setlists.notes">Notas</span> <input id="setlistNotesInput" /></label>
+                </div>
+                <div class="setlist-details-actions">
+                  <button id="saveSetlistBtn" class="primary-action" data-i18n="setlists.save">Salvar</button>
+                  <button id="shareServiceBtn" type="button" data-i18n="service.send">Enviar programa</button>
+                  <button id="whatsappServiceBtn" type="button" data-i18n="service.whatsapp">WhatsApp</button>
+                  <button id="deleteSetlistBtn" class="danger-action" data-i18n="setlists.delete">Excluir</button>
+                </div>
               </div>
               <div class="setlist-board">
-                <section>
-                  <h2 data-i18n="nav.songs">Musicas</h2>
-                  <div id="setlistSongPicker" class="ordered-list"></div>
-                  <label class="setlist-add">
-                    <select id="setlistAddSong" aria-label="Adicionar" data-i18n-aria="setlists.addSong"></select>
-                  </label>
-                </section>
+                <div id="setlistSongPicker" class="ordered-list"></div>
+              </div>
+              <div id="setlistAddSheet" class="setlist-add-sheet" hidden>
+                <div class="setlist-add-card">
+                  <strong data-i18n="setlists.addSong">Adicionar</strong>
+                  <div id="setlistAddList" class="setlist-add-list"></div>
+                  <select id="setlistAddSong" hidden aria-hidden="true"></select>
+                  <button id="setlistAddClose" type="button" data-i18n="common.back">Voltar</button>
+                </div>
               </div>
             </section>
           </div>
@@ -283,23 +309,25 @@
               <button type="button" data-more-go="setlists" data-i18n="nav.setlists">Setlists</button>
               <button type="button" data-more-go="favorites" data-i18n="library.favorites">Favoritas</button>
               <button type="button" data-more-go="recent" data-i18n="library.recent">Recentes</button>
+              <button type="button" data-open-paste data-i18n="more.paste">Trazer uma música</button>
               <button type="button" data-more-go="import-file" data-i18n="more.import">Importar músicas</button>
               <button type="button" data-more-go="export" data-i18n="more.exportAll">Exportar backup</button>
+              <button type="button" data-more-go="sync" data-i18n="sync.title">Computador</button>
             </div>
             <div class="more-columns">
             <div class="more-col">
-            <h2 class="more-heading" data-i18n="more.appearance">Aparencia</h2>
+            <h2 class="more-heading" data-i18n="more.appearance">Aparência</h2>
             <div class="more-list">
               <div class="more-row">
                 <span data-i18n="more.theme">Tema</span>
                 <div class="more-inline look-pills" id="themePills">
                   <button type="button" data-theme="light" data-i18n="more.themeLightShort">Claro</button>
                   <button type="button" data-theme="dark" data-i18n="more.themeDarkShort">Escuro</button>
-                  <button type="button" data-theme="auto" data-i18n="more.themeAuto">Automatico</button>
+                  <button type="button" data-theme="auto" data-i18n="more.themeAuto">Automático</button>
                 </div>
               </div>
               <div class="more-row">
-                <span data-i18n="more.fontDefault">Tamanho da letra padrao</span>
+                <span data-i18n="more.fontDefault">Tamanho da letra padrão</span>
                 <div class="more-inline">
                   <button id="fontDownMore" type="button">A-</button>
                   <output id="fontSizeMore">100%</output>
@@ -309,15 +337,29 @@
             </div>
             <h2 class="more-heading" data-i18n="more.features">Funcionalidades</h2>
             <div class="more-list">
-              <label class="switch-row"><span data-i18n="song.autoScroll">Rolagem automatica</span><input id="moreAutoScrollSwitch" type="checkbox" /></label>
+              <label class="switch-row"><span data-i18n="song.autoScroll">Rolagem automática</span><input id="moreAutoScrollSwitch" type="checkbox" /></label>
               <label class="switch-row"><span data-i18n="song.focus">Modo foco</span><input id="moreFocusSwitch" type="checkbox" /></label>
               <label class="switch-row"><span data-i18n="song.showChords">Mostrar acordes</span><input id="moreShowChordsSwitch" type="checkbox" checked /></label>
               <label class="switch-row"><span data-i18n="song.showLyrics">Mostrar letra</span><input id="moreShowLyricsSwitch" type="checkbox" checked /></label>
             </div>
             </div>
             <div class="more-col">
+            <h2 class="more-heading" data-i18n="sync.title">Computador</h2>
+            <div id="syncPanel" class="more-list sync-panel">
+              <p id="syncLead" class="more-lead" data-i18n="sync.lead">Abra o ChordBook no computador, mostre o código e autorize neste celular. Depois edite lá e use aqui.</p>
+              <p id="syncCodeDisplay" class="sync-code" hidden>—</p>
+              <p id="syncStatus" class="sync-status"></p>
+              <button id="syncHostBtn" type="button" data-i18n="sync.showCode">Mostrar código neste computador</button>
+              <label class="sync-join">
+                <span data-i18n="sync.codeLabel">Código do computador</span>
+                <input id="syncJoinInput" inputmode="numeric" maxlength="7" autocomplete="one-time-code" placeholder="000 000" />
+              </label>
+              <button id="syncJoinBtn" type="button" class="primary-action" data-i18n="sync.connect">Ligar ao computador</button>
+              <button id="syncStopBtn" type="button" hidden data-i18n="sync.stop">Desligar</button>
+            </div>
             <h2 class="more-heading" data-i18n="more.data">Dados</h2>
             <div class="more-list">
+              <button type="button" data-open-paste class="primary-action" data-i18n="more.paste">Trazer uma música</button>
               <label class="file-button large">
                 <span data-i18n="more.import">Importar músicas</span>
                 <input id="importFileInputAlt" type="file" accept=".json,.txt,.chordpro,.chordbook,.chordbook-library,application/json,text/plain" />
@@ -331,14 +373,14 @@
               <details class="look-details">
                 <summary data-i18n="nav.more">Mais</summary>
                 <div class="more-list" style="margin-top:10px">
-                  <button type="button" data-open-paste data-i18n="more.paste">Trazer uma musica</button>
+                  <button type="button" data-open-paste data-i18n="more.paste">Trazer uma música</button>
                   <button id="sitesSearchBtn" type="button" data-i18n="search.trySites">Buscar nos sites</button>
                   <button id="exportSelectedBtn" type="button" data-i18n="more.exportSong">Exportar cifra atual</button>
                   <button id="sampleBtnMore" type="button" data-i18n="more.sample">Carregar exemplo</button>
                 </div>
               </details>
             </div>
-            <h2 class="more-heading" data-i18n="more.other">Outras opcoes</h2>
+            <h2 class="more-heading" data-i18n="more.other">Outras opções</h2>
             <div class="more-list">
               <div class="more-row">
                 <span data-i18n="more.language">Idioma</span>
@@ -350,9 +392,10 @@
               </div>
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
-            <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta e sem nuvem.</p>
-            <p id="appVersion" class="more-version">Versão 1.0.0</p>
-            <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam só neste celular. Exporte um backup antes de desinstalar.</p>
+            <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
+            <p id="appVersion" class="more-version">Versão 1.1.0</p>
+            <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
+            <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
             <p class="more-privacy"><a href="./privacy.html" data-i18n="more.privacy">Política de privacidade</a></p>
             <pre id="fileLog" class="file-log">Pronto.</pre>
             </div>
@@ -368,7 +411,7 @@
                   <div id="lookPreview" class="look-preview stage-content" aria-live="polite"></div>
                 </div>
                 <p id="lookHint" class="look-hint" data-i18n="look.hint">Ajuste embaixo. A cifra em cima muda na hora. Só grava se você quiser.</p>
-                <p id="lookDirty" class="look-dirty" hidden data-i18n="look.dirty">Ainda nao gravado.</p>
+                <p id="lookDirty" class="look-dirty" hidden data-i18n="look.dirty">Ainda não salvo. Você pode descartar ou salvar.</p>
                 <div class="look-block">
                   <span data-i18n="look.preset">Estilo</span>
                   <div class="look-pills">
@@ -422,14 +465,36 @@
           <span data-i18n="nav.more">Mais</span>
         </button>
       </nav>
+      <button type="button" id="setlistPlayExit" class="setlist-play-exit" hidden aria-label="Sair" data-i18n-aria="setlists.playExit">‹</button>
+    </div>
+    <div id="setlistPlaySheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card setlist-play-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 data-i18n="setlists.playTitle">Como quer ver as músicas?</h2>
+            <p data-i18n="setlists.playLead">A cifra é clara para ensaiar. O palco é escuro para projetar.</p>
+          </div>
+          <button type="button" id="setlistPlayClose" data-i18n="common.back">Voltar</button>
+        </header>
+        <div class="setlist-play-modes">
+          <button type="button" class="setlist-play-mode" data-play-mode="song">
+            <strong data-i18n="setlists.playChart">Cifra</strong>
+            <span data-i18n="setlists.playChartHint">Tela clara, com capo e edição</span>
+          </button>
+          <button type="button" class="setlist-play-mode" data-play-mode="stage">
+            <strong data-i18n="setlists.playStage">Palco</strong>
+            <span data-i18n="setlists.playStageHint">Tela escura, para o culto</span>
+          </button>
+        </div>
+      </div>
     </div>
     <div id="toast" class="toast" hidden></div>
     <div id="pasteChart" class="paste-sheet" hidden>
       <div class="paste-sheet-card">
         <header class="paste-sheet-bar">
           <div>
-            <h2 data-i18n="paste.title">Trazer uma musica</h2>
-            <p data-i18n="paste.lead">Abra um hinario ou site, copie a cifra e cole abaixo. Depois acerte frases e acordes.</p>
+            <h2 data-i18n="paste.title">Trazer uma música</h2>
+            <p data-i18n="paste.lead">Abra um hinário ou site, copie a cifra e cole abaixo. Depois acerte frases e acordes.</p>
           </div>
           <button type="button" id="pasteChartClose" data-i18n="common.back">Voltar</button>
         </header>
@@ -442,12 +507,40 @@
         </div>
         <textarea id="pasteChartInput" spellcheck="false" placeholder="Cole aqui a cifra copiada..." data-i18n-placeholder="paste.placeholder"></textarea>
         <div class="paste-sheet-actions">
-          <button type="button" id="pasteChartClipboard" data-i18n="paste.clipboard">Colar da area de transferencia</button>
+          <button type="button" id="pasteChartClipboard" data-i18n="paste.clipboard">Colar da área de transferência</button>
           <button type="button" id="pasteChartApply" class="primary-action" data-i18n="paste.apply">Trazer para o editor</button>
         </div>
       </div>
     </div>
+    <div id="syncHostSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card sync-host-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 data-i18n="sync.hostTitle">Editar neste computador</h2>
+            <p data-i18n="sync.hostLead">No celular, abra ChordBook → Mais → Computador e digite este código. Depois toque em Permitir.</p>
+          </div>
+          <button type="button" id="syncHostSheetClose" data-i18n="common.back">Voltar</button>
+        </header>
+        <p id="syncHostSheetCode" class="sync-code">—</p>
+        <p id="syncHostSheetStatus" class="sync-status"></p>
+        <p class="more-lead" data-i18n="sync.sameWifi">Os dois aparelhos precisam de internet. Na mesma Wi-Fi funciona melhor.</p>
+      </div>
+    </div>
+    <div id="syncAuthSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 data-i18n="sync.authTitle">Permitir este computador?</h2>
+            <p data-i18n="sync.authLead">Ele vai ver e alterar as cifras deste celular. Só aceite se foi você que abriu o ChordBook no computador.</p>
+          </div>
+        </header>
+        <div class="paste-sheet-actions">
+          <button type="button" id="syncAuthDeny" data-i18n="sync.deny">Recusar</button>
+          <button type="button" id="syncAuthAllow" class="primary-action" data-i18n="sync.allow">Permitir</button>
+        </div>
+      </div>
+    </div>
 
-    <script src="./app.js?v=33" defer></script>
+    <script src="./app.js?v=72" defer></script>
   </body>
 </html>

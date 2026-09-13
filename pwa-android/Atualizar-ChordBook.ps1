@@ -1,3 +1,7 @@
+param(
+  [switch]$NoPause
+)
+
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -20,9 +24,13 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $out "generated") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $out "classes") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $out "dex") | Out-Null
+$assets = Join-Path $out "assets"
+New-Item -ItemType Directory -Force -Path $assets | Out-Null
+Copy-Item (Join-Path $root "..\pwa\*") $assets -Recurse -Force
+Get-ChildItem $assets -Recurse -File | Where-Object { $_.Extension -match '\.(txt|md)$' } | Remove-Item -Force
 
 & (Join-Path $bt "aapt2.exe") compile --dir app\src\main\res -o (Join-Path $out "compiled.zip")
-& (Join-Path $bt "aapt2.exe") link --auto-add-overlay -o (Join-Path $out "unsigned.apk") -I $androidJar --manifest app\src\main\AndroidManifest.xml -R (Join-Path $out "compiled.zip") -A ..\pwa --java (Join-Path $out "generated") --min-sdk-version 23 --target-sdk-version 36 --version-code $versionCode --version-name $versionName
+& (Join-Path $bt "aapt2.exe") link --auto-add-overlay -o (Join-Path $out "unsigned.apk") -I $androidJar --manifest app\src\main\AndroidManifest.xml -R (Join-Path $out "compiled.zip") -A $assets --java (Join-Path $out "generated") --min-sdk-version 23 --target-sdk-version 36 --version-code $versionCode --version-name $versionName
 
 $javaFiles = @("app\src\main\java\com\jairo\chordbookpwa\MainActivity.java") + (Get-ChildItem (Join-Path $out "generated") -Recurse -Filter *.java | Select-Object -ExpandProperty FullName)
 & (Join-Path $jdk "javac.exe") -classpath $androidJar -d (Join-Path $out "classes") $javaFiles
@@ -42,9 +50,14 @@ Pop-Location
 & (Join-Path $bt "apksigner.bat") verify (Join-Path $out "ChordBook-Lite-debug.apk")
 
 $apk = Join-Path $out "ChordBook-Lite-debug.apk"
+$share = Join-Path ([Environment]::GetFolderPath("Desktop")) "ChordBook-Lite-teste.apk"
+Copy-Item $apk $share -Force
 Write-Host ""
 Write-Host "APK pronto:" -ForegroundColor Green
 Write-Host $apk
+Write-Host ""
+Write-Host "Copia para enviar no WhatsApp:" -ForegroundColor Green
+Write-Host $share
 
 if (Test-Path $adb) {
     $devices = & $adb devices
@@ -62,4 +75,6 @@ if (Test-Path $adb) {
 }
 
 Write-Host ""
-Read-Host "Pressione Enter para fechar"
+if (-not $NoPause) {
+  Read-Host "Pressione Enter para fechar"
+}

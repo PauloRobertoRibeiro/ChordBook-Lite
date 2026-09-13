@@ -5,10 +5,21 @@ Projeto independente do núcleo leve do ChordBook. Não depende do app Flutter a
 - App web: `pwa/`
 - Casca Android (WebView): `pwa-android/`
 - Ficha de loja e política: `docs/loja/`
+- Como instalar no grupo: `pwa/instalar.html`
 
 O ChordBook antigo em `C:\Users\Jairo\Desktop\ChordBook\chordbook` permanece como backup e não deve ser alterado a partir daqui.
 
 Versão de venda: **1.0.0**. O `applicationId` continua `com.jairo.chordbookpwa`.
+
+## Teste com o grupo
+
+1. Gerar o APK: `pwa-android\Atualizar-ChordBook.bat`
+   - Cópia para enviar: `Desktop\ChordBook-Lite-teste.apk`
+2. No telemóvel Android, abra esse ficheiro e instale.
+3. No computador, abra https://paulorobertoribeiro.github.io/ChordBook-Lite/ no Chrome ou Edge e instale a PWA.
+4. As músicas não vão no APK. Quem monta o culto: **Mais → Exportar backup**. Cada músico: **Mais → Restaurar backup**.
+
+Instruções para o grupo: página **Instalar e partilhar** no app, ou `pwa/instalar.html`.
 
 ## Rodar a PWA
 
@@ -21,7 +32,7 @@ Abra `http://localhost:5177`.
 
 ## APK de teste (chave de debug)
 
-Só para o celular de desenvolvimento. A Play Store não aceita este pacote.
+Só para o celular de desenvolvimento e o teste do grupo. A Play Store não aceita este pacote.
 
 ```powershell
 cd C:\Users\Jairo\Desktop\ChordBook-Lite\pwa-android

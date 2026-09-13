@@ -2,6 +2,7 @@
   "name": "ChordBook Lite",
   "short_name": "ChordBook Lite",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",
   "theme_color": "#2563eb",

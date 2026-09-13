@@ -1,12 +1,14 @@
-const CACHE_NAME = "chordbook-lite-v33";
+const CACHE_NAME = "chordbook-lite-v72";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
-  "./styles.css?v=33",
-  "./app.js?v=33",
+  "./styles.css?v=72",
+  "./app.js?v=72",
+  "./vendor/peerjs.min.js",
   "./privacy.html",
+  "./instalar.html",
   "./manifest.webmanifest",
   "./icons/favicon.png",
   "./icons/Icon-192.png",
@@ -14,18 +16,35 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        ASSETS.map((url) =>
+          fetch(url, { cache: "reload" }).then((response) => cache.put(url, response)),
+        ),
+      ),
+    ),
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
-    ),
+    ).then(() => self.clients.claim()),
   );
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+  event.respondWith(
+    fetch(event.request).then((response) => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+      }
+      return response;
+    }).catch(() => caches.match(event.request)),
+  );
 });
