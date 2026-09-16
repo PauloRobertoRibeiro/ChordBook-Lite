@@ -29,7 +29,7 @@
     <main>
       <p><a href="./index.html">Voltar ao ChordBook Lite</a></p>
       <h1>Política de privacidade</h1>
-      <p class="muted">ChordBook Lite · versão 1.1.0 · atualizado em 10 de setembro de 2026</p>
+      <p class="muted">ChordBook Lite · versão 1.1.1 · atualizado em 15 de setembro de 2026</p>
 
       <p>
         O ChordBook Lite é um aplicativo de cifras, setlists e modo palco.
@@ -47,9 +47,11 @@
       <p>
         Você pode ligar um computador ao celular com um código e a sua
         permissão. A biblioteca passa por um canal encriptado entre os dois
-        aparelhos. Para apresentar um ao outro usamos um serviço de ligação
-        (PeerJS). As cifras não ficam guardadas nesse serviço nem numa conta
-        nossa.
+        aparelhos. Para apresentar um ao outro usamos o serviço PeerJS
+        (0.peerjs.com), o STUN da Google (stun.l.google.com) e, se a rede
+        bloquear o canal direto, um servidor TURN da PeerJS. Se o script
+        local falhar, o app pode carregar o PeerJS a partir da CDN unpkg.
+        As cifras não ficam guardadas nesses serviços nem numa conta nossa.
       </p>
 
       <h2>Internet</h2>
@@ -65,7 +67,8 @@
         Exportar backup gera um arquivo JSON no seu aparelho. Quem tiver
         esse arquivo pode importar as cifras. Guarde-o em local seguro.
         Desinstalar o aplicativo ou usar Limpar dados apaga a biblioteca
-        deste aparelho.
+        deste aparelho. O ChordBook não usa a cópia de segurança automática
+        do Android.
       </p>
 
       <h2>Crianças</h2>

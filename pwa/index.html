@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#2563eb" />
-    <meta name="description" content="Cifras, setlists e modo palco neste aparelho. Sem conta e sem nuvem." />
+    <meta name="description" content="Cifras, setlists e modo palco neste aparelho. Sem conta." />
     <title>ChordBook Lite</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=72" />
+    <link rel="stylesheet" href="./styles.css?v=86" />
   </head>
   <body>
     <div class="app-shell library-active">
@@ -229,23 +229,39 @@
             <section class="setlist-panel">
               <div class="panel-header">
                 <div>
-                  <h1 data-i18n="nav.setlists">Setlists</h1>
+                  <h1 data-i18n="nav.setlists">Agenda</h1>
                   <p id="setlistCount">0 listas</p>
                 </div>
-                <button id="newSetlistBtn" class="primary-action setlist-new-desktop" data-i18n="setlists.new">Novo setlist</button>
+                <div class="agenda-header-actions">
+                  <button id="agendaSettingsBtn" type="button" class="icon-btn" title="Personalizar campos" data-i18n-title="agenda.settings" aria-label="Personalizar campos">⚙</button>
+                  <button id="newSetlistBtn" class="primary-action setlist-new-desktop" data-i18n="setlists.new">Novo evento</button>
+                </div>
               </div>
-              <div class="library-filters" role="tablist" aria-label="Filtro de setlists" data-i18n-aria="setlists.filter">
-                <button type="button" class="library-filter active" data-setlist-filter="all" data-i18n="setlists.mine">Meus setlists</button>
-                <button type="button" class="library-filter" data-setlist-filter="recent" data-i18n="setlists.recent">Recentes</button>
+              <div class="agenda-hub" role="tablist" aria-label="Agenda">
+                <button type="button" class="agenda-hub-btn active" data-agenda-hub="events" data-i18n="agenda.hubEvents">Eventos</button>
+                <button type="button" class="agenda-hub-btn" data-agenda-hub="team" data-i18n="agenda.hubTeam">Equipe</button>
+                <button type="button" class="agenda-hub-btn" data-agenda-hub="month" data-i18n="agenda.hubMonth">Mês</button>
               </div>
-              <div id="setlistList" class="song-list setlist-list"></div>
-              <button id="setlistFab" class="library-fab" type="button" title="Novo setlist" data-i18n-title="setlists.new">+</button>
+              <div id="agendaEventsPane" class="agenda-pane">
+                <div class="library-filters" role="tablist" aria-label="Filtro de setlists" data-i18n-aria="setlists.filter">
+                  <button type="button" class="library-filter active" data-setlist-filter="all" data-i18n="setlists.mine">Todos</button>
+                  <button type="button" class="library-filter" data-setlist-filter="recent" data-i18n="setlists.recent">Recentes</button>
+                </div>
+                <div id="setlistList" class="song-list setlist-list"></div>
+              </div>
+              <div id="agendaTeamPane" class="agenda-pane" hidden>
+                <div id="teamList" class="team-list"></div>
+              </div>
+              <div id="agendaMonthPane" class="agenda-pane" hidden>
+                <div id="agendaMonth" class="agenda-month"></div>
+              </div>
+              <button id="setlistFab" class="library-fab" type="button" title="Novo evento" data-i18n-title="setlists.new">+</button>
             </section>
             <section class="setlist-editor">
               <header class="setlist-day-bar">
                 <button id="closeSetlistBtn" type="button" aria-label="Voltar" data-i18n-aria="common.back">‹</button>
                 <div class="setlist-day-actions">
-                  <button id="setlistEditDetailsBtn" type="button" title="Dados do culto" data-i18n-title="setlists.details" aria-label="Editar">✎</button>
+                  <button id="setlistEditDetailsBtn" type="button" title="Dados do evento" data-i18n-title="setlists.details" aria-label="Editar">✎</button>
                   <button id="setlistAddBtn" type="button" title="Acrescentar música" data-i18n-title="setlists.addSong" aria-label="Adicionar">+</button>
                   <button id="openSetlistBtn" type="button" title="Tocar" data-i18n-title="setlists.openStage" aria-label="Tocar">▶</button>
                   <button id="setlistMoreBtn" type="button" title="Mais" data-i18n-title="nav.more" aria-label="Mais">⋯</button>
@@ -253,31 +269,18 @@
               </header>
               <div id="setlistDayMenu" class="setlist-day-menu" hidden></div>
               <header class="setlist-day-head">
-                <h2 id="serviceEditorTitle">Programa de culto</h2>
+                <h2 id="serviceEditorTitle">Ordem do culto</h2>
                 <p id="setlistDayMeta"></p>
-                <p id="setlistDayLead"></p>
+                <ul id="setlistDayRoster" class="event-roster" hidden></ul>
               </header>
               <div id="setlistDetails" class="setlist-details" hidden>
                 <div class="setlist-fields">
-                  <label><span data-i18n="service.name">Nome do culto</span> <input id="setlistTitleInput" placeholder="Ex.: Culto Domingo" data-i18n-placeholder="service.namePh" /></label>
+                  <label><span data-i18n="service.name">Nome do evento</span> <input id="setlistTitleInput" placeholder="Ex.: Ensaio, culto, show" data-i18n-placeholder="service.namePh" /></label>
                   <label><span data-i18n="service.date">Data</span> <input id="serviceDate" type="date" /></label>
+                  <label><span data-i18n="agenda.time">Hora</span> <input id="serviceTime" type="time" /></label>
                 </div>
-                <div class="service-grid">
-                  <label><span data-i18n="service.opening">Abertura (prelúdio, quem toca)</span> <input id="serviceOpening" /></label>
-                  <label><span data-i18n="service.leader">Dirigente</span> <input id="serviceLeader" /></label>
-                  <label><span data-i18n="service.announcements">Anúncios e leitura da palavra</span> <input id="serviceAnnouncements" /></label>
-                  <label><span data-i18n="service.worship">Grupo de adoração</span> <input id="serviceWorship" /></label>
-                  <label><span data-i18n="service.preacher">Predicador</span> <input id="servicePreacher" /></label>
-                  <label>
-                    <span data-i18n="service.preacherRole">Pastor ou convidado</span>
-                    <select id="servicePreacherRole">
-                      <option value="pastor" data-i18n="service.pastor">Pastor</option>
-                      <option value="convidado" data-i18n="service.guest">Convidado</option>
-                    </select>
-                  </label>
-                  <label><span data-i18n="service.communion">Santa Ceia</span> <input id="serviceCommunion" /></label>
-                  <label><span data-i18n="setlists.notes">Notas</span> <input id="setlistNotesInput" /></label>
-                </div>
+                <div id="eventFields" class="event-fields"></div>
+                <input id="setlistNotesInput" type="hidden" />
                 <div class="setlist-details-actions">
                   <button id="saveSetlistBtn" class="primary-action" data-i18n="setlists.save">Salvar</button>
                   <button id="shareServiceBtn" type="button" data-i18n="service.send">Enviar programa</button>
@@ -290,10 +293,11 @@
               </div>
               <div id="setlistAddSheet" class="setlist-add-sheet" hidden>
                 <div class="setlist-add-card">
-                  <strong data-i18n="setlists.addSong">Adicionar</strong>
-                  <div id="setlistAddList" class="setlist-add-list"></div>
+                  <strong data-i18n="agenda.pickSongs">Marque as canções do programa</strong>
+                  <input id="setlistAddSearch" type="search" placeholder="Buscar músicas..." data-i18n-placeholder="agenda.searchSongs" />
+                  <div id="setlistAddList" class="setlist-add-list check-list"></div>
                   <select id="setlistAddSong" hidden aria-hidden="true"></select>
-                  <button id="setlistAddClose" type="button" data-i18n="common.back">Voltar</button>
+                  <button id="setlistAddClose" type="button" class="primary-action" data-i18n="agenda.donePick">Pronto</button>
                 </div>
               </div>
             </section>
@@ -393,7 +397,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.0</p>
+            <p id="appVersion" class="more-version">Versão 1.1.1</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
             <p class="more-privacy"><a href="./privacy.html" data-i18n="more.privacy">Política de privacidade</a></p>
@@ -488,6 +492,64 @@
         </div>
       </div>
     </div>
+    <div id="memberSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card member-sheet-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 id="memberSheetTitle" data-i18n="team.add">Adicionar integrante</h2>
+            <p data-i18n="team.rolesLead">Toque para marcar. Pode criar outras.</p>
+          </div>
+          <button type="button" id="memberSheetClose" data-i18n="common.back">Voltar</button>
+        </header>
+        <label><span data-i18n="team.name">Nome</span> <input id="memberNameInput" placeholder="Ex.: Ana" data-i18n-placeholder="team.namePh" /></label>
+        <p class="team-roles-label" data-i18n="team.roles">Funções</p>
+        <div id="memberRoleChips" class="role-chips"></div>
+        <div class="role-add-row">
+          <input id="memberRoleInput" placeholder="Nova função" data-i18n-placeholder="team.rolePh" />
+          <button type="button" id="memberRoleAdd" data-i18n="agenda.addPerson">Adicionar</button>
+        </div>
+        <label><span data-i18n="team.note">Nota</span> <input id="memberNoteInput" /></label>
+        <div class="paste-sheet-actions">
+          <button type="button" id="memberSave" class="primary-action" data-i18n="team.save">Salvar</button>
+          <button type="button" id="memberDelete" class="danger-action" hidden data-i18n="team.delete">Remover da equipe</button>
+        </div>
+      </div>
+    </div>
+    <div id="peoplePickerSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 id="peoplePickerTitle" data-i18n="agenda.pickPeople">Escolher da equipe</h2>
+            <p id="peoplePickerLead"></p>
+          </div>
+          <button type="button" id="peoplePickerClose" data-i18n="common.back">Voltar</button>
+        </header>
+        <input id="peoplePickerSearch" type="search" placeholder="Buscar na equipe..." data-i18n-placeholder="agenda.searchPeople" />
+        <div id="peoplePickerList" class="people-picker-list check-list"></div>
+        <div class="paste-sheet-actions">
+          <button type="button" id="peoplePickerDone" class="primary-action" data-i18n="agenda.donePick">Pronto</button>
+        </div>
+      </div>
+    </div>
+    <div id="agendaSettingsSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card agenda-settings-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 data-i18n="agenda.settings">Personalizar campos</h2>
+            <p data-i18n="service.lead">Monte a equipe, preencha o evento e escolha as músicas.</p>
+          </div>
+          <button type="button" id="agendaSettingsClose" data-i18n="common.back">Voltar</button>
+        </header>
+        <h3 data-i18n="agenda.sectionsTitle">Títulos das secções</h3>
+        <div id="agendaSectionEditor" class="agenda-section-editor"></div>
+        <h3 data-i18n="agenda.fieldsTitle">Campos do evento</h3>
+        <div id="agendaFieldEditor" class="agenda-field-editor"></div>
+        <div class="paste-sheet-actions">
+          <button type="button" id="agendaAddField" data-i18n="agenda.addField">Adicionar campo</button>
+          <button type="button" id="agendaSettingsSave" class="primary-action" data-i18n="common.save">Salvar</button>
+        </div>
+      </div>
+    </div>
     <div id="toast" class="toast" hidden></div>
     <div id="pasteChart" class="paste-sheet" hidden>
       <div class="paste-sheet-card">
@@ -541,6 +603,6 @@
       </div>
     </div>
 
-    <script src="./app.js?v=72" defer></script>
+    <script src="./app.js?v=86" defer></script>
   </body>
 </html>

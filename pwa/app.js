@@ -1,5 +1,5 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const LOOK_PRESETS = {
@@ -21,8 +21,8 @@ const LOOK_SAMPLE = [
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const FLAT_TO_SHARP = { Db: "C#", Eb: "D#", Gb: "F#", Ab: "G#", Bb: "A#" };
 const EASY_KEYS = ["G", "C", "D", "A", "E"];
-const CHORD_FIND_RE = /[A-G](?:#|b)?(?:maj|min|sus|dim|aug|add|m)?\d*(?:sus\d*)?(?:\/[A-G](?:#|b)?(?:maj|min|m)?\d*)?/g;
-const CHORD_TOKEN_RE = /^(?:[A-G](?:#|b)?(?:maj|min|sus|dim|aug|add|m)?\d*(?:sus\d*)?(?:\/[A-G](?:#|b)?(?:maj|min|m)?\d*)?)$/;
+const CHORD_FIND_RE = /[A-G](?:#|b)?(?:maj7|7M|M7|maj|min|sus|dim|aug|add|m)?\d*(?:sus\d*)?(?:\/[A-G](?:#|b)?(?:maj7|7M|M7|maj|min|m)?\d*)?/gi;
+const CHORD_TOKEN_RE = /^(?:[A-G](?:#|b)?(?:maj7|7M|M7|maj|min|sus|dim|aug|add|m)?\d*(?:sus\d*)?(?:\/[A-G](?:#|b)?(?:maj7|7M|M7|maj|min|m)?\d*)?)$/i;
 const CHORD_SHAPES = {
   C: "x32010", C7: "x32310", Cm: "x31013", Cm7: "x31313", Cmaj7: "x32000", Cadd9: "x32030", Csus4: "x33010",
   D: "xx0232", D7: "xx0212", Dm: "xx0231", Dm7: "xx0211", Dmaj7: "xx0222", Dsus4: "xx0233", Dadd9: "x54030",
@@ -43,7 +43,7 @@ const I18N = {
   pt: {
     "brand.tagline": "Suas músicas sempre com você",
     "nav.songs": "Músicas",
-    "nav.setlists": "Setlists",
+    "nav.setlists": "Agenda",
     "nav.chart": "Cifra",
     "nav.stage": "Palco",
     "nav.more": "Mais",
@@ -71,7 +71,7 @@ const I18N = {
     "home.library": "Biblioteca",
     "home.libraryLead": "Todas as cifras",
     "home.stageLead": "Tela para tocar",
-    "home.setlistsLead": "Ordem do culto",
+    "home.setlistsLead": "Agenda e ordem das músicas",
     "home.files": "Arquivos",
     "home.filesLead": "Importar backup",
     "home.newSong": "+ Nova música",
@@ -176,15 +176,15 @@ const I18N = {
     "stage.searchPh": "Buscar músicas...",
     "stage.noMatch": "Nenhuma música encontrada.",
     "stage.noScroll": "A cifra já cabe na tela.",
-    "setlists.new": "Novo setlist",
-    "setlists.mine": "Meus setlists",
+    "setlists.new": "Novo evento",
+    "setlists.mine": "Todos",
     "setlists.recent": "Recentes",
     "setlists.filter": "Filtro de setlists",
-    "setlists.countOne": "{n} setlist",
-    "setlists.countMany": "{n} setlists",
+    "setlists.countOne": "{n} evento",
+    "setlists.countMany": "{n} eventos",
     "setlists.recentOne": "{n} recente",
     "setlists.recentMany": "{n} recentes",
-    "setlists.empty": "Nenhum setlist criado.",
+    "setlists.empty": "Nenhum evento criado.",
     "setlists.emptyRecent": "Abra um setlist no palco para aparecer aqui.",
     "setlists.emptyList": "Sem músicas ainda",
     "setlists.songsOne": "{n} música",
@@ -208,18 +208,18 @@ const I18N = {
     "setlists.noSongs": "Nenhuma música neste setlist.",
     "setlists.addSong": "Adicionar",
     "setlists.remove": "Apagar",
-    "setlists.details": "Dados do culto",
+    "setlists.details": "Dados do evento",
     "setlists.addTitle": "Acrescentar música",
     "setlists.allAdded": "Todas as músicas já foram adicionadas.",
     "setlists.needSongs": "Adicione músicas ao setlist para tocar.",
     "setlists.saved": "Programa salvo.",
     "setlists.added": "Adicionada a {title}.",
     "setlists.already": "Já está neste setlist.",
-    "setlists.deleteConfirm": "Excluir o setlist \"{title}\"?",
-    "service.title": "Programa de culto",
-    "service.lead": "Preencha quem serve no domingo e as músicas. Depois envie a cada participante.",
-    "service.name": "Nome do culto",
-    "service.namePh": "Ex.: Culto Domingo",
+    "setlists.deleteConfirm": "Excluir o evento \"{title}\"?",
+    "service.title": "Programa",
+    "service.lead": "Monte a equipe, preencha o evento e escolha as músicas.",
+    "service.name": "Nome do evento",
+    "service.namePh": "Ex.: Ensaio, culto, show",
     "service.date": "Data",
     "service.opening": "Abertura (prelúdio, quem toca)",
     "service.openingPh": "Ex.: Piano — Ana",
@@ -239,7 +239,7 @@ const I18N = {
     "service.copied": "Programa copiado. Cole no WhatsApp ou no grupo.",
     "service.shared": "Programa enviado.",
     "service.copyFail": "Não consegui copiar. Use o botão WhatsApp para enviar.",
-    "service.heading": "PROGRAMA DE CULTO",
+    "service.heading": "PROGRAMA",
     "service.itemOpening": "1. ABERTURA (Prelúdio)",
     "service.itemLeader": "2. DIRIGENTE",
     "service.itemAnnouncements": "3. ANÚNCIOS E LEITURA DA PALAVRA",
@@ -249,7 +249,100 @@ const I18N = {
     "service.noSongs": "Ainda sem músicas.",
     "service.key": "Tom {key}",
     "service.tba": "a definir",
-    "service.defaultTitle": "Culto Domingo",
+    "service.defaultTitle": "Evento",
+    "agenda.hubEvents": "Eventos",
+    "agenda.hubTeam": "Equipe",
+    "agenda.hubMonth": "Mês",
+    "agenda.settings": "Personalizar campos",
+    "agenda.time": "Hora",
+    "agenda.field.type": "Tipo",
+    "agenda.field.speaker": "Quem predica",
+    "agenda.field.host": "Preside",
+    "agenda.field.theme": "Tema da mensagem",
+    "agenda.field.scripture": "Referência bíblica",
+    "agenda.field.musicLead": "Dirigente Alabanza",
+    "agenda.field.voices": "Vozes",
+    "agenda.field.instruments": "Instrumentos",
+    "agenda.field.opening": "Abertura",
+    "agenda.field.communion": "Santa Ceia",
+    "agenda.field.notes": "Instruções",
+    "agenda.field.prelude": "Prelúdio",
+    "agenda.field.reading": "Leitura inicial",
+    "agenda.field.readingVerse": "Texto da leitura",
+    "agenda.field.sundaySchool": "Apresentação Escola Dominical",
+    "agenda.field.prayer": "Tempo de oração",
+    "agenda.field.postlude": "Postlúdio",
+    "agenda.field.streamTitle": "Título (streaming)",
+    "agenda.field.streamDesc": "Descrição (streaming)",
+    "agenda.field.custom": "Campo novo",
+    "agenda.section.schedule": "Cronograma",
+    "agenda.section.order": "Ordem",
+    "agenda.section.word": "Tempo de pregação",
+    "agenda.section.music": "Grupo de alabanza",
+    "agenda.section.songs": "Alabanza",
+    "agenda.section.stream": "Streaming",
+    "agenda.sectionsTitle": "Títulos das secções",
+    "agenda.fieldsTitle": "Campos do evento",
+    "agenda.addField": "Adicionar campo",
+    "agenda.fieldLabel": "Nome do campo",
+    "agenda.kind.text": "Texto",
+    "agenda.kind.people": "Pessoas da equipe",
+    "agenda.kind.textarea": "Texto longo",
+    "agenda.peopleOne": "Uma pessoa",
+    "agenda.peopleMany": "Várias pessoas",
+    "agenda.pickPeople": "Escolher da equipe",
+    "agenda.noTeam": "Monte a equipe primeiro para marcar nomes com um toque.",
+    "agenda.goTeam": "Ir para Equipe",
+    "agenda.addPerson": "Adicionar",
+    "agenda.searchSongs": "Buscar músicas...",
+    "agenda.searchPeople": "Buscar na equipe...",
+    "agenda.donePick": "Pronto",
+    "agenda.pickSongs": "Marque as canções do programa",
+    "agenda.orderTitle": "Ordem do culto",
+    "agenda.serviceDate": "Data do culto",
+    "agenda.order.praise": "Alabanza",
+    "agenda.order.finalHymn": "Hino final",
+    "agenda.markFinal": "Passar para hino final",
+    "agenda.unmarkFinal": "Voltar para alabanza",
+    "agenda.includeMoment": "Incluir neste culto",
+    "agenda.momentNote": "Nota (opcional)",
+    "agenda.orderHint": "Marque só o que este culto vai ter. O resto não aparece na ordem.",
+    "agenda.slotFinal": "Final",
+    "agenda.monthPrev": "Mês anterior",
+    "agenda.monthNext": "Mês seguinte",
+    "agenda.dayEmpty": "Nenhum evento neste dia.",
+    "agenda.dayCreate": "Criar evento neste dia",
+    "agenda.savedSettings": "Campos salvos.",
+    "agenda.week0": "D",
+    "agenda.week1": "S",
+    "agenda.week2": "T",
+    "agenda.week3": "Q",
+    "agenda.week4": "Q",
+    "agenda.week5": "S",
+    "agenda.week6": "S",
+    "team.emptyTitle": "Ainda não há integrantes",
+    "team.emptyLead": "Cada um monta a equipe do seu jeito: duas pessoas ou vinte, com as funções que precisar.",
+    "team.add": "Adicionar integrante",
+    "team.edit": "Editar integrante",
+    "team.name": "Nome",
+    "team.namePh": "Ex.: Ana",
+    "team.roles": "Funções",
+    "team.rolesLead": "Toque para marcar. Pode criar outras.",
+    "team.rolePh": "Nova função",
+    "team.note": "Nota",
+    "team.save": "Salvar",
+    "team.delete": "Remover da equipe",
+    "team.deleteConfirm": "Remover {name} da equipe?",
+    "team.countOne": "{n} integrante",
+    "team.countMany": "{n} integrantes",
+    "team.role.voice": "Voz",
+    "team.role.guitar": "Guitarra",
+    "team.role.keys": "Teclado",
+    "team.role.drums": "Bateria",
+    "team.role.bass": "Baixo",
+    "team.role.tech": "Técnico",
+    "team.needed": "Escreva o nome.",
+    "team.saved": "Integrante salvo.",
     "more.lead": "Ajustes e cópias de segurança.",
     "more.appearance": "Aparência",
     "more.theme": "Tema",
@@ -301,6 +394,8 @@ const I18N = {
     "sync.badCode": "Código inválido.",
     "sync.fail": "Não foi possível ligar. Confira a internet e tente de novo na mesma Wi-Fi.",
     "sync.received": "Biblioteca recebida do celular.",
+    "sync.merged": "Juntei as cifras dos dois lados.",
+    "sync.keptLocal": "O celular estava sem cifras. Mantive as daqui e enviei-as para o celular.",
     "sync.sent": "Alterações enviadas ao celular.",
     "sync.bannerIdle": "Edite as cifras do celular neste computador.",
     "sync.bannerStart": "Começar",
@@ -344,6 +439,7 @@ const I18N = {
     "chords.close": "Fechar",
     "chords.empty": "Nenhum acorde nesta cifra.",
     "msg.saved": "Música salva.",
+    "msg.saveFail": "Não deu para gravar. Libere espaço neste aparelho ou exporte um backup.",
     "msg.copied": "Música copiada para compartilhar.",
     "msg.copyFail": "Não consegui copiar. Baixei um arquivo da música.",
     "msg.sample": "Adicionar cifras de exemplo mesmo assim?",
@@ -362,7 +458,7 @@ const I18N = {
   es: {
     "brand.tagline": "Tus canciones siempre contigo",
     "nav.songs": "Canciones",
-    "nav.setlists": "Setlists",
+    "nav.setlists": "Agenda",
     "nav.chart": "Cifra",
     "nav.stage": "Escenario",
     "nav.more": "Más",
@@ -495,15 +591,15 @@ const I18N = {
     "stage.searchPh": "Buscar canciones...",
     "stage.noMatch": "No se encontraron canciones.",
     "stage.noScroll": "La cifra ya cabe en pantalla.",
-    "setlists.new": "Nuevo setlist",
-    "setlists.mine": "Mis setlists",
+    "setlists.new": "Nuevo evento",
+    "setlists.mine": "Todos",
     "setlists.recent": "Recientes",
     "setlists.filter": "Filtro de setlists",
-    "setlists.countOne": "{n} setlist",
-    "setlists.countMany": "{n} setlists",
+    "setlists.countOne": "{n} evento",
+    "setlists.countMany": "{n} eventos",
     "setlists.recentOne": "{n} reciente",
     "setlists.recentMany": "{n} recientes",
-    "setlists.empty": "Ningún setlist creado.",
+    "setlists.empty": "Ningún evento creado.",
     "setlists.emptyRecent": "Abre un setlist en el escenario para verlo aquí.",
     "setlists.emptyList": "Todavía sin canciones",
     "setlists.songsOne": "{n} canción",
@@ -527,18 +623,18 @@ const I18N = {
     "setlists.noSongs": "Ninguna canción en este setlist.",
     "setlists.addSong": "Añadir",
     "setlists.remove": "Borrar",
-    "setlists.details": "Datos del culto",
+    "setlists.details": "Datos del evento",
     "setlists.addTitle": "Añadir canción",
     "setlists.allAdded": "Todas las canciones ya fueron añadidas.",
     "setlists.needSongs": "Añade canciones al setlist para tocar.",
     "setlists.saved": "Programa guardado.",
     "setlists.added": "Añadida a {title}.",
     "setlists.already": "Ya está en este setlist.",
-    "setlists.deleteConfirm": "¿Eliminar el setlist \"{title}\"?",
-    "service.title": "Programa de culto",
-    "service.lead": "Complete quién sirve el domingo y las canciones. Luego envíe a cada participante.",
-    "service.name": "Nombre del culto",
-    "service.namePh": "Ej.: Culto Domingo",
+    "setlists.deleteConfirm": "¿Eliminar el evento \"{title}\"?",
+    "service.title": "Programa",
+    "service.lead": "Arme el equipo, complete el evento y elija las canciones.",
+    "service.name": "Nombre del evento",
+    "service.namePh": "Ej.: Ensayo, culto, concierto",
     "service.date": "Fecha",
     "service.opening": "Apertura (preludio, quién toca)",
     "service.openingPh": "Ej.: Piano — Ana",
@@ -558,7 +654,7 @@ const I18N = {
     "service.copied": "Programa copiado. Péguelo en WhatsApp o en el grupo.",
     "service.shared": "Programa enviado.",
     "service.copyFail": "No pude copiar. Use el botón WhatsApp para enviar.",
-    "service.heading": "PROGRAMA DE CULTO",
+    "service.heading": "PROGRAMA",
     "service.itemOpening": "1. APERTURA (Preludio)",
     "service.itemLeader": "2. DIRIGENTE",
     "service.itemAnnouncements": "3. ANUNCIOS Y LECTURA DE LA PALABRA",
@@ -568,7 +664,100 @@ const I18N = {
     "service.noSongs": "Todavía sin canciones.",
     "service.key": "Tono {key}",
     "service.tba": "por definir",
-    "service.defaultTitle": "Culto Domingo",
+    "service.defaultTitle": "Evento",
+    "agenda.hubEvents": "Eventos",
+    "agenda.hubTeam": "Equipo",
+    "agenda.hubMonth": "Mes",
+    "agenda.settings": "Personalizar campos",
+    "agenda.time": "Hora",
+    "agenda.field.type": "Tipo",
+    "agenda.field.speaker": "Quién predica",
+    "agenda.field.host": "Preside",
+    "agenda.field.theme": "Tema del mensaje",
+    "agenda.field.scripture": "Referencia bíblica",
+    "agenda.field.musicLead": "Dirigente Alabanza",
+    "agenda.field.voices": "Voces",
+    "agenda.field.instruments": "Instrumentos",
+    "agenda.field.opening": "Apertura",
+    "agenda.field.communion": "Santa Cena",
+    "agenda.field.notes": "Instrucciones",
+    "agenda.field.prelude": "Preludio",
+    "agenda.field.reading": "Lectura inicial",
+    "agenda.field.readingVerse": "Texto de la lectura",
+    "agenda.field.sundaySchool": "Presentación Escuela Dominical",
+    "agenda.field.prayer": "Tiempo de oración",
+    "agenda.field.postlude": "Postludio",
+    "agenda.field.streamTitle": "Título (streaming)",
+    "agenda.field.streamDesc": "Descripción (streaming)",
+    "agenda.field.custom": "Campo nuevo",
+    "agenda.section.schedule": "Cronograma",
+    "agenda.section.order": "Orden",
+    "agenda.section.word": "Tiempo de predicación",
+    "agenda.section.music": "Grupo de alabanza",
+    "agenda.section.songs": "Alabanza",
+    "agenda.section.stream": "Streaming",
+    "agenda.sectionsTitle": "Títulos de las secciones",
+    "agenda.fieldsTitle": "Campos del evento",
+    "agenda.addField": "Añadir campo",
+    "agenda.fieldLabel": "Nombre del campo",
+    "agenda.kind.text": "Texto",
+    "agenda.kind.people": "Personas del equipo",
+    "agenda.kind.textarea": "Texto largo",
+    "agenda.peopleOne": "Una persona",
+    "agenda.peopleMany": "Varias personas",
+    "agenda.pickPeople": "Elegir del equipo",
+    "agenda.noTeam": "Arme el equipo primero para marcar nombres con un toque.",
+    "agenda.goTeam": "Ir a Equipo",
+    "agenda.addPerson": "Añadir",
+    "agenda.searchSongs": "Buscar canciones...",
+    "agenda.searchPeople": "Buscar en el equipo...",
+    "agenda.donePick": "Listo",
+    "agenda.pickSongs": "Marque las canciones del programa",
+    "agenda.orderTitle": "Orden de culto",
+    "agenda.serviceDate": "Fecha de servicio",
+    "agenda.order.praise": "Alabanza",
+    "agenda.order.finalHymn": "Himno final",
+    "agenda.markFinal": "Pasar a himno final",
+    "agenda.unmarkFinal": "Volver a alabanza",
+    "agenda.includeMoment": "Incluir en este culto",
+    "agenda.momentNote": "Nota (opcional)",
+    "agenda.orderHint": "Marque solo lo que este culto va a tener. El resto no aparece en la orden.",
+    "agenda.slotFinal": "Final",
+    "agenda.monthPrev": "Mes anterior",
+    "agenda.monthNext": "Mes siguiente",
+    "agenda.dayEmpty": "Ningún evento en este día.",
+    "agenda.dayCreate": "Crear evento en este día",
+    "agenda.savedSettings": "Campos guardados.",
+    "agenda.week0": "D",
+    "agenda.week1": "L",
+    "agenda.week2": "M",
+    "agenda.week3": "X",
+    "agenda.week4": "J",
+    "agenda.week5": "V",
+    "agenda.week6": "S",
+    "team.emptyTitle": "Todavía no hay integrantes",
+    "team.emptyLead": "Cada uno arma el equipo a su manera: dos personas o veinte, con las funciones que necesite.",
+    "team.add": "Añadir integrante",
+    "team.edit": "Editar integrante",
+    "team.name": "Nombre",
+    "team.namePh": "Ej.: Ana",
+    "team.roles": "Funciones",
+    "team.rolesLead": "Toque para marcar. Puede crear otras.",
+    "team.rolePh": "Nueva función",
+    "team.note": "Nota",
+    "team.save": "Guardar",
+    "team.delete": "Quitar del equipo",
+    "team.deleteConfirm": "¿Quitar a {name} del equipo?",
+    "team.countOne": "{n} integrante",
+    "team.countMany": "{n} integrantes",
+    "team.role.voice": "Voz",
+    "team.role.guitar": "Guitarra",
+    "team.role.keys": "Teclado",
+    "team.role.drums": "Batería",
+    "team.role.bass": "Bajo",
+    "team.role.tech": "Técnico",
+    "team.needed": "Escriba el nombre.",
+    "team.saved": "Integrante guardado.",
     "more.lead": "Ajustes y copias de seguridad.",
     "more.appearance": "Apariencia",
     "more.theme": "Tema",
@@ -620,6 +809,8 @@ const I18N = {
     "sync.badCode": "Código no válido.",
     "sync.fail": "No se pudo conectar. Compruebe internet e inténtelo en la misma Wi-Fi.",
     "sync.received": "Biblioteca recibida del teléfono.",
+    "sync.merged": "Junté las cifras de los dos lados.",
+    "sync.keptLocal": "El teléfono no tenía cifras. Conservé las de aquí y las envié al teléfono.",
     "sync.sent": "Cambios enviados al teléfono.",
     "sync.bannerIdle": "Edite las cifras del teléfono en este computador.",
     "sync.bannerStart": "Empezar",
@@ -663,6 +854,7 @@ const I18N = {
     "chords.close": "Cerrar",
     "chords.empty": "No hay acordes en esta cifra.",
     "msg.saved": "Canción guardada.",
+    "msg.saveFail": "No se pudo guardar. Libere espacio en este aparato o exporte un backup.",
     "msg.copied": "Canción copiada para compartir.",
     "msg.copyFail": "No pude copiar. Descargue un archivo de la canción.",
     "msg.sample": "¿Añadir cifras de ejemplo de todas formas?",
@@ -681,7 +873,7 @@ const I18N = {
   en: {
     "brand.tagline": "Your songs, always with you",
     "nav.songs": "Songs",
-    "nav.setlists": "Setlists",
+    "nav.setlists": "Agenda",
     "nav.chart": "Chart",
     "nav.stage": "Stage",
     "nav.more": "More",
@@ -814,15 +1006,15 @@ const I18N = {
     "stage.searchPh": "Search songs...",
     "stage.noMatch": "No songs found.",
     "stage.noScroll": "This chart already fits on screen.",
-    "setlists.new": "New setlist",
-    "setlists.mine": "My setlists",
+    "setlists.new": "New event",
+    "setlists.mine": "All",
     "setlists.recent": "Recent",
     "setlists.filter": "Setlist filter",
-    "setlists.countOne": "{n} setlist",
-    "setlists.countMany": "{n} setlists",
+    "setlists.countOne": "{n} event",
+    "setlists.countMany": "{n} events",
     "setlists.recentOne": "{n} recent",
     "setlists.recentMany": "{n} recent",
-    "setlists.empty": "No setlists yet.",
+    "setlists.empty": "No events yet.",
     "setlists.emptyRecent": "Open a setlist on stage to see it here.",
     "setlists.emptyList": "No songs yet",
     "setlists.songsOne": "{n} song",
@@ -846,18 +1038,18 @@ const I18N = {
     "setlists.noSongs": "No songs in this setlist.",
     "setlists.addSong": "Add",
     "setlists.remove": "Remove",
-    "setlists.details": "Service details",
+    "setlists.details": "Event details",
     "setlists.addTitle": "Add a song",
     "setlists.allAdded": "Every song is already added.",
     "setlists.needSongs": "Add songs to the setlist to play.",
     "setlists.saved": "Program saved.",
     "setlists.added": "Added to {title}.",
     "setlists.already": "Already in this setlist.",
-    "setlists.deleteConfirm": "Delete setlist \"{title}\"?",
-    "service.title": "Sunday program",
-    "service.lead": "Fill in who serves on Sunday and the songs. Then send it to each participant.",
-    "service.name": "Service name",
-    "service.namePh": "Ex.: Sunday service",
+    "setlists.deleteConfirm": "Delete event \"{title}\"?",
+    "service.title": "Program",
+    "service.lead": "Build the team, fill in the event, and pick the songs.",
+    "service.name": "Event name",
+    "service.namePh": "e.g. Rehearsal, service, gig",
     "service.date": "Date",
     "service.opening": "Opening (prelude, who plays)",
     "service.openingPh": "Ex.: Piano — Ana",
@@ -877,7 +1069,7 @@ const I18N = {
     "service.copied": "Program copied. Paste it into WhatsApp or the group.",
     "service.shared": "Program sent.",
     "service.copyFail": "Could not copy. Use the WhatsApp button to send it.",
-    "service.heading": "SUNDAY PROGRAM",
+    "service.heading": "PROGRAM",
     "service.itemOpening": "1. OPENING (Prelude)",
     "service.itemLeader": "2. SERVICE LEADER",
     "service.itemAnnouncements": "3. ANNOUNCEMENTS AND SCRIPTURE",
@@ -887,7 +1079,100 @@ const I18N = {
     "service.noSongs": "No songs yet.",
     "service.key": "Key {key}",
     "service.tba": "TBD",
-    "service.defaultTitle": "Sunday service",
+    "service.defaultTitle": "Event",
+    "agenda.hubEvents": "Events",
+    "agenda.hubTeam": "Team",
+    "agenda.hubMonth": "Month",
+    "agenda.settings": "Customize fields",
+    "agenda.time": "Time",
+    "agenda.field.type": "Type",
+    "agenda.field.speaker": "Speaker",
+    "agenda.field.host": "Host",
+    "agenda.field.theme": "Message theme",
+    "agenda.field.scripture": "Scripture",
+    "agenda.field.musicLead": "Music leader",
+    "agenda.field.voices": "Vocals",
+    "agenda.field.instruments": "Instruments",
+    "agenda.field.opening": "Opening",
+    "agenda.field.communion": "Communion",
+    "agenda.field.notes": "Instructions",
+    "agenda.field.prelude": "Prelude",
+    "agenda.field.reading": "Opening reading",
+    "agenda.field.readingVerse": "Reading scripture",
+    "agenda.field.sundaySchool": "Sunday school presentation",
+    "agenda.field.prayer": "Prayer",
+    "agenda.field.postlude": "Postlude",
+    "agenda.field.streamTitle": "Streaming title",
+    "agenda.field.streamDesc": "Streaming description",
+    "agenda.field.custom": "New field",
+    "agenda.section.schedule": "Schedule",
+    "agenda.section.order": "Order",
+    "agenda.section.word": "Message",
+    "agenda.section.music": "Band",
+    "agenda.section.songs": "Praise",
+    "agenda.section.stream": "Streaming",
+    "agenda.sectionsTitle": "Section titles",
+    "agenda.fieldsTitle": "Event fields",
+    "agenda.addField": "Add field",
+    "agenda.fieldLabel": "Field name",
+    "agenda.kind.text": "Text",
+    "agenda.kind.people": "People from the team",
+    "agenda.kind.textarea": "Long text",
+    "agenda.peopleOne": "One person",
+    "agenda.peopleMany": "Several people",
+    "agenda.pickPeople": "Pick from the team",
+    "agenda.noTeam": "Build the team first to tap names.",
+    "agenda.goTeam": "Go to Team",
+    "agenda.addPerson": "Add",
+    "agenda.searchSongs": "Search songs...",
+    "agenda.searchPeople": "Search the team...",
+    "agenda.donePick": "Done",
+    "agenda.pickSongs": "Check the songs for the program",
+    "agenda.orderTitle": "Order of service",
+    "agenda.serviceDate": "Service date",
+    "agenda.order.praise": "Praise",
+    "agenda.order.finalHymn": "Closing hymn",
+    "agenda.markFinal": "Move to closing hymn",
+    "agenda.unmarkFinal": "Move back to praise",
+    "agenda.includeMoment": "Include in this service",
+    "agenda.momentNote": "Note (optional)",
+    "agenda.orderHint": "Check only what this service will use. The rest stays off the order.",
+    "agenda.slotFinal": "Final",
+    "agenda.monthPrev": "Previous month",
+    "agenda.monthNext": "Next month",
+    "agenda.dayEmpty": "No events on this day.",
+    "agenda.dayCreate": "Create event on this day",
+    "agenda.savedSettings": "Fields saved.",
+    "agenda.week0": "S",
+    "agenda.week1": "M",
+    "agenda.week2": "T",
+    "agenda.week3": "W",
+    "agenda.week4": "T",
+    "agenda.week5": "F",
+    "agenda.week6": "S",
+    "team.emptyTitle": "No team members yet",
+    "team.emptyLead": "Build the team your way: two people or twenty, with whatever roles you need.",
+    "team.add": "Add member",
+    "team.edit": "Edit member",
+    "team.name": "Name",
+    "team.namePh": "e.g. Ana",
+    "team.roles": "Roles",
+    "team.rolesLead": "Tap to select. You can add your own.",
+    "team.rolePh": "New role",
+    "team.note": "Note",
+    "team.save": "Save",
+    "team.delete": "Remove from team",
+    "team.deleteConfirm": "Remove {name} from the team?",
+    "team.countOne": "{n} member",
+    "team.countMany": "{n} members",
+    "team.role.voice": "Vocals",
+    "team.role.guitar": "Guitar",
+    "team.role.keys": "Keys",
+    "team.role.drums": "Drums",
+    "team.role.bass": "Bass",
+    "team.role.tech": "Tech",
+    "team.needed": "Enter a name.",
+    "team.saved": "Member saved.",
     "more.lead": "Settings and backups.",
     "more.appearance": "Appearance",
     "more.theme": "Theme",
@@ -939,6 +1224,8 @@ const I18N = {
     "sync.badCode": "Invalid code.",
     "sync.fail": "Could not connect. Check the internet and try again on the same Wi-Fi.",
     "sync.received": "Library received from the phone.",
+    "sync.merged": "Merged the charts from both sides.",
+    "sync.keptLocal": "The phone had no charts. Kept this library and sent it to the phone.",
     "sync.sent": "Changes sent to the phone.",
     "sync.bannerIdle": "Edit the phone charts on this computer.",
     "sync.bannerStart": "Start",
@@ -982,6 +1269,7 @@ const I18N = {
     "chords.close": "Close",
     "chords.empty": "No chords in this chart.",
     "msg.saved": "Song saved.",
+    "msg.saveFail": "Could not save. Free space on this device or export a backup.",
     "msg.copied": "Song copied to share.",
     "msg.copyFail": "Could not copy. A song file was downloaded instead.",
     "msg.sample": "Add sample charts anyway?",
@@ -1052,6 +1340,27 @@ function countLabel(n, oneKey, manyKey) {
   return t(n === 1 ? oneKey : manyKey, { n });
 }
 
+function restoreAndroidOrigin() {
+  try {
+    if (!window.ChordBookAndroid) return;
+    if (location.protocol === "file:") {
+      window.ChordBookAndroid.finishFileOrigin?.(
+        localStorage.getItem(STORAGE_KEY) || "",
+        localStorage.getItem(LOOK_KEY) || "",
+      );
+      return;
+    }
+    const packed = window.ChordBookAndroid.consumeMigration?.();
+    if (!packed) return;
+    const data = JSON.parse(packed);
+    if (data.library && !localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, data.library);
+    if (data.look && !localStorage.getItem(LOOK_KEY)) localStorage.setItem(LOOK_KEY, data.look);
+  } catch {
+    /* ignore */
+  }
+}
+
+restoreAndroidOrigin();
 const state = loadState();
 let activeView = "library";
 let libraryFilter = "all";
@@ -1067,6 +1376,18 @@ let isEditingSetlist = false;
 let isSetlistDetailsOpen = false;
 let isSetlistAddOpen = false;
 let isSetlistDayMenuOpen = false;
+let agendaHub = "events";
+let agendaMonthCursor = new Date();
+let selectedAgendaDay = "";
+let setlistAddQuery = "";
+let peoplePickerQuery = "";
+let editingMemberId = null;
+let memberDraftRoles = [];
+let peoplePickerFieldId = "";
+let peoplePickerDraft = { ids: [], extra: "" };
+let isMemberSheetOpen = false;
+let isPeoplePickerOpen = false;
+let isAgendaSettingsOpen = false;
 let isMobileSongMenuOpen = false;
 let isSongReadMenuOpen = false;
 let isSetlistPickerOpen = false;
@@ -1218,7 +1539,7 @@ const el = {
   setlistMore: document.querySelector("#setlistMoreBtn"),
   setlistDayMenu: document.querySelector("#setlistDayMenu"),
   setlistDayMeta: document.querySelector("#setlistDayMeta"),
-  setlistDayLead: document.querySelector("#setlistDayLead"),
+  setlistDayRoster: document.querySelector("#setlistDayRoster"),
   setlistDetails: document.querySelector("#setlistDetails"),
   setlistAddSheet: document.querySelector("#setlistAddSheet"),
   setlistAddList: document.querySelector("#setlistAddList"),
@@ -1226,13 +1547,39 @@ const el = {
   setlistTitle: document.querySelector("#setlistTitleInput"),
   setlistNotes: document.querySelector("#setlistNotesInput"),
   serviceDate: document.querySelector("#serviceDate"),
-  serviceOpening: document.querySelector("#serviceOpening"),
-  serviceLeader: document.querySelector("#serviceLeader"),
-  serviceAnnouncements: document.querySelector("#serviceAnnouncements"),
-  serviceWorship: document.querySelector("#serviceWorship"),
-  servicePreacher: document.querySelector("#servicePreacher"),
-  servicePreacherRole: document.querySelector("#servicePreacherRole"),
-  serviceCommunion: document.querySelector("#serviceCommunion"),
+  serviceTime: document.querySelector("#serviceTime"),
+  eventFields: document.querySelector("#eventFields"),
+  agendaSettings: document.querySelector("#agendaSettingsBtn"),
+  agendaHub: document.querySelectorAll("[data-agenda-hub]"),
+  agendaEventsPane: document.querySelector("#agendaEventsPane"),
+  agendaTeamPane: document.querySelector("#agendaTeamPane"),
+  agendaMonthPane: document.querySelector("#agendaMonthPane"),
+  teamList: document.querySelector("#teamList"),
+  agendaMonth: document.querySelector("#agendaMonth"),
+  setlistAddSearch: document.querySelector("#setlistAddSearch"),
+  memberSheet: document.querySelector("#memberSheet"),
+  memberSheetTitle: document.querySelector("#memberSheetTitle"),
+  memberSheetClose: document.querySelector("#memberSheetClose"),
+  memberNameInput: document.querySelector("#memberNameInput"),
+  memberRoleChips: document.querySelector("#memberRoleChips"),
+  memberRoleInput: document.querySelector("#memberRoleInput"),
+  memberRoleAdd: document.querySelector("#memberRoleAdd"),
+  memberNoteInput: document.querySelector("#memberNoteInput"),
+  memberSave: document.querySelector("#memberSave"),
+  memberDelete: document.querySelector("#memberDelete"),
+  peoplePickerSheet: document.querySelector("#peoplePickerSheet"),
+  peoplePickerTitle: document.querySelector("#peoplePickerTitle"),
+  peoplePickerLead: document.querySelector("#peoplePickerLead"),
+  peoplePickerClose: document.querySelector("#peoplePickerClose"),
+  peoplePickerSearch: document.querySelector("#peoplePickerSearch"),
+  peoplePickerList: document.querySelector("#peoplePickerList"),
+  peoplePickerDone: document.querySelector("#peoplePickerDone"),
+  agendaSettingsSheet: document.querySelector("#agendaSettingsSheet"),
+  agendaSettingsClose: document.querySelector("#agendaSettingsClose"),
+  agendaSectionEditor: document.querySelector("#agendaSectionEditor"),
+  agendaFieldEditor: document.querySelector("#agendaFieldEditor"),
+  agendaAddField: document.querySelector("#agendaAddField"),
+  agendaSettingsSave: document.querySelector("#agendaSettingsSave"),
   shareService: document.querySelector("#shareServiceBtn"),
   whatsappService: document.querySelector("#whatsappServiceBtn"),
   setlistPicker: document.querySelector("#setlistSongPicker"),
@@ -1291,6 +1638,9 @@ registerServiceWorker();
 window.ChordBookNative = {
   stageStep(direction) {
     return applyStageStep(direction === "prev" ? -1 : 1);
+  },
+  goBack() {
+    return handleAppBack();
   },
 };
 
@@ -1353,6 +1703,10 @@ function bindEvents() {
   });
   window.addEventListener("keydown", handleStageHotkeys);
   window.addEventListener("keydown", handleEditorSaveHotkey);
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (handleAppBack()) event.preventDefault();
+  });
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && (el.appShell.classList.contains("stage-active") || isSetlistPlaying)) {
       requestStageWakeLock();
@@ -1383,8 +1737,8 @@ function bindEvents() {
   el.favorite.addEventListener("click", toggleFavorite);
   el.duplicate.addEventListener("click", duplicateSong);
   el.delete.addEventListener("click", deleteSong);
-  el.songBack.addEventListener("click", closeSongView);
-  el.setlistPlayExit?.addEventListener("click", closeSongView);
+  el.songBack.addEventListener("click", () => handleAppBack());
+  el.setlistPlayExit?.addEventListener("click", () => handleAppBack());
   el.songFav.addEventListener("click", toggleFavorite);
   el.songMore.addEventListener("click", toggleSongReadMenu);
   el.songTransposeDown.addEventListener("click", () => transposeSelected(-1));
@@ -1401,7 +1755,7 @@ function bindEvents() {
   el.songChords.addEventListener("click", toggleChordSheet);
   el.chordSheetClose.addEventListener("click", closeChordSheet);
   el.langButtons.forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.lang)));
-  el.stageExit.addEventListener("click", () => (isSetlistPlaying ? closeSongView() : openSongView()));
+  el.stageExit.addEventListener("click", () => handleAppBack());
   el.stageMenu.addEventListener("click", toggleMobileSongMenu);
   el.stagePrev.addEventListener("click", () => moveSetlistStage(-1));
   el.stageScroll.addEventListener("click", toggleAutoScroll);
@@ -1417,9 +1771,59 @@ function bindEvents() {
   el.stageContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
   el.songReadContent.addEventListener("wheel", handleStageManualScroll, { passive: true });
   el.songReadContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
-  el.newSetlist.addEventListener("click", createSetlist);
-  el.setlistFab.addEventListener("click", createSetlist);
-  el.closeSetlist.addEventListener("click", closeSetlistEditor);
+  el.newSetlist.addEventListener("click", () => {
+    if (agendaHub === "team") openMemberEditor();
+    else createSetlist();
+  });
+  el.setlistFab.addEventListener("click", () => {
+    if (agendaHub === "team") openMemberEditor();
+    else createSetlist();
+  });
+  el.agendaHub.forEach((button) => button.addEventListener("click", () => setAgendaHub(button.dataset.agendaHub)));
+  el.agendaSettings?.addEventListener("click", () => setAgendaSettingsOpen(true));
+  el.agendaSettingsClose?.addEventListener("click", () => setAgendaSettingsOpen(false));
+  el.agendaSettingsSheet?.addEventListener("click", (event) => {
+    if (event.target === el.agendaSettingsSheet) setAgendaSettingsOpen(false);
+  });
+  el.agendaAddField?.addEventListener("click", addCustomAgendaField);
+  el.agendaSettingsSave?.addEventListener("click", () => setAgendaSettingsOpen(false));
+  el.memberSheetClose?.addEventListener("click", () => setMemberSheetOpen(false));
+  el.memberSheet?.addEventListener("click", (event) => {
+    if (event.target === el.memberSheet) setMemberSheetOpen(false);
+  });
+  el.memberRoleAdd?.addEventListener("click", addDraftMemberRole);
+  el.memberRoleInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addDraftMemberRole();
+    }
+  });
+  el.memberSave?.addEventListener("click", saveTeamMember);
+  el.memberDelete?.addEventListener("click", deleteTeamMember);
+  el.peoplePickerClose?.addEventListener("click", () => setPeoplePickerOpen(false));
+  el.peoplePickerDone?.addEventListener("click", applyPeoplePicker);
+  el.peoplePickerSheet?.addEventListener("click", (event) => {
+    if (event.target === el.peoplePickerSheet) setPeoplePickerOpen(false);
+  });
+  el.setlistAddSearch?.addEventListener("input", () => {
+    setlistAddQuery = el.setlistAddSearch.value;
+    renderSongCheckLists();
+  });
+  el.peoplePickerSearch?.addEventListener("input", () => {
+    peoplePickerQuery = el.peoplePickerSearch.value;
+    renderPeoplePicker();
+  });
+  el.serviceDate?.addEventListener("change", () => {
+    const setlist = selectedSetlist();
+    if (!setlist) return;
+    setlist.service = readServiceFromForm();
+  });
+  el.serviceTime?.addEventListener("change", () => {
+    const setlist = selectedSetlist();
+    if (!setlist) return;
+    setlist.service = readServiceFromForm();
+  });
+  el.closeSetlist.addEventListener("click", () => handleAppBack());
   el.setlistEditDetails?.addEventListener("click", () => {
     isSetlistDetailsOpen = !isSetlistDetailsOpen;
     isSetlistAddOpen = false;
@@ -1677,6 +2081,91 @@ function closeSongView() {
   switchView("library");
 }
 
+function closeStageList() {
+  if (!isMobileSongMenuOpen) return false;
+  isMobileSongMenuOpen = false;
+  stageMenuQuery = "";
+  syncStageChrome();
+  renderMobileSongMenu();
+  return true;
+}
+
+function handleAppBack() {
+  if (el.setlistPlaySheet && !el.setlistPlaySheet.hidden) {
+    closeSetlistPlaySheet();
+    return true;
+  }
+  if (isMemberSheetOpen) {
+    setMemberSheetOpen(false);
+    return true;
+  }
+  if (isPeoplePickerOpen) {
+    setPeoplePickerOpen(false);
+    return true;
+  }
+  if (isAgendaSettingsOpen) {
+    setAgendaSettingsOpen(false);
+    return true;
+  }
+  if (el.pasteChart && !el.pasteChart.hidden) {
+    closePasteChart();
+    return true;
+  }
+  if (el.syncHostSheet && !el.syncHostSheet.hidden) {
+    setSyncHostSheetOpen(false);
+    return true;
+  }
+  if (el.syncAuthSheet && !el.syncAuthSheet.hidden) {
+    denySyncComputer();
+    return true;
+  }
+  if (isChordSheetOpen) {
+    closeChordSheet();
+    return true;
+  }
+  if (isSetlistAddOpen || isSetlistDetailsOpen || isSetlistDayMenuOpen) {
+    isSetlistAddOpen = false;
+    isSetlistDetailsOpen = false;
+    isSetlistDayMenuOpen = false;
+    renderSetlists();
+    return true;
+  }
+  if (isSongToolsOpen) {
+    setSongToolsOpen(false);
+    return true;
+  }
+  if (isSongReadMenuOpen) {
+    isSongReadMenuOpen = false;
+    isSetlistPickerOpen = false;
+    renderSongReadMenu();
+    return true;
+  }
+  if (closeStageList()) return true;
+  if (el.appShell.classList.contains("stage-active")) {
+    if (isSetlistPlaying || activeSetlistId) closeSongView();
+    else openSongView();
+    return true;
+  }
+  if (el.appShell.classList.contains("song-active")) {
+    closeSongView();
+    return true;
+  }
+  if (isEditingSetlist) {
+    closeSetlistEditor();
+    return true;
+  }
+  if (isEditingSong) {
+    closeSongEditor();
+    switchView("library");
+    return true;
+  }
+  if (activeView === "setlists" || activeView === "import") {
+    switchView("library");
+    return true;
+  }
+  return false;
+}
+
 function setSetlistFilter(filter) {
   setlistFilter = filter === "recent" ? "recent" : "all";
   el.setlistFilters.forEach((button) => button.classList.toggle("active", button.dataset.setlistFilter === setlistFilter));
@@ -1807,6 +2296,7 @@ function renderSongs() {
   el.libraryCount.textContent = libraryFilter === "favorites"
     ? countLabel(songs.length, "library.favOne", "library.favMany")
     : countLabel(songs.length, "library.countOne", "library.countMany");
+  const query = el.search.value.trim();
   const emptyKey = libraryKeyFilter
     ? "library.emptyKey"
     : libraryFilter === "favorites" ? "library.emptyFavorites"
@@ -1913,10 +2403,10 @@ function songRow(song) {
   const written = songWrittenKey(song);
   const artistHtml = song.artist ? `<small>${escapeHtml(song.artist)}</small>` : "";
   return `
-    <article class="song-item ${song.id === selectedSongId ? "active" : ""}" data-song-wrap="${song.id}">
+    <article class="song-item ${song.id === selectedSongId ? "active" : ""}" data-song-wrap="${escapeHtml(song.id)}">
       <div class="song-row library-song-row">
-        <button type="button" class="song-fav ${song.isFavorite ? "on" : ""}" data-fav-id="${song.id}" aria-label="${song.isFavorite ? t("library.unfavorite") : t("library.favorite")}" title="${t("library.favorite")}">★</button>
-        <button type="button" class="song-open-main" data-play-id="${song.id}">
+        <button type="button" class="song-fav ${song.isFavorite ? "on" : ""}" data-fav-id="${escapeHtml(song.id)}" aria-label="${song.isFavorite ? t("library.unfavorite") : t("library.favorite")}" title="${t("library.favorite")}">★</button>
+        <button type="button" class="song-open-main" data-play-id="${escapeHtml(song.id)}">
           <span class="song-main">
             <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
             ${artistHtml}
@@ -2343,7 +2833,7 @@ function renderSongReadMenu() {
       <button type="button" data-song-action="back">${t("common.back")}</button>
       ${lists.map((setlist) => {
         const inside = song && setlist.songIds.includes(song.id);
-        return `<button type="button" data-add-setlist-id="${setlist.id}" ${inside ? "disabled" : ""}>${escapeHtml(setlist.title)}${inside ? " · ✓" : ""}</button>`;
+        return `<button type="button" data-add-setlist-id="${escapeHtml(setlist.id)}" ${inside ? "disabled" : ""}>${escapeHtml(setlist.title)}${inside ? " · ✓" : ""}</button>`;
       }).join("")}
       <button type="button" class="primary-action" data-song-action="new-setlist">${t("setlists.new")}</button>
     `;
@@ -2452,7 +2942,7 @@ function stageMenuSongRow(song, order) {
   const meta = [key ? t("song.key", { key }) : "", mark].filter(Boolean).join(" · ");
   const num = index >= 0 ? `<span class="stage-cue-num">${index + 1}</span>` : "";
   return `
-    <button type="button" class="stage-set-row ${song.id === selectedSongId ? "active" : ""}" data-mobile-song-id="${song.id}">
+    <button type="button" class="stage-set-row ${song.id === selectedSongId ? "active" : ""}" data-mobile-song-id="${escapeHtml(song.id)}">
       ${num}
       <span class="song-main">
         <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
@@ -2487,10 +2977,13 @@ function activeSetlistPosition() {
 function renderStageSetlistBar() {}
 
 function renderSetlists() {
+  renderAgendaHub();
   const setlists = visibleSetlists();
-  el.setlistCount.textContent = setlistFilter === "recent"
-    ? countLabel(setlists.length, "setlists.recentOne", "setlists.recentMany")
-    : countLabel(state.setlists.length, "setlists.countOne", "setlists.countMany");
+  el.setlistCount.textContent = agendaHub === "team"
+    ? countLabel(state.team.members.length, "team.countOne", "team.countMany")
+    : setlistFilter === "recent"
+      ? countLabel(setlists.length, "setlists.recentOne", "setlists.recentMany")
+      : countLabel(state.setlists.length, "setlists.countOne", "setlists.countMany");
   el.setlistList.innerHTML = setlists.length
     ? setlists.map(setlistRow).join("")
     : `<p class="empty">${setlistFilter === "recent" ? t("setlists.emptyRecent") : t("setlists.empty")}</p>`;
@@ -2514,58 +3007,37 @@ function renderSetlists() {
   el.setlistTitle.value = setlist?.title ?? "";
   el.setlistNotes.value = setlist?.notes ?? "";
   writeServiceToForm(setlist?.service);
-  const heading = setlist?.service?.leader?.trim() || setlist?.title || t("nav.setlists");
-  if (el.serviceEditorTitle) el.serviceEditorTitle.textContent = heading;
-  if (el.setlistDayMeta) el.setlistDayMeta.textContent = formatSetlistDayDate(setlist?.service?.date);
-  if (el.setlistDayLead) {
-    const bits = [];
-    const leader = setlist?.service?.leader?.trim();
-    const worship = setlist?.service?.worship?.trim();
-    const preacher = setlist?.service?.preacher?.trim();
-    if (leader && leader !== heading) bits.push(`${t("service.leader")}: ${leader}`);
-    if (worship) bits.push(`${t("service.worship")}: ${worship}`);
-    if (preacher) bits.push(`${t("service.preacher")}: ${preacher}`);
-    el.setlistDayLead.textContent = bits.join(" · ");
-    el.setlistDayLead.hidden = !bits.length;
+  if (el.serviceEditorTitle) el.serviceEditorTitle.textContent = t("agenda.orderTitle");
+  if (el.setlistDayMeta) {
+    const dateLabel = formatSetlistDayDate(setlist?.service?.date);
+    const timeLabel = setlist?.service?.time || "";
+    const title = setlist?.title?.trim();
+    const defaultTitle = t("service.defaultTitle");
+    const extra = title && title !== defaultTitle ? title : "";
+    el.setlistDayMeta.textContent = [extra, dateLabel, timeLabel].filter(Boolean).join(" · ");
   }
+  renderEventRoster(setlist);
   if (el.setlistDetails) el.setlistDetails.hidden = !isSetlistDetailsOpen;
   el.setlistEditDetails?.classList.toggle("on", isSetlistDetailsOpen);
   el.setlistAdd?.classList.toggle("on", isSetlistAddOpen);
   el.setlistMore?.classList.toggle("on", isSetlistDayMenuOpen);
   const editorFields = [
     el.setlistTitle, el.setlistNotes, el.saveSetlist, el.openSetlist, el.deleteSetlist,
-    el.shareService, el.whatsappService, el.serviceDate, el.serviceOpening, el.serviceLeader,
-    el.serviceAnnouncements, el.serviceWorship, el.servicePreacher, el.servicePreacherRole, el.serviceCommunion,
-    el.setlistAddSong,
+    el.shareService, el.whatsappService, el.serviceDate, el.serviceTime, el.setlistAddSong,
   ];
   editorFields.forEach((field) => {
     if (field) field.disabled = !setlist;
   });
 
   const selectedIds = setlist?.songIds ?? [];
-  const selectedSongs = selectedIds.map((id) => state.songs.find((song) => song.id === id)).filter(Boolean);
   const availableSongs = state.songs.filter((song) => !selectedIds.includes(song.id));
 
-  el.setlistPicker.innerHTML = selectedSongs.length
-    ? selectedSongs.map((song, index) => orderedSetlistSongRow(song, index)).join("")
+  el.setlistPicker.innerHTML = setlist
+    ? renderEventOrderHtml(setlist)
     : `<p class="empty compact">${t("setlists.noSongs")}</p>`;
   bindSetlistSwipe(el.setlistPicker);
-  if (el.setlistAddList) {
-    el.setlistAddList.innerHTML = availableSongs.length
-      ? availableSongs.map((song) => `
-          <button type="button" data-add-song-id="${song.id}">
-            <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
-            ${song.artist ? `<small>${escapeHtml(song.artist)}</small>` : ""}
-          </button>
-        `).join("")
-      : `<p class="empty compact">${t("setlists.allAdded")}</p>`;
-    el.setlistAddList.querySelectorAll("[data-add-song-id]").forEach((button) => {
-      button.addEventListener("click", () => {
-        isSetlistAddOpen = false;
-        addSongToSetlist(button.dataset.addSongId);
-      });
-    });
-  }
+  renderSongCheckLists();
+  if (el.setlistAddSearch) el.setlistAddSearch.value = setlistAddQuery;
   if (el.setlistAddSheet) el.setlistAddSheet.hidden = !isSetlistAddOpen;
   if (el.setlistAddSong) {
     el.setlistAddSong.innerHTML = availableSongs.length
@@ -2608,28 +3080,30 @@ function setlistRow(setlist) {
   const canOpen = Boolean(songs.length);
   return `
     <div class="setlist-row ${setlist.id === selectedSetlistId ? "active" : ""}">
-      <button type="button" class="setlist-row-main" data-setlist-id="${setlist.id}">
+      <button type="button" class="setlist-row-main" data-setlist-id="${escapeHtml(setlist.id)}">
         <strong>${escapeHtml(setlist.title || t("nav.setlists"))}</strong>
         <small>${escapeHtml(meta)}</small>
       </button>
-      <button type="button" class="setlist-play" data-open-stage-id="${setlist.id}" ${canOpen ? "" : "disabled"} aria-label="${t("setlists.openStage")}" title="${t("setlists.openStage")}">▶</button>
+      <button type="button" class="setlist-play" data-open-stage-id="${escapeHtml(setlist.id)}" ${canOpen ? "" : "disabled"} aria-label="${t("setlists.openStage")}" title="${t("setlists.openStage")}">▶</button>
     </div>
   `;
 }
 
-function orderedSetlistSongRow(song, index) {
+function orderedSetlistSongRow(song, index, slot) {
   const key = songWrittenKey(song);
+  const isFinal = slot === "final";
   return `
     <div class="setlist-swipe">
-      <button type="button" class="setlist-swipe-delete" data-setlist-action="remove" data-song-id="${song.id}">${t("setlists.remove")}</button>
+      <button type="button" class="setlist-swipe-delete" data-setlist-action="remove" data-song-id="${escapeHtml(song.id)}">${t("setlists.remove")}</button>
       <div class="setlist-swipe-main">
         <span class="setlist-num">${index + 1}</span>
-        <button type="button" class="setlist-song-open" data-open-song-id="${song.id}">
+        <button type="button" class="setlist-song-open" data-open-song-id="${escapeHtml(song.id)}">
           <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
           ${song.artist ? `<small>${escapeHtml(song.artist)}</small>` : ""}
         </button>
+        <button type="button" class="setlist-slot ${isFinal ? "on" : ""}" data-setlist-action="slot" data-song-id="${escapeHtml(song.id)}" title="${escapeHtml(isFinal ? t("agenda.unmarkFinal") : t("agenda.markFinal"))}">${escapeHtml(t("agenda.slotFinal"))}</button>
         <span class="setlist-song-key ${key ? "" : "muted"}">${escapeHtml(key || "—")}</span>
-        <button type="button" class="setlist-row-remove" data-setlist-action="remove" data-song-id="${song.id}" aria-label="${t("setlists.remove")}">×</button>
+        <button type="button" class="setlist-row-remove" data-setlist-action="remove" data-song-id="${escapeHtml(song.id)}" aria-label="${t("setlists.remove")}">×</button>
       </div>
     </div>
   `;
@@ -2935,7 +3409,7 @@ function saveSong(event) {
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
   });
-  persist();
+  if (!persist()) return;
   render();
   logFile(t("msg.saved"));
   notify(t("msg.saved"));
@@ -3057,6 +3531,8 @@ function clearLibraryData() {
   if (!confirm(t("more.clearConfirm"))) return;
   state.songs = [];
   state.setlists = [];
+  state.team = normalizeTeam();
+  state.agenda = normalizeAgenda();
   selectedSongId = null;
   selectedSetlistId = null;
   persist();
@@ -3149,10 +3625,13 @@ function defaultLook() {
 
 function normalizeLook(look) {
   const gap = Number(look?.stageGap);
+  const fallback = defaultLook();
   return {
-    stageBg: LOOK_BG.includes(look?.stageBg) ? look.stageBg : look?.stageBg || defaultLook().stageBg,
-    lyricColor: look?.lyricColor || defaultLook().lyricColor,
-    chordColor: look?.chordColor || defaultLook().chordColor,
+    stageBg: LOOK_BG.includes(String(look?.stageBg || "").toLowerCase())
+      ? String(look.stageBg).toLowerCase()
+      : fallback.stageBg,
+    lyricColor: safeHexColor(look?.lyricColor, fallback.lyricColor),
+    chordColor: safeHexColor(look?.chordColor, fallback.chordColor),
     stageFont: clamp(Number(look?.stageFont) || defaultStageFont(), 14, 42),
     stageGap: gap === 1.18 || gap === 1.55 ? gap : 1.35,
   };
@@ -3170,8 +3649,23 @@ function loadLook() {
 
 function persistLook(look) {
   savedLook = normalizeLook(look);
-  localStorage.setItem(LOOK_KEY, JSON.stringify(savedLook));
-  localStorage.setItem("chordbook.stageFont", String(savedLook.stageFont));
+  try {
+    localStorage.setItem(LOOK_KEY, JSON.stringify(savedLook));
+    localStorage.setItem("chordbook.stageFont", String(savedLook.stageFont));
+    return true;
+  } catch {
+    try {
+      notify(t("msg.saveFail"));
+    } catch {
+      /* toast may not exist yet */
+    }
+    return false;
+  }
+}
+
+function safeHexColor(value, fallback) {
+  const raw = String(value || "").trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(raw) ? raw : fallback;
 }
 
 function applyLook(root, look) {
@@ -3367,7 +3861,7 @@ function createSetlist() {
   const setlist = normalizeSetlist({
     id: makeId(),
     title: t("service.defaultTitle"),
-    service: { date: nextSundayIso() },
+    service: { date: selectedAgendaDay || nextSundayIso() },
   });
   state.setlists.push(setlist);
   selectedSetlistId = setlist.id;
@@ -3397,7 +3891,7 @@ function closeSetlistEditor() {
   isSetlistDetailsOpen = false;
   isSetlistAddOpen = false;
   isSetlistDayMenuOpen = false;
-  el.appShell.classList.remove("editing-setlist");
+  switchView("setlists");
 }
 
 function saveSetlist(silent) {
@@ -3407,8 +3901,8 @@ function saveSetlist(silent) {
     setlist = selectedSetlist();
   }
   setlist.title = el.setlistTitle.value.trim() || t("service.defaultTitle");
-  setlist.notes = el.setlistNotes.value.trim();
   setlist.service = readServiceFromForm();
+  setlist.notes = el.setlistNotes.value.trim();
   setlist.updatedAt = new Date().toISOString();
   persist();
   if (silent !== true) isSetlistDetailsOpen = false;
@@ -3458,28 +3952,122 @@ function createSetlistWithCurrentSong() {
 }
 
 function addSongToSetlist(songId) {
+  toggleSongInSetlist(songId, true);
+}
+
+function toggleSongInSetlist(songId, checked) {
   const setlist = selectedSetlist();
-  if (!setlist || setlist.songIds.includes(songId)) return;
-  setlist.songIds.push(songId);
+  if (!setlist || !songId) return;
+  if (isSetlistDetailsOpen) {
+    setlist.service = readServiceFromForm();
+    setlist.notes = el.setlistNotes?.value.trim() || setlist.notes;
+  }
+  const has = setlist.songIds.includes(songId);
+  const parts = partitionSetlistSongs(setlist);
+  if (checked && !has) {
+    parts.praise.push(songId);
+    writePartitionedSongs(setlist, parts.praise, parts.finale);
+  }
+  if (!checked && has) {
+    writePartitionedSongs(
+      setlist,
+      parts.praise.filter((id) => id !== songId),
+      parts.finale.filter((id) => id !== songId),
+    );
+  }
   setlist.updatedAt = new Date().toISOString();
   persist();
-  renderSetlists();
+  refreshSetlistSongUi();
+}
+
+function songCheckListHtml(setlist) {
+  const selected = new Set(setlist?.songIds || []);
+  const query = normalize(setlistAddQuery);
+  const songs = state.songs
+    .filter((song) => !query || normalize(`${song.title} ${song.artist || ""}`).includes(query))
+    .slice()
+    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+  if (!songs.length) {
+    return `<p class="empty compact">${state.songs.length ? t("stage.noMatch") : t("setlists.noSongs")}</p>`;
+  }
+  return songs.map((song) => {
+    const key = songWrittenKey(song);
+    return `
+      <label class="check-row">
+        <input type="checkbox" data-toggle-song="${escapeHtml(song.id)}" ${selected.has(song.id) ? "checked" : ""}>
+        <span class="check-mark" aria-hidden="true"></span>
+        <span class="check-copy">
+          <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
+          <small>${escapeHtml([song.artist, key].filter(Boolean).join(" · "))}</small>
+        </span>
+      </label>
+    `;
+  }).join("");
+}
+
+function bindSongCheckLists(root) {
+  if (!root) return;
+  root.querySelectorAll("[data-toggle-song]").forEach((input) => {
+    input.addEventListener("change", () => toggleSongInSetlist(input.dataset.toggleSong, input.checked));
+  });
+}
+
+function renderSongCheckLists() {
+  const html = songCheckListHtml(selectedSetlist());
+  if (el.setlistAddList) {
+    el.setlistAddList.innerHTML = html;
+    bindSongCheckLists(el.setlistAddList);
+  }
+  const eventList = document.querySelector("#eventSongList");
+  if (eventList) {
+    eventList.innerHTML = html;
+    bindSongCheckLists(eventList);
+  }
+}
+
+function refreshSetlistSongUi() {
+  const setlist = selectedSetlist();
+  if (el.setlistPicker) {
+    el.setlistPicker.innerHTML = setlist
+      ? renderEventOrderHtml(setlist)
+      : `<p class="empty compact">${t("setlists.noSongs")}</p>`;
+    bindSetlistSwipe(el.setlistPicker);
+    el.setlistPicker.querySelectorAll("[data-setlist-action]").forEach((button) => {
+      button.addEventListener("click", () => updateSetlistSongOrder(button.dataset.songId, button.dataset.setlistAction));
+    });
+    el.setlistPicker.querySelectorAll("[data-open-song-id]").forEach((button) => {
+      button.addEventListener("click", () => openSetlistSong(button.dataset.openSongId));
+    });
+  }
+  renderSongCheckLists();
 }
 
 function updateSetlistSongOrder(songId, action) {
   const setlist = selectedSetlist();
   if (!setlist) return;
-  const index = setlist.songIds.indexOf(songId);
-  if (index < 0) return;
+  const parts = partitionSetlistSongs(setlist);
 
   if (action === "remove") {
-    setlist.songIds.splice(index, 1);
-  }
-  if (action === "up" && index > 0) {
-    [setlist.songIds[index - 1], setlist.songIds[index]] = [setlist.songIds[index], setlist.songIds[index - 1]];
-  }
-  if (action === "down" && index < setlist.songIds.length - 1) {
-    [setlist.songIds[index + 1], setlist.songIds[index]] = [setlist.songIds[index], setlist.songIds[index + 1]];
+    writePartitionedSongs(
+      setlist,
+      parts.praise.filter((id) => id !== songId),
+      parts.finale.filter((id) => id !== songId),
+    );
+  } else if (action === "slot") {
+    if (parts.finale.includes(songId)) {
+      writePartitionedSongs(setlist, [...parts.praise, songId], parts.finale.filter((id) => id !== songId));
+    } else {
+      writePartitionedSongs(setlist, parts.praise.filter((id) => id !== songId), [...parts.finale, songId]);
+    }
+  } else {
+    const index = setlist.songIds.indexOf(songId);
+    if (index < 0) return;
+    if (action === "up" && index > 0) {
+      [setlist.songIds[index - 1], setlist.songIds[index]] = [setlist.songIds[index], setlist.songIds[index - 1]];
+    }
+    if (action === "down" && index < setlist.songIds.length - 1) {
+      [setlist.songIds[index + 1], setlist.songIds[index]] = [setlist.songIds[index], setlist.songIds[index + 1]];
+    }
   }
 
   setlist.updatedAt = new Date().toISOString();
@@ -3690,6 +4278,8 @@ function exportRepertoire() {
     exportedAt: new Date().toISOString(),
     songs: state.songs,
     setlists: state.setlists,
+    team: state.team,
+    agenda: state.agenda,
   });
 }
 
@@ -3700,9 +4290,9 @@ async function importFile(event) {
   try {
     const data = JSON.parse(await file.text());
     const result = importData(data);
-    persist();
+    const saved = persist();
     render();
-    logFile(t("msg.imported", { result }));
+    if (saved) logFile(t("msg.imported", { result }));
   } catch (error) {
     logFile(t("msg.importFail", { error: error.message }));
   }
@@ -3716,6 +4306,8 @@ function importData(data) {
   if (data.format === "chordbook-repertoire") {
     mergeSongs(data.songs || []);
     mergeSetlists(data.setlists || []);
+    if (data.team) mergeTeam(data.team);
+    if (data.agenda) state.agenda = normalizeAgenda(data.agenda);
     return `${(data.songs || []).length} cifras e ${(data.setlists || []).length} setlists`;
   }
   if (data.format === "chordbook-project" && data.song) {
@@ -3829,10 +4421,13 @@ function splitChordProWordChunks(line, semitones) {
       pending.push(transposeChord(match[1].trim(), semitones));
       continue;
     }
-    chunks.push({
-      chord: pending.join(" "),
-      lyric: match[2] || match[3] || " ",
-    });
+    const lyric = match[2] || match[3] || " ";
+    if (pending.length > 1) {
+      chunks.push({ chord: pending[0], lyric });
+      pending.slice(1).forEach((chord) => chunks.push({ chord, lyric: " " }));
+    } else {
+      chunks.push({ chord: pending.join(" "), lyric });
+    }
     pending = [];
   }
   if (pending.length) chunks.push({ chord: pending.join(" "), lyric: " " });
@@ -3989,7 +4584,7 @@ function chordLineHasAlignment(line) {
 function chordMarkers(line) {
   const tokens = [];
   const source = String(line || "").replace(/\t/g, "  ");
-  const regex = new RegExp(CHORD_FIND_RE.source, "g");
+  const regex = new RegExp(CHORD_FIND_RE.source, "gi");
   let match;
   while ((match = regex.exec(source)) !== null) {
     tokens.push({ chord: match[0], index: match.index });
@@ -4113,7 +4708,7 @@ function isChordOnlyLine(line) {
   if (/:$/.test(trimmed)) return false;
   const tokens = trimmed.split(/\s+/).filter(Boolean);
   if (!tokens.length) return false;
-  return tokens.every((token) => CHORD_TOKEN_RE.test(token));
+  return tokens.every((token) => token.split(/[-–—]+/).filter(Boolean).every((part) => CHORD_TOKEN_RE.test(part)));
 }
 
 function expandGluedChords(line) {
@@ -4369,6 +4964,8 @@ function loadState() {
       showLyrics: saved.showLyrics !== false,
       focusChart: Boolean(saved.focusChart),
       preferAutoScroll: Boolean(saved.preferAutoScroll),
+      team: normalizeTeam(saved.team),
+      agenda: normalizeAgenda(saved.agenda),
     };
   } catch {
     return demoLibrary();
@@ -4495,14 +5092,28 @@ function demoLibrary() {
     }),
   ];
 
-  return { songs, setlists, theme: "light", language: "pt", showChords: true, showLyrics: true, focusChart: false, preferAutoScroll: false };
+  return { songs, setlists, theme: "light", language: "pt", showChords: true, showLyrics: true, focusChart: false, preferAutoScroll: false, team: normalizeTeam(), agenda: normalizeAgenda() };
 }
 
 function persist(options = {}) {
-  state.songs = uniqueById(state.songs);
-  state.setlists = uniqueById(state.setlists);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  if (!options.fromSync) scheduleSyncPush();
+  try {
+    state.songs = uniqueById(state.songs);
+    state.setlists = uniqueById(state.setlists);
+    state.team = normalizeTeam(state.team);
+    state.agenda = normalizeAgenda(state.agenda);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!options.fromSync) scheduleSyncPush();
+    return true;
+  } catch {
+    if (!options.silent) {
+      try {
+        notify(t("msg.saveFail"));
+      } catch {
+        /* toast may not exist yet */
+      }
+    }
+    return false;
+  }
 }
 
 function isDesktopComputer() {
@@ -4560,6 +5171,8 @@ function librarySnapshot() {
   return {
     songs: state.songs,
     setlists: state.setlists,
+    team: state.team,
+    agenda: state.agenda,
     selectedSongId,
     selectedSetlistId,
   };
@@ -4584,10 +5197,27 @@ function scheduleSyncPush() {
   }, 280);
 }
 
-function applySyncState(payload, notifyKey) {
+function applySyncState(payload, notifyKey, options = {}) {
   if (!payload || !Array.isArray(payload.songs)) return;
-  state.songs = uniqueById((payload.songs || []).map(normalizeSong));
-  state.setlists = uniqueById((payload.setlists || []).map(normalizeSetlist));
+  const hadLocal = state.songs.length > 0 || state.setlists.length > 0;
+  const incomingEmpty = !(payload.songs || []).length && !(payload.setlists || []).length;
+  if (options.merge) {
+    mergeSongs(payload.songs || []);
+    mergeSetlists(payload.setlists || []);
+    if (payload.team) mergeTeam(payload.team);
+    if (payload.agenda) {
+      const local = state.agenda || {};
+      state.agenda = normalizeAgenda({
+        fields: [...(local.fields || []), ...(payload.agenda.fields || [])],
+        sections: [...(local.sections || []), ...(payload.agenda.sections || [])],
+      });
+    }
+  } else {
+    state.songs = uniqueById((payload.songs || []).map(normalizeSong));
+    state.setlists = uniqueById((payload.setlists || []).map(normalizeSetlist));
+    if (payload.team) state.team = normalizeTeam(payload.team);
+    if (payload.agenda) state.agenda = normalizeAgenda(payload.agenda);
+  }
   if (payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId)) {
     selectedSongId = payload.selectedSongId;
   } else if (!state.songs.some((song) => song.id === selectedSongId)) {
@@ -4599,8 +5229,12 @@ function applySyncState(payload, notifyKey) {
     selectedSetlistId = state.setlists[0]?.id ?? null;
   }
   persist({ fromSync: true });
+  if (options.reply) scheduleSyncPush();
   render();
-  if (notifyKey) notify(t(notifyKey));
+  const key = notifyKey || (options.merge
+    ? (incomingEmpty && hadLocal ? "sync.keptLocal" : hadLocal && !incomingEmpty ? "sync.merged" : "sync.received")
+    : "");
+  if (key) notify(t(key));
 }
 
 function handleSyncMessage(message) {
@@ -4614,7 +5248,7 @@ function handleSyncMessage(message) {
     syncLink.authorized = true;
     syncLink.status = "linked";
     setSyncHostSheetOpen(false);
-    applySyncState(message.payload, "sync.received");
+    applySyncState(message.payload, "", { merge: true, reply: true });
     updateSyncUi();
     setPairingStayAwake(false);
     return;
@@ -4871,7 +5505,7 @@ function updateSyncUi() {
 
 function normalizeSong(song) {
   return {
-    id: String(song.id || makeId()),
+    id: safeId(song.id),
     title: String(song.title || "Sem título"),
     artist: String(song.artist || ""),
     category: String(song.category || "Geral"),
@@ -4886,11 +5520,854 @@ function normalizeSong(song) {
   };
 }
 
-function normalizeSetlist(setlist) {
+function defaultAgendaFields() {
+  return [
+    { id: "type", labelKey: "agenda.field.type", enabled: false, kind: "text", section: "schedule" },
+    { id: "host", labelKey: "agenda.field.host", enabled: true, kind: "people", peopleMode: "one", section: "schedule" },
+    { id: "prelude", labelKey: "agenda.field.prelude", enabled: true, kind: "text", section: "order" },
+    { id: "reading", labelKey: "agenda.field.reading", enabled: true, kind: "text", section: "order" },
+    { id: "readingVerse", labelKey: "agenda.field.readingVerse", enabled: true, kind: "text", section: "order" },
+    { id: "sundaySchool", labelKey: "agenda.field.sundaySchool", enabled: true, kind: "text", section: "order" },
+    { id: "speaker", labelKey: "agenda.field.speaker", enabled: true, kind: "people", peopleMode: "one", section: "word" },
+    { id: "theme", labelKey: "agenda.field.theme", enabled: true, kind: "text", section: "word" },
+    { id: "scripture", labelKey: "agenda.field.scripture", enabled: true, kind: "text", section: "word" },
+    { id: "prayer", labelKey: "agenda.field.prayer", enabled: true, kind: "text", section: "order" },
+    { id: "postlude", labelKey: "agenda.field.postlude", enabled: true, kind: "text", section: "order" },
+    { id: "musicLead", labelKey: "agenda.field.musicLead", enabled: true, kind: "people", peopleMode: "one", section: "music" },
+    { id: "voices", labelKey: "agenda.field.voices", enabled: true, kind: "people", peopleMode: "many", section: "music" },
+    { id: "instruments", labelKey: "agenda.field.instruments", enabled: true, kind: "people", peopleMode: "many", section: "music" },
+    { id: "streamTitle", labelKey: "agenda.field.streamTitle", enabled: true, kind: "text", section: "stream" },
+    { id: "streamDesc", labelKey: "agenda.field.streamDesc", enabled: true, kind: "text", section: "stream" },
+    { id: "opening", labelKey: "agenda.field.opening", enabled: false, kind: "text", section: "schedule" },
+    { id: "communion", labelKey: "agenda.field.communion", enabled: false, kind: "text", section: "word" },
+    { id: "notes", labelKey: "agenda.field.notes", enabled: true, kind: "textarea", section: "schedule" },
+  ];
+}
+
+function defaultAgendaSections() {
+  return [
+    { id: "schedule", titleKey: "agenda.section.schedule" },
+    { id: "order", titleKey: "agenda.section.order" },
+    { id: "word", titleKey: "agenda.section.word" },
+    { id: "music", titleKey: "agenda.section.music" },
+    { id: "songs", titleKey: "agenda.section.songs" },
+    { id: "stream", titleKey: "agenda.section.stream" },
+  ];
+}
+
+function normalizeTeam(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const members = Array.isArray(src.members) ? src.members : [];
   return {
-    id: String(setlist.id || makeId()),
-    title: String(setlist.title || "Culto Domingo"),
-    songIds: Array.isArray(setlist.songIds) ? setlist.songIds.map(String) : [],
+    members: uniqueById(members.map((member) => ({
+      id: safeId(member.id),
+      name: String(member.name || "").trim(),
+      roles: Array.isArray(member.roles) ? member.roles.map((role) => String(role).trim()).filter(Boolean) : [],
+      note: String(member.note || "").trim(),
+      createdAt: member.createdAt || new Date().toISOString(),
+    })).filter((member) => member.name)),
+    rolePresets: Array.isArray(src.rolePresets) ? src.rolePresets.map((role) => String(role).trim()).filter(Boolean) : [],
+  };
+}
+
+function normalizeAgendaField(field, fallback) {
+  const src = field && typeof field === "object" ? field : {};
+  const base = fallback || {};
+  const kind = src.kind === "people" || src.kind === "textarea" ? src.kind : (base.kind || "text");
+  return {
+    id: safeId(src.id || base.id || `custom-${makeId()}`),
+    labelKey: src.labelKey || base.labelKey || "",
+    label: String(src.label || ""),
+    enabled: src.enabled !== undefined ? Boolean(src.enabled) : (base.enabled !== false),
+    kind,
+    peopleMode: src.peopleMode === "one" || base.peopleMode === "one" ? "one" : "many",
+    section: src.section || base.section || "schedule",
+  };
+}
+
+function normalizeAgenda(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const defaults = defaultAgendaFields();
+  const savedFields = Array.isArray(src.fields) ? src.fields : [];
+  const savedById = Object.fromEntries(savedFields.map((field) => [field.id, field]));
+  const fields = defaults.map((def) => normalizeAgendaField(savedById[def.id] || def, def));
+  savedFields.filter((field) => field.id && !defaults.some((def) => def.id === field.id)).forEach((field) => {
+    fields.push(normalizeAgendaField(field));
+  });
+  const defaultSections = defaultAgendaSections();
+  const savedSections = Array.isArray(src.sections) ? src.sections : [];
+  const savedSecById = Object.fromEntries(savedSections.map((section) => [section.id, section]));
+  const sections = defaultSections.map((def) => {
+    const saved = savedSecById[def.id] || {};
+    return { id: def.id, titleKey: def.titleKey, title: String(saved.title || "") };
+  });
+  return { fields, sections };
+}
+
+function mergeTeam(raw) {
+  const incoming = normalizeTeam(raw);
+  incoming.members.forEach((member) => {
+    const index = state.team.members.findIndex((item) => item.id === member.id);
+    if (index >= 0) state.team.members[index] = member;
+    else state.team.members.push(member);
+  });
+  incoming.rolePresets.forEach((role) => {
+    if (!state.team.rolePresets.includes(role)) state.team.rolePresets.push(role);
+  });
+}
+
+function agendaFieldLabel(field) {
+  if (field.label && field.label.trim()) return field.label.trim();
+  return field.labelKey ? t(field.labelKey) : t("agenda.field.custom");
+}
+
+function agendaSectionTitle(section) {
+  if (section.title && section.title.trim()) return section.title.trim();
+  return section.titleKey ? t(section.titleKey) : "";
+}
+
+function normalizePeopleValue(value) {
+  if (Array.isArray(value)) return { ids: value.map(cleanId).filter(Boolean), extra: "" };
+  if (value && typeof value === "object") {
+    return {
+      ids: Array.isArray(value.ids) ? value.ids.map(cleanId).filter(Boolean) : [],
+      extra: String(value.extra || "").trim(),
+    };
+  }
+  if (typeof value === "string" && value.trim()) return { ids: [], extra: value.trim() };
+  return { ids: [], extra: "" };
+}
+
+function teamMemberById(id) {
+  return (state.team.members || []).find((member) => member.id === id) || null;
+}
+
+function peopleDisplay(value) {
+  const data = normalizePeopleValue(value);
+  const names = data.ids.map((id) => teamMemberById(id)?.name).filter(Boolean);
+  if (data.extra) names.push(data.extra);
+  return names.join(", ");
+}
+
+function serviceValue(service, fieldId) {
+  return service?.values && service.values[fieldId] !== undefined ? service.values[fieldId] : "";
+}
+
+function isOrderMoment(fieldId) {
+  return fieldId === "prelude" || fieldId === "reading" || fieldId === "sundaySchool" || fieldId === "prayer" || fieldId === "postlude";
+}
+
+function agendaFieldById(id) {
+  return (state.agenda.fields || []).find((field) => field.id === id) || null;
+}
+
+function isMomentValue(raw) {
+  return Boolean(raw && typeof raw === "object" && !Array.isArray(raw) && !("ids" in raw) && ("included" in raw || "text" in raw));
+}
+
+function momentState(setlist, fieldId) {
+  const raw = serviceValue(setlist?.service, fieldId);
+  if (isMomentValue(raw)) {
+    return { included: Boolean(raw.included), text: String(raw.text || "").trim() };
+  }
+  const text = String(raw || "").trim();
+  return { included: Boolean(text), text };
+}
+
+function filledPlainText(setlist, fieldId) {
+  const field = agendaFieldById(fieldId);
+  if (!field?.enabled) return "";
+  if (isOrderMoment(fieldId)) return momentState(setlist, fieldId).text;
+  const raw = serviceValue(setlist?.service, fieldId);
+  if (field.kind === "people") return peopleDisplay(raw);
+  if (isMomentValue(raw)) return raw.included ? String(raw.text || "").trim() : "";
+  return String(raw || "").trim();
+}
+
+function partitionSetlistSongs(setlist) {
+  const finaleSet = new Set((setlist?.finalSongIds || []).map(String));
+  const praise = [];
+  const finale = [];
+  (setlist?.songIds || []).forEach((id) => {
+    (finaleSet.has(String(id)) ? finale : praise).push(String(id));
+  });
+  return { praise, finale };
+}
+
+function writePartitionedSongs(setlist, praise, finale) {
+  setlist.songIds = [...praise, ...finale];
+  setlist.finalSongIds = finale.slice();
+}
+
+function songsByIds(ids) {
+  return (ids || []).map((id) => state.songs.find((song) => song.id === id)).filter(Boolean);
+}
+
+function eventHeading(setlist) {
+  return t("agenda.orderTitle");
+}
+
+function eventOrderModel(setlist) {
+  const header = [];
+  const blocks = [];
+  if (!setlist) return { header, blocks };
+  const service = normalizeService(setlist.service);
+  const dateLabel = formatSetlistDayDate(service.date);
+  const timeLabel = service.time || "";
+  if (dateLabel || timeLabel) {
+    header.push({ label: t("agenda.serviceDate"), text: [dateLabel, timeLabel].filter(Boolean).join(" · ") });
+  }
+  enabledAgendaFields()
+    .filter((field) => field.kind === "people" && field.id !== "speaker")
+    .forEach((field) => {
+      const text = peopleDisplay(serviceValue(service, field.id));
+      if (text) header.push({ label: agendaFieldLabel(field), text });
+    });
+
+  const { praise, finale } = partitionSetlistSongs(setlist);
+  const praiseSongs = songsByIds(praise);
+  const finaleSongs = songsByIds(finale);
+  const pushMoment = (id) => {
+    if (!agendaFieldById(id)?.enabled) return;
+    const moment = momentState(setlist, id);
+    if (!moment.included) return;
+    blocks.push({ type: "moment", title: agendaFieldLabel(agendaFieldById(id)), body: moment.text });
+  };
+
+  pushMoment("prelude");
+  const reading = agendaFieldById("reading")?.enabled ? momentState(setlist, "reading") : { included: false, text: "" };
+  const verse = filledPlainText(setlist, "readingVerse");
+  if (reading.included || verse) {
+    const titleBase = agendaFieldLabel(agendaFieldById("reading") || { labelKey: "agenda.field.reading" });
+    blocks.push({
+      type: "reading",
+      title: reading.text ? `${titleBase} – ${reading.text}` : titleBase,
+      verse,
+    });
+  }
+
+  const praiseBlock = praiseSongs.length
+    ? { type: "songs", title: "", songs: praiseSongs, slot: "praise" }
+    : null;
+  if (praiseBlock) blocks.push(praiseBlock);
+
+  pushMoment("sundaySchool");
+
+  const speaker = filledPlainText(setlist, "speaker");
+  const theme = filledPlainText(setlist, "theme");
+  const scripture = filledPlainText(setlist, "scripture");
+  if (speaker || theme || scripture) {
+    const wordSection = (state.agenda.sections || []).find((section) => section.id === "word");
+    blocks.push({
+      type: "preach",
+      title: wordSection ? agendaSectionTitle(wordSection) : t("agenda.section.word"),
+      speaker,
+      speakerLabel: agendaFieldLabel(agendaFieldById("speaker") || { labelKey: "agenda.field.speaker" }),
+      theme,
+      themeLabel: agendaFieldLabel(agendaFieldById("theme") || { labelKey: "agenda.field.theme" }),
+      scripture,
+    });
+  }
+
+  const communion = filledPlainText(setlist, "communion");
+  if (communion) {
+    blocks.push({ type: "moment", title: agendaFieldLabel(agendaFieldById("communion") || { labelKey: "agenda.field.communion" }), body: communion });
+  }
+
+  if (finaleSongs.length) {
+    blocks.push({ type: "songs", title: t("agenda.order.finalHymn"), songs: finaleSongs, slot: "final" });
+  }
+
+  pushMoment("prayer");
+  pushMoment("postlude");
+
+  const streamTitle = filledPlainText(setlist, "streamTitle");
+  const streamDesc = filledPlainText(setlist, "streamDesc");
+  if (streamTitle || streamDesc) {
+    const streamSection = (state.agenda.sections || []).find((section) => section.id === "stream");
+    blocks.push({
+      type: "stream",
+      title: streamSection ? agendaSectionTitle(streamSection) : t("agenda.section.stream"),
+      streamTitle,
+      streamTitleLabel: agendaFieldLabel(agendaFieldById("streamTitle") || { labelKey: "agenda.field.streamTitle" }),
+      streamDesc,
+      streamDescLabel: agendaFieldLabel(agendaFieldById("streamDesc") || { labelKey: "agenda.field.streamDesc" }),
+    });
+  }
+
+  const used = new Set([
+    "prelude", "reading", "readingVerse", "sundaySchool", "speaker", "theme", "scripture",
+    "prayer", "postlude", "streamTitle", "streamDesc", "host", "notes", "opening",
+    "communion", "type", "musicLead", "voices", "instruments",
+  ]);
+  enabledAgendaFields()
+    .filter((field) => !used.has(field.id) && field.kind !== "people")
+    .forEach((field) => {
+      if (isOrderMoment(field.id)) {
+        pushMoment(field.id);
+        return;
+      }
+      const text = filledPlainText(setlist, field.id);
+      if (text) blocks.push({ type: "moment", title: agendaFieldLabel(field), body: text });
+    });
+
+  const hasProgramExtras = blocks.some((block) => block.type !== "songs" || block.slot === "final");
+  if (hasProgramExtras && praiseBlock) praiseBlock.title = t("agenda.order.praise");
+  return { header, blocks };
+}
+
+function eventRosterItems(setlist) {
+  return eventOrderModel(setlist).header.filter((item) => item.label !== t("agenda.serviceDate"));
+}
+
+function eventLeadLine(setlist) {
+  return eventRosterItems(setlist).map((item) => `${item.label}: ${item.text}`).slice(0, 3).join(" · ");
+}
+
+function renderEventRoster(setlist) {
+  if (!el.setlistDayRoster) return;
+  const items = eventOrderModel(setlist).header;
+  el.setlistDayRoster.hidden = !items.length;
+  el.setlistDayRoster.innerHTML = items.map((item) => `
+    <li>
+      <span>${escapeHtml(item.label)}</span>
+      <strong>${escapeHtml(item.text)}</strong>
+    </li>
+  `).join("");
+}
+
+function renderEventOrderHtml(setlist) {
+  const { blocks } = eventOrderModel(setlist);
+  if (!blocks.length) return `<p class="empty compact">${t("setlists.noSongs")}</p>`;
+  return blocks.map((block) => {
+    if (block.type === "songs") {
+      return `
+        <section class="order-block">
+          ${block.title ? `<h3>${escapeHtml(block.title)}</h3>` : ""}
+          ${block.songs.map((song, index) => orderedSetlistSongRow(song, index, block.slot)).join("")}
+        </section>
+      `;
+    }
+    if (block.type === "reading") {
+      return `
+        <section class="order-block">
+          <h3>${escapeHtml(block.title)}</h3>
+          ${block.verse ? `<p class="order-verse">${escapeHtml(block.verse)}</p>` : ""}
+        </section>
+      `;
+    }
+    if (block.type === "preach") {
+      return `
+        <section class="order-block">
+          <h3>${escapeHtml(block.title)}</h3>
+          ${block.speaker ? `<p class="order-line"><span>${escapeHtml(block.speakerLabel)}:</span> <strong>${escapeHtml(block.speaker)}</strong></p>` : ""}
+          ${block.theme || block.scripture ? `<p class="order-line"><span>${escapeHtml(block.themeLabel)}:</span> ${[block.theme ? `“${escapeHtml(block.theme)}”` : "", escapeHtml(block.scripture || "")].filter(Boolean).join(" ")}</p>` : ""}
+        </section>
+      `;
+    }
+    if (block.type === "stream") {
+      return `
+        <section class="order-block">
+          <h3>${escapeHtml(block.title)}</h3>
+          ${block.streamTitle ? `<p class="order-line"><span>${escapeHtml(block.streamTitleLabel)}:</span> ${escapeHtml(block.streamTitle)}</p>` : ""}
+          ${block.streamDesc ? `<p class="order-line"><span>${escapeHtml(block.streamDescLabel)}:</span> ${escapeHtml(block.streamDesc)}</p>` : ""}
+        </section>
+      `;
+    }
+    return `
+      <section class="order-block">
+        <h3>${escapeHtml(block.title)}</h3>
+        ${block.body ? `<p class="order-line">${escapeHtml(block.body)}</p>` : ""}
+      </section>
+    `;
+  }).join("");
+}
+
+function enabledAgendaFields() {
+  return (state.agenda.fields || []).filter((field) => field.enabled);
+}
+
+function suggestedTeamRoles() {
+  const fromI18n = [
+    t("team.role.voice"), t("team.role.guitar"), t("team.role.keys"),
+    t("team.role.drums"), t("team.role.bass"), t("team.role.tech"),
+  ];
+  const used = state.team.members.flatMap((member) => member.roles);
+  return [...new Set([...fromI18n, ...state.team.rolePresets, ...used, ...memberDraftRoles])].filter(Boolean);
+}
+
+function setAgendaHub(hub) {
+  agendaHub = hub === "team" || hub === "month" ? hub : "events";
+  if (el.setlistFab) {
+    el.setlistFab.title = agendaHub === "team" ? t("team.add") : t("setlists.new");
+  }
+  renderSetlists();
+}
+
+function renderAgendaHub() {
+  if (!state.team) state.team = normalizeTeam();
+  if (!state.agenda) state.agenda = normalizeAgenda();
+  el.agendaHub.forEach((button) => button.classList.toggle("active", button.dataset.agendaHub === agendaHub));
+  if (el.agendaEventsPane) el.agendaEventsPane.hidden = agendaHub !== "events";
+  if (el.agendaTeamPane) el.agendaTeamPane.hidden = agendaHub !== "team";
+  if (el.agendaMonthPane) el.agendaMonthPane.hidden = agendaHub !== "month";
+  const addLabel = agendaHub === "team" ? t("team.add") : t("setlists.new");
+  if (el.newSetlist) el.newSetlist.textContent = addLabel;
+  if (el.setlistFab) el.setlistFab.title = addLabel;
+  if (agendaHub === "team") renderTeamList();
+  if (agendaHub === "month") renderAgendaMonth();
+}
+
+function renderTeamList() {
+  if (!el.teamList) return;
+  const members = state.team.members.slice().sort((a, b) => a.name.localeCompare(b.name));
+  if (!members.length) {
+    el.teamList.innerHTML = `
+      <div class="team-empty">
+        <div class="team-empty-art" aria-hidden="true"><span></span><span></span><span></span></div>
+        <h2>${t("team.emptyTitle")}</h2>
+        <p>${t("team.emptyLead")}</p>
+        <button type="button" class="primary-action" data-team-add>${t("team.add")}</button>
+      </div>
+    `;
+    el.teamList.querySelector("[data-team-add]")?.addEventListener("click", () => openMemberEditor());
+    return;
+  }
+  el.teamList.innerHTML = members.map((member) => `
+    <button type="button" class="team-card" data-member-id="${escapeHtml(member.id)}">
+      <span class="team-avatar">${escapeHtml((member.name[0] || "?").toUpperCase())}</span>
+      <span>
+        <strong>${escapeHtml(member.name)}</strong>
+        <small>${escapeHtml(member.roles.join(" · ") || t("team.roles"))}</small>
+      </span>
+    </button>
+  `).join("");
+  el.teamList.querySelectorAll("[data-member-id]").forEach((button) => {
+    button.addEventListener("click", () => openMemberEditor(button.dataset.memberId));
+  });
+}
+
+function openMemberEditor(memberId) {
+  editingMemberId = memberId || null;
+  const member = memberId ? teamMemberById(memberId) : null;
+  memberDraftRoles = member ? member.roles.slice() : [];
+  if (el.memberNameInput) el.memberNameInput.value = member?.name || "";
+  if (el.memberNoteInput) el.memberNoteInput.value = member?.note || "";
+  if (el.memberSheetTitle) el.memberSheetTitle.textContent = member ? t("team.edit") : t("team.add");
+  if (el.memberDelete) el.memberDelete.hidden = !member;
+  setMemberSheetOpen(true);
+}
+
+function setMemberSheetOpen(open) {
+  isMemberSheetOpen = Boolean(open);
+  if (el.memberSheet) el.memberSheet.hidden = !isMemberSheetOpen;
+  if (isMemberSheetOpen) {
+    renderMemberRoleChips();
+    requestAnimationFrame(() => el.memberNameInput?.focus());
+  }
+}
+
+function renderMemberRoleChips() {
+  if (!el.memberRoleChips) return;
+  el.memberRoleChips.innerHTML = suggestedTeamRoles().map((role) => `
+    <button type="button" class="role-chip ${memberDraftRoles.includes(role) ? "on" : ""}" data-role="${escapeHtml(role)}">${escapeHtml(role)}</button>
+  `).join("");
+  el.memberRoleChips.querySelectorAll("[data-role]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const role = button.dataset.role;
+      if (memberDraftRoles.includes(role)) memberDraftRoles = memberDraftRoles.filter((item) => item !== role);
+      else memberDraftRoles.push(role);
+      renderMemberRoleChips();
+    });
+  });
+}
+
+function addDraftMemberRole() {
+  const role = el.memberRoleInput?.value.trim();
+  if (!role) return;
+  if (!memberDraftRoles.includes(role)) memberDraftRoles.push(role);
+  if (!state.team.rolePresets.includes(role)) state.team.rolePresets.push(role);
+  el.memberRoleInput.value = "";
+  renderMemberRoleChips();
+}
+
+function saveTeamMember() {
+  const name = el.memberNameInput?.value.trim();
+  if (!name) {
+    notify(t("team.needed"));
+    el.memberNameInput?.focus();
+    return;
+  }
+  const payload = {
+    id: editingMemberId || makeId(),
+    name,
+    roles: memberDraftRoles.slice(),
+    note: el.memberNoteInput?.value.trim() || "",
+    createdAt: teamMemberById(editingMemberId)?.createdAt || new Date().toISOString(),
+  };
+  const index = state.team.members.findIndex((member) => member.id === payload.id);
+  if (index >= 0) state.team.members[index] = payload;
+  else state.team.members.push(payload);
+  persist();
+  setMemberSheetOpen(false);
+  notify(t("team.saved"));
+  renderSetlists();
+}
+
+function deleteTeamMember() {
+  const member = teamMemberById(editingMemberId);
+  if (!member || !confirm(t("team.deleteConfirm", { name: member.name }))) return;
+  state.team.members = state.team.members.filter((item) => item.id !== member.id);
+  persist();
+  setMemberSheetOpen(false);
+  renderSetlists();
+}
+
+function renderAgendaMonth() {
+  if (!el.agendaMonth) return;
+  const year = agendaMonthCursor.getFullYear();
+  const month = agendaMonthCursor.getMonth();
+  const locale = { pt: "pt-BR", es: "es-ES", en: "en-US" }[state.language] || "pt-BR";
+  const label = new Date(year, month, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevDays = new Date(year, month, 0).getDate();
+  const todayIso = toLocalIsoDate(new Date());
+  if (!selectedAgendaDay) selectedAgendaDay = todayIso;
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i += 1) {
+    const day = prevDays - firstWeekday + i + 1;
+    cells.push({ iso: toLocalIsoDate(new Date(year, month - 1, day)), muted: true, num: day });
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    cells.push({ iso: toLocalIsoDate(new Date(year, month, day)), muted: false, num: day });
+  }
+  while (cells.length % 7) {
+    const extra = cells.length - (firstWeekday + daysInMonth) + 1;
+    cells.push({ iso: toLocalIsoDate(new Date(year, month + 1, extra)), muted: true, num: extra });
+  }
+  const weekdays = [0, 1, 2, 3, 4, 5, 6].map((day) => `<span>${t(`agenda.week${day}`)}</span>`).join("");
+  el.agendaMonth.innerHTML = `
+    <div class="month-nav">
+      <button type="button" data-month-step="-1" aria-label="${t("agenda.monthPrev")}">‹</button>
+      <strong>${escapeHtml(label)}</strong>
+      <button type="button" data-month-step="1" aria-label="${t("agenda.monthNext")}">›</button>
+    </div>
+    <div class="month-weekdays">${weekdays}</div>
+    <div class="month-grid">
+      ${cells.map((cell) => {
+        const count = state.setlists.filter((setlist) => setlist.service?.date === cell.iso).length;
+        const dots = Array.from({ length: Math.min(count, 3) }, () => "<i></i>").join("");
+        return `
+          <button type="button" class="month-day ${cell.muted ? "muted" : ""} ${cell.iso === todayIso ? "today" : ""} ${cell.iso === selectedAgendaDay ? "selected" : ""}" data-day="${cell.iso}">
+            <span class="day-num">${cell.num}</span>
+            <span class="month-dots">${dots}</span>
+          </button>
+        `;
+      }).join("")}
+    </div>
+    <div class="month-day-events" id="monthDayEvents"></div>
+  `;
+  el.agendaMonth.querySelectorAll("[data-month-step]").forEach((button) => {
+    button.addEventListener("click", () => {
+      agendaMonthCursor = new Date(year, month + Number(button.dataset.monthStep), 1);
+      renderAgendaMonth();
+    });
+  });
+  el.agendaMonth.querySelectorAll("[data-day]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedAgendaDay = button.dataset.day;
+      renderAgendaMonth();
+    });
+  });
+  const dayEvents = state.setlists.filter((setlist) => setlist.service?.date === selectedAgendaDay);
+  const box = el.agendaMonth.querySelector("#monthDayEvents");
+  if (!box) return;
+  if (!dayEvents.length) {
+    box.innerHTML = `
+      <p class="empty compact">${t("agenda.dayEmpty")}</p>
+      <button type="button" class="primary-action" data-create-day>${t("agenda.dayCreate")}</button>
+    `;
+    box.querySelector("[data-create-day]")?.addEventListener("click", createSetlist);
+    return;
+  }
+  box.innerHTML = dayEvents.map((setlist) => `
+    <div class="setlist-row">
+      <button type="button" class="setlist-row-main" data-open-day-event="${escapeHtml(setlist.id)}">
+        <strong>${escapeHtml(setlist.title || t("service.defaultTitle"))}</strong>
+        <small>${escapeHtml([setlist.service?.time, eventLeadLine(setlist)].filter(Boolean).join(" · "))}</small>
+      </button>
+    </div>
+  `).join("") + `<button type="button" class="primary-action" data-create-day>${t("agenda.dayCreate")}</button>`;
+  box.querySelectorAll("[data-open-day-event]").forEach((button) => {
+    button.addEventListener("click", () => openSetlistEditor(button.dataset.openDayEvent));
+  });
+  box.querySelector("[data-create-day]")?.addEventListener("click", createSetlist);
+}
+
+function setAgendaSettingsOpen(open) {
+  isAgendaSettingsOpen = Boolean(open);
+  if (el.agendaSettingsSheet) el.agendaSettingsSheet.hidden = !isAgendaSettingsOpen;
+  if (isAgendaSettingsOpen) renderAgendaSettings();
+}
+
+function renderAgendaSettings() {
+  if (el.agendaSectionEditor) {
+    el.agendaSectionEditor.innerHTML = state.agenda.sections.map((section) => `
+      <label>
+        <span>${escapeHtml(t(section.titleKey))}</span>
+        <input data-section-id="${escapeHtml(section.id)}" value="${escapeHtml(section.title)}" placeholder="${escapeHtml(t(section.titleKey))}" />
+      </label>
+    `).join("");
+    el.agendaSectionEditor.querySelectorAll("[data-section-id]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const section = state.agenda.sections.find((item) => item.id === input.dataset.sectionId);
+        if (section) section.title = input.value;
+        persist();
+      });
+    });
+  }
+  if (el.agendaFieldEditor) {
+    el.agendaFieldEditor.innerHTML = state.agenda.fields.map((field) => {
+      const custom = !field.labelKey;
+      return `
+        <div class="agenda-field-row">
+          <button type="button" class="agenda-toggle ${field.enabled ? "on" : ""}" data-toggle-field="${escapeHtml(field.id)}" aria-pressed="${field.enabled}"></button>
+          <div>
+            <input data-label-field="${escapeHtml(field.id)}" value="${escapeHtml(field.label)}" placeholder="${escapeHtml(agendaFieldLabel(field))}" />
+            ${custom ? `
+              <select data-kind-field="${escapeHtml(field.id)}">
+                <option value="text" ${field.kind === "text" ? "selected" : ""}>${t("agenda.kind.text")}</option>
+                <option value="people" ${field.kind === "people" ? "selected" : ""}>${t("agenda.kind.people")}</option>
+                <option value="textarea" ${field.kind === "textarea" ? "selected" : ""}>${t("agenda.kind.textarea")}</option>
+              </select>
+            ` : ""}
+          </div>
+          ${custom ? `<button type="button" class="agenda-field-delete" data-delete-field="${escapeHtml(field.id)}" aria-label="${t("setlists.delete")}">×</button>` : "<span></span>"}
+        </div>
+      `;
+    }).join("");
+    el.agendaFieldEditor.querySelectorAll("[data-toggle-field]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const field = state.agenda.fields.find((item) => item.id === button.dataset.toggleField);
+        if (!field) return;
+        field.enabled = !field.enabled;
+        persist();
+        renderAgendaSettings();
+        writeServiceToForm(selectedSetlist()?.service);
+      });
+    });
+    el.agendaFieldEditor.querySelectorAll("[data-label-field]").forEach((input) => {
+      input.addEventListener("input", () => {
+        const field = state.agenda.fields.find((item) => item.id === input.dataset.labelField);
+        if (field) field.label = input.value;
+        persist();
+      });
+    });
+    el.agendaFieldEditor.querySelectorAll("[data-kind-field]").forEach((select) => {
+      select.addEventListener("change", () => {
+        const field = state.agenda.fields.find((item) => item.id === select.dataset.kindField);
+        if (!field) return;
+        field.kind = select.value === "people" || select.value === "textarea" ? select.value : "text";
+        if (field.kind === "people") field.peopleMode = "many";
+        persist();
+        writeServiceToForm(selectedSetlist()?.service);
+      });
+    });
+    el.agendaFieldEditor.querySelectorAll("[data-delete-field]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.agenda.fields = state.agenda.fields.filter((item) => item.id !== button.dataset.deleteField);
+        persist();
+        renderAgendaSettings();
+        writeServiceToForm(selectedSetlist()?.service);
+      });
+    });
+  }
+}
+
+function addCustomAgendaField() {
+  state.agenda.fields.push(normalizeAgendaField({
+    id: `custom-${makeId()}`,
+    label: t("agenda.field.custom"),
+    enabled: true,
+    kind: "text",
+    section: "schedule",
+  }));
+  persist();
+  renderAgendaSettings();
+}
+
+function openPeoplePicker(fieldId) {
+  const setlist = selectedSetlist();
+  const field = state.agenda.fields.find((item) => item.id === fieldId);
+  if (!setlist || !field) return;
+  if (!state.team.members.length) {
+    setAgendaHub("team");
+    notify(t("agenda.noTeam"));
+    return;
+  }
+  peoplePickerFieldId = fieldId;
+  peoplePickerDraft = normalizePeopleValue(serviceValue(setlist.service, fieldId));
+  peoplePickerQuery = "";
+  if (el.peoplePickerSearch) el.peoplePickerSearch.value = "";
+  if (el.peoplePickerTitle) el.peoplePickerTitle.textContent = agendaFieldLabel(field);
+  if (el.peoplePickerLead) el.peoplePickerLead.textContent = field.peopleMode === "one" ? t("agenda.peopleOne") : t("agenda.peopleMany");
+  setPeoplePickerOpen(true);
+}
+
+function setPeoplePickerOpen(open) {
+  isPeoplePickerOpen = Boolean(open);
+  if (el.peoplePickerSheet) el.peoplePickerSheet.hidden = !isPeoplePickerOpen;
+  if (isPeoplePickerOpen) renderPeoplePicker();
+}
+
+function renderPeoplePicker() {
+  if (!el.peoplePickerList) return;
+  const field = state.agenda.fields.find((item) => item.id === peoplePickerFieldId);
+  const query = normalize(peoplePickerQuery);
+  const members = state.team.members
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .filter((member) => !query || normalize(`${member.name} ${member.roles.join(" ")}`).includes(query));
+  if (el.peoplePickerSearch) el.peoplePickerSearch.value = peoplePickerQuery;
+  el.peoplePickerList.innerHTML = members.length
+    ? members.map((member) => {
+        const on = peoplePickerDraft.ids.includes(member.id);
+        return `
+          <label class="check-row people-check ${on ? "on" : ""}">
+            <input type="checkbox" data-pick-id="${escapeHtml(member.id)}" ${on ? "checked" : ""}>
+            <span class="check-mark" aria-hidden="true"></span>
+            <span class="check-copy">
+              <strong>${escapeHtml(member.name)}</strong>
+              <small>${escapeHtml(member.roles.join(" · "))}</small>
+            </span>
+          </label>
+        `;
+      }).join("")
+    : `<p class="empty compact">${state.team.members.length ? t("stage.noMatch") : t("agenda.noTeam")}</p>`;
+  el.peoplePickerList.querySelectorAll("[data-pick-id]").forEach((input) => {
+    input.addEventListener("change", () => {
+      const id = input.dataset.pickId;
+      if (field?.peopleMode === "one") {
+        peoplePickerDraft.ids = input.checked ? [id] : [];
+      } else if (input.checked) {
+        if (!peoplePickerDraft.ids.includes(id)) peoplePickerDraft.ids.push(id);
+      } else {
+        peoplePickerDraft.ids = peoplePickerDraft.ids.filter((item) => item !== id);
+      }
+      renderPeoplePicker();
+    });
+  });
+}
+
+function applyPeoplePicker() {
+  const setlist = selectedSetlist();
+  if (setlist && peoplePickerFieldId) {
+    setlist.service = normalizeService(setlist.service);
+    setlist.service.values[peoplePickerFieldId] = { ...peoplePickerDraft };
+    persist();
+  }
+  setPeoplePickerOpen(false);
+  writeServiceToForm(selectedSetlist()?.service);
+}
+
+function bindEventFieldInputs() {
+  if (!el.eventFields) return;
+  el.eventFields.querySelectorAll("[data-field-id]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const setlist = selectedSetlist();
+      if (!setlist) return;
+      setlist.service = normalizeService({ ...readServiceFromForm(), date: el.serviceDate.value, time: el.serviceTime?.value || "" });
+      if (input.dataset.fieldId === "notes") setlist.notes = String(input.value || "").trim();
+    });
+  });
+  el.eventFields.querySelectorAll("[data-moment-id]").forEach((box) => {
+    box.addEventListener("change", () => {
+      const setlist = selectedSetlist();
+      if (!setlist) return;
+      setlist.service = normalizeService({ ...readServiceFromForm(), date: el.serviceDate.value, time: el.serviceTime?.value || "" });
+      persist();
+      box.closest(".check-row")?.classList.toggle("on", box.checked);
+    });
+  });
+  el.eventFields.querySelectorAll("[data-pick-field]").forEach((button) => {
+    button.addEventListener("click", () => openPeoplePicker(button.dataset.pickField));
+  });
+  el.eventFields.querySelectorAll("[data-remove-person]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const setlist = selectedSetlist();
+      const fieldId = button.dataset.removePerson;
+      if (!setlist || !fieldId) return;
+      const current = normalizePeopleValue(serviceValue(setlist.service, fieldId));
+      current.ids = current.ids.filter((id) => id !== button.dataset.memberId);
+      setlist.service.values[fieldId] = current;
+      persist();
+      writeServiceToForm(setlist.service);
+    });
+  });
+  el.eventFields.querySelectorAll("[data-go-team]").forEach((button) => {
+    button.addEventListener("click", () => {
+      saveSetlist(true);
+      closeSetlistEditor();
+      setAgendaHub("team");
+    });
+  });
+  el.eventFields.querySelectorAll("[data-open-add-songs]").forEach((button) => {
+    button.addEventListener("click", () => {
+      isSetlistAddOpen = true;
+      isSetlistDayMenuOpen = false;
+      renderSetlists();
+    });
+  });
+}
+
+function renderEventFieldControl(field, value) {
+  if (field.kind === "people") {
+    const people = normalizePeopleValue(value);
+    const chips = people.ids.map((id) => {
+      const member = teamMemberById(id);
+      if (!member) return "";
+      return `<span class="person-chip">${escapeHtml(member.name)} <button type="button" data-remove-person="${escapeHtml(field.id)}" data-member-id="${escapeHtml(id)}">×</button></span>`;
+    }).join("");
+    const extra = people.extra ? `<span class="person-chip">${escapeHtml(people.extra)}</span>` : "";
+    const emptyHint = !state.team.members.length
+      ? `<button type="button" class="people-add-btn" data-go-team="1">${t("agenda.goTeam")}</button>`
+      : `<button type="button" class="people-add-btn" data-pick-field="${escapeHtml(field.id)}">+ ${t("agenda.addPerson")}</button>`;
+    return `<div class="people-field">${chips}${extra}${emptyHint}</div>`;
+  }
+  if (isOrderMoment(field.id)) {
+    const moment = isMomentValue(value)
+      ? { included: Boolean(value.included), text: String(value.text || "") }
+      : { included: Boolean(String(value || "").trim()), text: String(value || "") };
+    return `
+      <div class="moment-field">
+        <label class="check-row ${moment.included ? "on" : ""}">
+          <input type="checkbox" data-moment-id="${escapeHtml(field.id)}" ${moment.included ? "checked" : ""}>
+          <span class="check-mark" aria-hidden="true"></span>
+          <span class="check-copy"><strong>${escapeHtml(t("agenda.includeMoment"))}</strong></span>
+        </label>
+        <input data-field-id="${escapeHtml(field.id)}" data-kind="text" value="${escapeHtml(moment.text)}" placeholder="${escapeHtml(t("agenda.momentNote"))}">
+      </div>
+    `;
+  }
+  if (field.kind === "textarea") {
+    return `<textarea data-field-id="${escapeHtml(field.id)}" data-kind="textarea">${escapeHtml(String(value || ""))}</textarea>`;
+  }
+  return `<input data-field-id="${escapeHtml(field.id)}" data-kind="text" value="${escapeHtml(String(value || ""))}" />`;
+}
+
+function normalizeSetlist(setlist) {
+  const songIds = Array.isArray(setlist.songIds) ? setlist.songIds.map(cleanId).filter(Boolean) : [];
+  const finale = Array.isArray(setlist.finalSongIds)
+    ? setlist.finalSongIds.map(cleanId).filter((id) => id && songIds.includes(id))
+    : [];
+  return {
+    id: safeId(setlist.id),
+    title: String(setlist.title || "Evento"),
+    songIds,
+    finalSongIds: finale,
     notes: String(setlist.notes || ""),
     service: normalizeService(setlist.service),
     createdAt: setlist.createdAt || new Date().toISOString(),
@@ -4901,41 +6378,120 @@ function normalizeSetlist(setlist) {
 
 function normalizeService(service) {
   const src = service && typeof service === "object" ? service : {};
+  const values = src.values && typeof src.values === "object" ? { ...src.values } : {};
+  Object.keys(values).forEach((key) => {
+    const value = values[key];
+    if (value && typeof value === "object" && Array.isArray(value.ids)) {
+      values[key] = {
+        ids: value.ids.map(cleanId).filter(Boolean),
+        extra: String(value.extra || "").trim(),
+      };
+    }
+  });
+  if (!values.opening && src.opening) values.opening = src.opening;
+  if (!values.notes && src.notes) values.notes = src.notes;
+  if (!values.scripture && src.announcements) values.scripture = src.announcements;
+  if (!values.communion && src.communion) values.communion = src.communion;
+  if (!values.speaker && src.preacher) values.speaker = src.preacher;
+  if (!values.musicLead && src.leader) values.musicLead = src.leader;
+  if (!values.voices && src.worshipTeam) values.voices = src.worshipTeam;
   return {
     date: String(src.date || ""),
-    opening: String(src.opening || ""),
-    leader: String(src.leader || ""),
-    announcements: String(src.announcements || ""),
-    worshipTeam: String(src.worshipTeam || ""),
-    preacher: String(src.preacher || ""),
+    time: String(src.time || ""),
+    opening: String(src.opening || values.opening || ""),
+    leader: String(src.leader || peopleDisplay(values.musicLead) || ""),
+    announcements: String(src.announcements || values.scripture || ""),
+    worshipTeam: String(src.worshipTeam || peopleDisplay(values.voices) || ""),
+    preacher: String(src.preacher || peopleDisplay(values.speaker) || ""),
     preacherRole: src.preacherRole === "convidado" ? "convidado" : "pastor",
-    communion: String(src.communion || ""),
+    communion: String(src.communion || values.communion || ""),
+    values,
   };
 }
 
 function readServiceFromForm() {
+  const values = {};
+  el.eventFields?.querySelectorAll("[data-field-id]").forEach((input) => {
+    values[input.dataset.fieldId] = input.value;
+  });
+  el.eventFields?.querySelectorAll("[data-moment-id]").forEach((box) => {
+    const id = box.dataset.momentId;
+    values[id] = { included: box.checked, text: String(values[id] || "").trim() };
+  });
+  const setlist = selectedSetlist();
+  const current = normalizeService(setlist?.service);
+  enabledAgendaFields().filter((field) => field.kind === "people").forEach((field) => {
+    values[field.id] = current.values[field.id] || { ids: [], extra: "" };
+  });
+  const notes = String(values.notes || el.setlistNotes?.value || "").trim();
+  if (el.setlistNotes) el.setlistNotes.value = notes;
+  const opening = isMomentValue(values.opening) ? values.opening.text : values.opening;
+  const communion = isMomentValue(values.communion) ? values.communion.text : values.communion;
   return normalizeService({
-    date: el.serviceDate.value,
-    opening: el.serviceOpening.value.trim(),
-    leader: el.serviceLeader.value.trim(),
-    announcements: el.serviceAnnouncements.value.trim(),
-    worshipTeam: el.serviceWorship.value.trim(),
-    preacher: el.servicePreacher.value.trim(),
-    preacherRole: el.servicePreacherRole.value,
-    communion: el.serviceCommunion.value.trim(),
+    date: el.serviceDate?.value || "",
+    time: el.serviceTime?.value || "",
+    values,
+    opening: opening || "",
+    leader: peopleDisplay(values.musicLead),
+    announcements: values.scripture || "",
+    worshipTeam: peopleDisplay(values.voices),
+    preacher: peopleDisplay(values.speaker),
+    communion: communion || "",
+    notes,
   });
 }
 
 function writeServiceToForm(service) {
   const data = normalizeService(service);
-  el.serviceDate.value = data.date;
-  el.serviceOpening.value = data.opening;
-  el.serviceLeader.value = data.leader;
-  el.serviceAnnouncements.value = data.announcements;
-  el.serviceWorship.value = data.worshipTeam;
-  el.servicePreacher.value = data.preacher;
-  el.servicePreacherRole.value = data.preacherRole;
-  el.serviceCommunion.value = data.communion;
+  if (el.serviceDate) el.serviceDate.value = data.date;
+  if (el.serviceTime) el.serviceTime.value = data.time;
+  if (el.setlistNotes) el.setlistNotes.value = String(serviceValue(data, "notes") || selectedSetlist()?.notes || "");
+  if (!el.eventFields) return;
+  const sections = state.agenda.sections || defaultAgendaSections();
+  el.eventFields.innerHTML = sections.map((section) => {
+    const fields = enabledAgendaFields().filter((field) => field.section === section.id);
+    if (section.id === "songs") {
+      return `
+        <section class="event-section">
+          <h3>${escapeHtml(agendaSectionTitle(section))}</h3>
+          <input id="eventSongSearch" type="search" placeholder="${escapeHtml(t("agenda.searchSongs"))}" value="${escapeHtml(setlistAddQuery)}" />
+          <div id="eventSongList" class="check-list event-song-list">${songCheckListHtml(selectedSetlist())}</div>
+        </section>
+      `;
+    }
+    if (!fields.length) return "";
+    const hint = section.id === "order" || section.id === "stream"
+      ? `<p class="event-section-hint">${escapeHtml(t("agenda.orderHint"))}</p>`
+      : "";
+    return `
+      <section class="event-section">
+        <h3>${escapeHtml(agendaSectionTitle(section))}</h3>
+        ${hint}
+        ${fields.map((field) => `
+          <label class="event-field">
+            <span>${escapeHtml(agendaFieldLabel(field))}</span>
+            ${renderEventFieldControl(field, serviceValue(data, field.id) || (field.id === "notes" ? el.setlistNotes.value : ""))}
+          </label>
+        `).join("")}
+      </section>
+    `;
+  }).join("");
+  const unsectioned = enabledAgendaFields().filter((field) => !sections.some((section) => section.id === field.section));
+  if (unsectioned.length) {
+    el.eventFields.insertAdjacentHTML("beforeend", unsectioned.map((field) => `
+      <label class="event-field">
+        <span>${escapeHtml(agendaFieldLabel(field))}</span>
+        ${renderEventFieldControl(field, serviceValue(data, field.id))}
+      </label>
+    `).join(""));
+  }
+  bindEventFieldInputs();
+  bindSongCheckLists(document.querySelector("#eventSongList"));
+  document.querySelector("#eventSongSearch")?.addEventListener("input", (event) => {
+    setlistAddQuery = event.target.value;
+    if (el.setlistAddSearch) el.setlistAddSearch.value = setlistAddQuery;
+    renderSongCheckLists();
+  });
 }
 
 function nextSundayIso() {
@@ -4980,46 +6536,50 @@ function formatServiceDate(iso) {
 }
 
 function formatServiceProgram(setlist) {
-  const service = normalizeService(setlist.service);
-  const tba = t("service.tba");
-  const person = (value) => value || tba;
-  const dateLine = formatServiceDate(service.date);
-  const role = service.preacherRole === "convidado" ? t("service.guest") : t("service.pastor");
-  const songs = setlistSongs(setlist);
-  const songLines = songs.length
-    ? songs.map((song, index) => {
+  const { header, blocks } = eventOrderModel(setlist);
+  const lines = [];
+  header.forEach((item) => lines.push(`${item.label}: ${item.text}`));
+  if (header.length) lines.push("");
+  if (blocks.length) lines.push(`${t("agenda.orderTitle")}:`, "");
+  blocks.forEach((block) => {
+    if (block.type === "songs") {
+      if (block.title) lines.push(block.title);
+      block.songs.forEach((song, index) => {
         const rawKey = songKey(song);
         const key = rawKey ? transposeChord(rawKey, song.transposeValue || 0) : "";
-        return `${index + 1}. ${song.title}${key ? ` (${t("song.key", { key })})` : ""}`;
-      }).join("\n")
-    : t("service.noSongs");
-  const lines = [
-    t("service.heading"),
-    dateLine ? `${setlist.title} — ${dateLine}` : setlist.title,
-    "",
-    t("service.itemOpening"),
-    person(service.opening),
-    "",
-    t("service.itemLeader"),
-    person(service.leader),
-    "",
-    t("service.itemAnnouncements"),
-    person(service.announcements),
-    "",
-    t("service.itemWorship"),
-    person(service.worshipTeam),
-    songLines,
-    "",
-    `${t("service.itemPreacher")} (${role})`,
-    person(service.preacher),
-    "",
-    t("service.itemCommunion"),
-    person(service.communion),
-  ];
-  if (setlist.notes) {
-    lines.push("", `${t("setlists.notes")}: ${setlist.notes}`);
-  }
-  return lines.join("\n");
+        lines.push(`  ${index + 1}. ${song.title}${key ? ` (${t("song.key", { key })})` : ""}`);
+      });
+      lines.push("");
+      return;
+    }
+    if (block.type === "reading") {
+      lines.push(block.title);
+      if (block.verse) lines.push(`  ${block.verse}`);
+      lines.push("");
+      return;
+    }
+    if (block.type === "preach") {
+      lines.push(block.title);
+      if (block.speaker) lines.push(`  ${block.speakerLabel}: ${block.speaker}`);
+      if (block.theme || block.scripture) {
+        lines.push(`  ${block.themeLabel}: ${[block.theme ? `“${block.theme}”` : "", block.scripture].filter(Boolean).join(" ")}`);
+      }
+      lines.push("");
+      return;
+    }
+    if (block.type === "stream") {
+      lines.push(block.title);
+      if (block.streamTitle) lines.push(`  ${block.streamTitleLabel}: ${block.streamTitle}`);
+      if (block.streamDesc) lines.push(`  ${block.streamDescLabel}: ${block.streamDesc}`);
+      lines.push("");
+      return;
+    }
+    lines.push(block.title);
+    if (block.body) lines.push(`  ${block.body}`);
+    lines.push("");
+  });
+  if (!blocks.length) lines.push(t("service.noSongs"));
+  return lines.join("\n").trim();
 }
 
 async function shareServiceProgram() {
@@ -5097,6 +6657,14 @@ function makeId() {
   return `${Date.now()}${Math.floor(Math.random() * 100000)}`;
 }
 
+function cleanId(value) {
+  return String(value || "").replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 96);
+}
+
+function safeId(value) {
+  return cleanId(value) || makeId();
+}
+
 function normalize(value) {
   return String(value || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
@@ -5120,7 +6688,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=72").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=86").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
