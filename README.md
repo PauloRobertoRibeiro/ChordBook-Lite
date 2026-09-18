@@ -6,6 +6,7 @@ Projeto independente do núcleo leve do ChordBook. Não depende do app Flutter a
 - Casca Android (WebView): `pwa-android/`
 - Ficha de loja e política: `docs/loja/`
 - Como instalar no grupo: `pwa/instalar.html`
+- Comprar o APK (5 €): https://paulorobertoribeiro.github.io/ChordBook-Lite/comprar.html
 
 O ChordBook antigo em `C:\Users\Jairo\Desktop\ChordBook\chordbook` permanece como backup e não deve ser alterado a partir daqui.
 
@@ -46,3 +47,6 @@ cd C:\Users\Jairo\Desktop\ChordBook-Lite\pwa-android
 3. Quem já tem o APK de teste precisa exportar o backup, desinstalar o teste e instalar o 1.1.1. Chaves diferentes não atualizam o mesmo app.
 
 Textos da Play: `docs/loja/LISTAGEM.md`. Política no app: `pwa/privacy.html` (publique também em HTTPS para o Console).
+
+Venda directa (sem esperar a Play): https://paulorobertoribeiro.github.io/ChordBook-Lite/comprar.html  
+APK a enviar depois do pagamento: `Desktop\ChordBook-Lite-venda.apk`. PayPal/Bizum: edite `pwa/sale.js`.

@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="ChordBook Lite: cifras, setlists e palco no telemóvel. 5 €. Sem conta." />
+    <title>Comprar — ChordBook Lite</title>
+    <link rel="icon" href="./icons/favicon.png" />
+    <style>
+      :root {
+        --blue: #2563eb;
+        --ink: #111827;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --bg: #f5f7fb;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.55;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .bar {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: inherit;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .brand img { width: 36px; height: 36px; border-radius: 8px; }
+      .langs { display: flex; gap: 6px; }
+      .langs button {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 999px;
+        padding: 4px 10px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.85rem;
+      }
+      .langs button[aria-pressed="true"] {
+        background: #eef4ff;
+        border-color: #bfdbfe;
+        color: var(--blue);
+      }
+      main { max-width: 44rem; margin: 0 auto; padding: 28px 20px 72px; }
+      h1 { font-size: 1.85rem; line-height: 1.2; margin: 0 0 8px; }
+      h2 { font-size: 1.08rem; margin: 28px 0 8px; }
+      .muted { color: var(--muted); margin: 0 0 20px; }
+      a { color: var(--blue); }
+      .price {
+        display: inline-block;
+        background: #eef4ff;
+        color: var(--blue);
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 4px 12px;
+        margin-bottom: 12px;
+      }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 8px; }
+      .btn {
+        display: inline-block;
+        text-decoration: none;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-weight: 650;
+      }
+      .btn-primary { background: var(--blue); color: #fff; }
+      .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin: 12px 0 0;
+      }
+      ol, ul { padding-left: 1.25rem; margin: 8px 0; }
+      .shots {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .shots figure { margin: 0; }
+      .shots img {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: #fff;
+        display: block;
+      }
+      .shots figcaption {
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-align: center;
+        margin-top: 6px;
+      }
+      @media (max-width: 640px) {
+        .shots { grid-template-columns: 1fr 1fr; }
+      }
+      .pay-box { background: #eef4ff; }
+      footer { color: var(--muted); font-size: 0.9rem; margin-top: 36px; }
+    </style>
+    <script src="./sale.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <a class="brand" href="./index.html">
+          <img src="./icons/Icon-192.png" alt="" />
+          ChordBook Lite
+        </a>
+        <div class="langs" role="group" aria-label="Idioma">
+          <button type="button" data-lang="pt" aria-pressed="true">PT</button>
+          <button type="button" data-lang="es" aria-pressed="false">ES</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+    <main>
+      <p class="price" id="pricePill">5 €</p>
+      <h1 id="tTitle">Cifras, setlists e palco no telemóvel</h1>
+      <p class="muted" id="tLead">App pago, sem conta e sem anúncios. A biblioteca fica neste aparelho. Versão 1.1.1.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" id="buyBtn" href="#">Comprar o APK Android</a>
+        <a class="btn btn-ghost" href="./index.html" id="tryBtn">Provar no browser</a>
+      </div>
+      <p class="muted" id="tPayHint"></p>
+
+      <div class="shots">
+        <figure>
+          <img src="./loja/01-biblioteca.png" alt="Biblioteca de cifras" />
+          <figcaption id="c1">Biblioteca</figcaption>
+        </figure>
+        <figure>
+          <img src="./loja/02-cifra.png" alt="Cifra com tom e capo" />
+          <figcaption id="c2">Tom e capo</figcaption>
+        </figure>
+        <figure>
+          <img src="./loja/03-palco.png" alt="Modo palco" />
+          <figcaption id="c3">Modo palco</figcaption>
+        </figure>
+      </div>
+
+      <h2 id="tWhat">O que compra</h2>
+      <div class="card">
+        <ul id="tWhatList"></ul>
+      </div>
+
+      <h2 id="tHow">Como pagar</h2>
+      <div class="card pay-box" id="payBox"></div>
+
+      <h2 id="tInstall">Depois do pagamento</h2>
+      <div class="card">
+        <ol id="tInstallList"></ol>
+      </div>
+
+      <p>
+        <a href="./instalar.html" id="tShare">Instalar no grupo e partilhar cifras</a>
+        ·
+        <a href="./privacy.html" id="tPrivacy">Política de privacidade</a>
+      </p>
+      <footer id="tFoot"></footer>
+    </main>
+    <script>
+      const I18N = {
+        pt: {
+          title: "Cifras, setlists e palco no telemóvel",
+          lead: "App pago, sem conta e sem anúncios. A biblioteca fica neste aparelho. Versão {v}.",
+          buy: "Comprar o APK Android",
+          try: "Provar no browser",
+          payMail: "Ainda não há PayPal automático nesta página. Clique em Comprar para abrir um e-mail com o pedido. Resposta com o APK 1.1.1 depois do pagamento de {p}.",
+          payPaypal: "Pague {p} no PayPal. Depois envie o comprovativo para {e} se o APK não chegar de imediato.",
+          payBizum: "Bizum: {b} ({p}). No e-mail indique o nome que usou no Bizum.",
+          what: "O que compra",
+          whatList: [
+            "APK Android assinado, versão {v} (não é o ficheiro de teste)",
+            "Cifras, transposição, capo, setlists e modo palco",
+            "Funciona offline; as músicas ficam no telemóvel",
+            "Backup e restauro por ficheiro JSON",
+            "A loja Google Play segue em revisão; esta venda não espera por ela",
+          ],
+          how: "Como pagar",
+          mailBody: "Quero comprar o ChordBook Lite {v} por {p}.\n\nNome:\nPaís:\nComo pretendo pagar (PayPal / Bizum / transferência):",
+          mailSubject: "ChordBook Lite {v} — compra {p}",
+          payStepsTitle: "Passos",
+          paySteps: [
+            "Clique em Comprar e envie o e-mail (já vai preenchido).",
+            "Pague {p} pelo método combinado (PayPal, Bizum na Espanha, ou transferência).",
+            "Recebe o ficheiro ChordBook-Lite-venda.apk por e-mail ou WhatsApp.",
+          ],
+          install: "Depois do pagamento",
+          installList: [
+            "No Android, abra o APK. Se pedir, permita instalar desta fonte.",
+            "Se já tinha a versão de teste, exporte o backup, desinstale o teste e instale este.",
+            "No app: Mais → Restaurar, se tiver um backup.",
+            "Não use ChordBook-Lite-teste.apk.",
+          ],
+          share: "Instalar no grupo e partilhar cifras",
+          privacy: "Política de privacidade",
+          foot: "ChordBook Lite · {v} · {p} · {e}",
+          c1: "Biblioteca",
+          c2: "Tom e capo",
+          c3: "Modo palco",
+        },
+        es: {
+          title: "Cifras, setlists y escenario en el móvil",
+          lead: "App de pago, sin cuenta y sin anuncios. La biblioteca queda en este aparato. Versión {v}.",
+          buy: "Comprar el APK Android",
+          try: "Probar en el navegador",
+          payMail: "Aún no hay PayPal automático en esta página. Pulse Comprar para abrir un correo con el pedido. Recibirá el APK 1.1.1 tras el pago de {p}.",
+          payPaypal: "Pague {p} en PayPal. Luego envíe el justificante a {e} si el APK no llega al momento.",
+          payBizum: "Bizum: {b} ({p}). En el correo indique el nombre usado en Bizum.",
+          what: "Qué compra",
+          whatList: [
+            "APK Android firmado, versión {v} (no es el archivo de prueba)",
+            "Cifras, transposición, cejilla, setlists y modo escenario",
+            "Funciona sin internet; las canciones quedan en el móvil",
+            "Copia de seguridad y restauración en un archivo JSON",
+            "Google Play sigue en revisión; esta venta no espera a la tienda",
+          ],
+          how: "Cómo pagar",
+          mailBody: "Quiero comprar ChordBook Lite {v} por {p}.\n\nNombre:\nPaís:\nCómo quiero pagar (PayPal / Bizum / transferencia):",
+          mailSubject: "ChordBook Lite {v} — compra {p}",
+          payStepsTitle: "Pasos",
+          paySteps: [
+            "Pulse Comprar y envíe el correo (ya va rellenado).",
+            "Pague {p} por el método acordado (PayPal, Bizum en España o transferencia).",
+            "Recibirá ChordBook-Lite-venda.apk por correo o WhatsApp.",
+          ],
+          install: "Después del pago",
+          installList: [
+            "En Android, abra el APK. Si lo pide, permita instalar desde esta fuente.",
+            "Si tenía la versión de prueba, exporte la copia, desinstálela e instale esta.",
+            "En la app: Más → Restaurar, si tiene una copia.",
+            "No use ChordBook-Lite-teste.apk.",
+          ],
+          share: "Instalar en el grupo y compartir cifras",
+          privacy: "Política de privacidad",
+          foot: "ChordBook Lite · {v} · {p} · {e}",
+          c1: "Biblioteca",
+          c2: "Tono y cejilla",
+          c3: "Modo escenario",
+        },
+        en: {
+          title: "Charts, setlists and stage mode on your phone",
+          lead: "Paid app, no account, no ads. Your library stays on this device. Version {v}.",
+          buy: "Buy the Android APK",
+          try: "Try it in the browser",
+          payMail: "There is no automatic PayPal on this page yet. Tap Buy to open a pre-filled email. You get the 1.1.1 APK after paying {p}.",
+          payPaypal: "Pay {p} with PayPal. Then email the receipt to {e} if the APK does not arrive right away.",
+          payBizum: "Bizum: {b} ({p}). In the email, say the name you used on Bizum.",
+          what: "What you get",
+          whatList: [
+            "Signed Android APK, version {v} (not the test file)",
+            "Charts, transpose, capo, setlists and stage mode",
+            "Works offline; songs stay on the phone",
+            "Backup and restore with a JSON file",
+            "Google Play is still in review; this sale does not wait for the store",
+          ],
+          how: "How to pay",
+          mailBody: "I want to buy ChordBook Lite {v} for {p}.\n\nName:\nCountry:\nHow I will pay (PayPal / Bizum / transfer):",
+          mailSubject: "ChordBook Lite {v} — purchase {p}",
+          payStepsTitle: "Steps",
+          paySteps: [
+            "Tap Buy and send the email (it is already filled in).",
+            "Pay {p} by the agreed method (PayPal, Bizum in Spain, or bank transfer).",
+            "You receive ChordBook-Lite-venda.apk by email or WhatsApp.",
+          ],
+          install: "After payment",
+          installList: [
+            "On Android, open the APK. Allow installs from this source if asked.",
+            "If you had the test build, export a backup, uninstall it, then install this one.",
+            "In the app: More → Restore, if you have a backup.",
+            "Do not use ChordBook-Lite-teste.apk.",
+          ],
+          share: "Install for the group and share charts",
+          privacy: "Privacy policy",
+          foot: "ChordBook Lite · {v} · {p} · {e}",
+          c1: "Library",
+          c2: "Key and capo",
+          c3: "Stage mode",
+        },
+      };
+
+      function fill(str, sale) {
+        return str
+          .replaceAll("{v}", sale.version)
+          .replaceAll("{p}", sale.price)
+          .replaceAll("{e}", sale.email)
+          .replaceAll("{b}", sale.bizum || "");
+      }
+
+      function listHtml(items, sale) {
+        return items.map((item) => "<li>" + fill(item, sale) + "</li>").join("");
+      }
+
+      function apply(lang) {
+        const sale = window.CHORD_BOOK_SALE || {
+          price: "5 €",
+          version: "1.1.1",
+          email: "ribeirorobertopaulo@gmail.com",
+          paypalMe: "",
+          bizum: "",
+        };
+        const t = I18N[lang] || I18N.pt;
+        document.documentElement.lang = lang;
+        document.getElementById("pricePill").textContent = sale.price;
+        document.getElementById("tTitle").textContent = t.title;
+        document.getElementById("tLead").textContent = fill(t.lead, sale);
+        document.getElementById("tryBtn").textContent = t.try;
+        document.getElementById("tWhat").textContent = t.what;
+        document.getElementById("tWhatList").innerHTML = listHtml(t.whatList, sale);
+        document.getElementById("tHow").textContent = t.how;
+        document.getElementById("tInstall").textContent = t.install;
+        document.getElementById("tInstallList").innerHTML = listHtml(t.installList, sale);
+        document.getElementById("tShare").textContent = t.share;
+        document.getElementById("tPrivacy").textContent = t.privacy;
+        document.getElementById("tFoot").textContent = fill(t.foot, sale);
+        document.getElementById("c1").textContent = t.c1;
+        document.getElementById("c2").textContent = t.c2;
+        document.getElementById("c3").textContent = t.c3;
+
+        const mail = "mailto:" + sale.email
+          + "?subject=" + encodeURIComponent(fill(t.mailSubject, sale))
+          + "&body=" + encodeURIComponent(fill(t.mailBody, sale));
+        const buy = document.getElementById("buyBtn");
+        buy.textContent = t.buy;
+        if (sale.paypalMe) {
+          buy.href = sale.paypalMe;
+        } else {
+          buy.href = mail;
+        }
+
+        let hint = fill(t.payMail, sale);
+        if (sale.paypalMe) hint = fill(t.payPaypal, sale);
+        document.getElementById("tPayHint").textContent = hint;
+
+        const extra = [];
+        if (sale.paypalMe) {
+          extra.push('<p><a class="btn btn-primary" href="' + sale.paypalMe + '">PayPal · ' + sale.price + "</a></p>");
+        }
+        if (sale.bizum) extra.push("<p>" + fill(t.payBizum, sale) + "</p>");
+        extra.push("<p><strong>" + t.payStepsTitle + "</strong></p><ol>" + listHtml(t.paySteps, sale) + "</ol>");
+        extra.push('<p><a href="' + mail + '">' + sale.email + "</a></p>");
+        document.getElementById("payBox").innerHTML = extra.join("");
+
+        document.querySelectorAll(".langs button").forEach((button) => {
+          button.setAttribute("aria-pressed", button.dataset.lang === lang ? "true" : "false");
+        });
+      }
+
+      document.querySelectorAll(".langs button").forEach((button) => {
+        button.addEventListener("click", () => apply(button.dataset.lang));
+      });
+      const start = (navigator.language || "pt").toLowerCase().startsWith("es")
+        ? "es"
+        : (navigator.language || "").toLowerCase().startsWith("en")
+          ? "en"
+          : "pt";
+      apply(start);
+    </script>
+  </body>
+</html>

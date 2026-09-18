@@ -358,6 +358,7 @@ const I18N = {
     "more.aboutLegal": "Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.",
     "more.version": "Versão {v}",
     "more.privacy": "Política de privacidade",
+    "more.buy": "Comprar app Android (5 €)",
     "more.install": "Instalar e partilhar",
     "more.font": "Tamanho da letra",
     "more.fontDefault": "Tamanho da letra padrão",
@@ -773,6 +774,7 @@ const I18N = {
     "more.aboutLegal": "Los datos quedan en este teléfono. Un computador solo entra con el código y su permiso. Exporte una copia antes de desinstalar.",
     "more.version": "Versión {v}",
     "more.privacy": "Política de privacidad",
+    "more.buy": "Comprar app Android (5 €)",
     "more.install": "Instalar y compartir",
     "more.font": "Tamaño de letra",
     "more.fontDefault": "Tamaño de letra predeterminado",
@@ -1188,6 +1190,7 @@ const I18N = {
     "more.aboutLegal": "Your data stays on this phone. A computer can join only with the code and your permission. Export a backup before uninstalling.",
     "more.version": "Version {v}",
     "more.privacy": "Privacy policy",
+    "more.buy": "Buy Android app (5 €)",
     "more.install": "Install and share",
     "more.font": "Font size",
     "more.fontDefault": "Default font size",
@@ -6688,7 +6691,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=86").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=87").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
