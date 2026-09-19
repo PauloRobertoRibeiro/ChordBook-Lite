@@ -6691,7 +6691,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=87").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=88").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

@@ -3,6 +3,6 @@ window.CHORD_BOOK_SALE = {
   price: "5 €",
   version: "1.1.1",
   email: "ribeirorobertopaulo@gmail.com",
-  paypalMe: "",
+  paypalMe: "https://paypal.me/jogaraprender/5",
   bizum: "",
 };
