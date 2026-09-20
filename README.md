@@ -49,4 +49,4 @@ cd C:\Users\Jairo\Desktop\ChordBook-Lite\pwa-android
 Textos da Play: `docs/loja/LISTAGEM.md`. Política no app: `pwa/privacy.html` (publique também em HTTPS para o Console).
 
 Venda directa (sem esperar a Play): https://paulorobertoribeiro.github.io/ChordBook-Lite/comprar.html  
-APK a enviar depois do pagamento: `Desktop\ChordBook-Lite-venda.apk`. PayPal/Bizum: edite `pwa/sale.js`.
+APK a enviar depois do pagamento: `pwa/ChordBook.apk`. PayPal/Bizum: edite `pwa/sale.js`.

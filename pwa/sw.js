@@ -1,4 +1,4 @@
-const CACHE_NAME = "chordbook-lite-v89";
+const CACHE_NAME = "chordbook-lite-v90";
 const ASSETS = [
   "./",
   "./index.html",
@@ -11,7 +11,7 @@ const ASSETS = [
   "./instalar.html",
   "./comprar.html",
   "./sale.js",
-  "./sale.js?v=88",
+  "./sale.js?v=90",
   "./license-config.js",
   "./loja/01-biblioteca.png",
   "./loja/02-cifra.png",
@@ -45,6 +45,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  if (/\.apk(\?|$)/i.test(event.request.url)) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   event.respondWith(
     fetch(event.request).then((response) => {
       if (response.ok) {

@@ -112,6 +112,9 @@ try {
   Write-Host $releaseApk
   Write-Host ""
   Write-Host "Nao instale por cima do APK de teste (chave de debug). Exporte o backup, desinstale o teste e instale este."
+  $publicApk = Join-Path $root "..\pwa\ChordBook.apk"
+  Copy-Item -Force $releaseApk $publicApk
+  Write-Host "Copia publica: $publicApk"
   Write-Host ""
   Wait-Window
   exit 0

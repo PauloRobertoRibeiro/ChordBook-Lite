@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Licenças ChordBook Lite</title>
+    <title>Licencas ChordBook Lite</title>
     <style>
       body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 24px auto; padding: 0 16px; color: #111; }
       label, input, button { font: inherit; }
@@ -17,22 +17,22 @@
     </style>
   </head>
   <body>
-    <h1>Licenças ChordBook Lite</h1>
-    <p class="muted">Número fixo do comprador. CVV novo em cada venda ou telemóvel. Depois de activar, o CVV antigo deixa de servir.</p>
+    <h1>Licencas ChordBook Lite</h1>
+    <p class="muted">O PayPal ja gera e envia o numero e o CVV ao e-mail do comprador. Use esta pagina so para testes, Bizum, ou um CVV novo.</p>
     <label>Senha de administrador (ADMIN_KEY)</label>
     <input id="key" type="password" autocomplete="current-password" />
-    <label>E-mail do comprador (opcional)</label>
+    <label>E-mail do comprador (o programa envia o codigo para aqui)</label>
     <input id="email" type="email" placeholder="comprador@..." />
     <p>
-      <button type="button" id="issue">Nova venda (número + CVV)</button>
+      <button type="button" id="issue">Nova venda (numero + CVV)</button>
       <button type="button" id="list">Actualizar lista</button>
     </p>
     <div class="card" id="out" hidden></div>
     <h2>Compradores</h2>
     <div id="table"></div>
-    <p class="muted">Novo CVV: escreva o número na caixa abaixo e clique Rodar.</p>
+    <p class="muted">Novo CVV: escreva o numero na caixa abaixo e clique Rodar.</p>
     <input id="rotateNumber" placeholder="6112 3478 9012 3456" />
-    <button type="button" id="rotate">Novo CVV (anula o telemóvel antigo)</button>
+    <button type="button" id="rotate">Novo CVV (anula o telemovel antigo)</button>
     <script>
       function group(n) {
         return String(n || "").replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
@@ -40,19 +40,29 @@
       function showPair(data) {
         const box = document.getElementById("out");
         box.hidden = false;
-        box.innerHTML = "<p>Envie isto ao comprador:</p><p class='num'>" + group(data.number) + "</p><p>CVV: <strong>" + data.cvv + "</strong></p>";
+        const mail = data.emailed
+          ? "<p>O programa ja enviou o numero e o CVV por e-mail. Nao precisa de os copiar.</p>"
+          : "<p>Sem e-mail: copie e envie voce.</p>";
+        box.innerHTML = mail + "<p class='num'>" + group(data.number) + "</p><p>CVV: <strong>" + data.cvv + "</strong></p>";
       }
       function key() { return document.getElementById("key").value; }
       document.getElementById("issue").onclick = () => {
-        google.script.run.withSuccessHandler((data) => {
-          if (!data || !data.ok) { alert("Senha errada ou erro."); return; }
+        google.script.run.withFailureHandler((err) => {
+          alert("Erro: " + (err && err.message ? err.message : err));
+        }).withSuccessHandler((data) => {
+          if (!data || !data.ok) {
+            alert(data && data.error === "admin" ? "ADMIN_KEY nao coincide. Veja a engrenagem / Propiedades de script." : "Erro: " + ((data && data.error) || "desconhecido"));
+            return;
+          }
           showPair(data);
           document.getElementById("list").click();
         }).adminIssue(key(), document.getElementById("email").value);
       };
       document.getElementById("rotate").onclick = () => {
-        google.script.run.withSuccessHandler((data) => {
-          if (!data || !data.ok) { alert("Não encontrado ou senha errada."); return; }
+        google.script.run.withFailureHandler((err) => {
+          alert("Erro: " + (err && err.message ? err.message : err));
+        }).withSuccessHandler((data) => {
+          if (!data || !data.ok) { alert("Nao encontrado ou senha errada."); return; }
           showPair(data);
           document.getElementById("list").click();
         }).adminRotate(key(), document.getElementById("rotateNumber").value);
@@ -60,7 +70,7 @@
       document.getElementById("list").onclick = () => {
         google.script.run.withSuccessHandler((data) => {
           if (!data || !data.ok) { alert("Senha errada."); return; }
-          document.getElementById("table").innerHTML = "<table><tr><th>Número</th><th>CVV actual</th><th>Telemóvel</th><th>E-mail</th></tr>" +
+          document.getElementById("table").innerHTML = "<table><tr><th>Numero</th><th>CVV actual</th><th>Telemovel</th><th>E-mail</th></tr>" +
             (data.rows || []).map((row) => "<tr><td>" + group(row.number) + "</td><td>" + row.cvv + "</td><td>" + row.device + "</td><td>" + (row.email || "") + "</td></tr>").join("") +
             "</table>";
         }).adminList(key());

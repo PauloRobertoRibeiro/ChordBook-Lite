@@ -12,6 +12,7 @@ Desktop.ini
 pwa-android/build/
 pwa-android/.gradle/
 *.apk
+!pwa/ChordBook.apk
 *.aab
 *.apk.idsig
 *.class

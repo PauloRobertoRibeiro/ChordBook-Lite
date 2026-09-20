@@ -119,9 +119,20 @@
         .shots { grid-template-columns: 1fr 1fr; }
       }
       .pay-box { background: #eef4ff; }
+      .ok-banner {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin: 0 0 18px;
+      }
+      .ok-banner[hidden] { display: none; }
+      form.paypal { margin: 0; }
       footer { color: var(--muted); font-size: 0.9rem; margin-top: 36px; }
     </style>
-    <script src="./sale.js?v=88"></script>
+    <script src="./license-config.js"></script>
+    <script src="./sale.js?v=90"></script>
   </head>
   <body>
     <header>
@@ -139,6 +150,7 @@
     </header>
     <main>
       <p class="price" id="pricePill">5 €</p>
+      <div class="ok-banner" id="paidBanner" hidden></div>
       <h1 id="tTitle">Cifras, setlists e palco no telemóvel</h1>
       <p class="muted" id="tLead">App pago, sem conta e sem anúncios. A biblioteca fica neste aparelho. Versão 1.1.1.</p>
       <div class="hero-actions">
@@ -189,9 +201,11 @@
           lead: "App pago, sem conta e sem anúncios. A biblioteca fica neste aparelho. Versão {v}.",
           buy: "Comprar o APK Android",
           try: "Provar no browser",
-          payMail: "Ainda não há PayPal automático nesta página. Clique em Comprar para abrir um e-mail com o pedido. Resposta com o APK 1.1.1 depois do pagamento de {p}.",
-          payPaypal: "Pague {p} no PayPal. Depois envie o comprovativo para {e} se o APK não chegar de imediato.",
+          payMail: "Ainda não há PayPal automático nesta página. Clique em Comprar para abrir um e-mail com o pedido.",
+          payPaypal: "Pague {p} no PayPal. O programa envia o número e o CVV ao e-mail da conta PayPal. Não precisa de nos escrever.",
           payBizum: "Bizum: {b} ({p}). No e-mail indique o nome que usou no Bizum.",
+          paidOk: "Pagamento feito. O número e o CVV chegam ao e-mail do PayPal (veja também o spam). Depois descarregue o APK nesta página.",
+          apk: "Descarregar ChordBook",
           what: "O que compra",
           whatList: [
             "APK Android assinado, versão {v} (não é o ficheiro de teste)",
@@ -205,16 +219,16 @@
           mailSubject: "ChordBook Lite {v} — compra {p}",
           payStepsTitle: "Passos",
           paySteps: [
-            "Clique em Comprar e envie o e-mail (já vai preenchido).",
-            "Pague {p} pelo método combinado (PayPal, Bizum na Espanha, ou transferência).",
-            "Recebe o APK, um número de licença (fixo) e um CVV (muda em cada compra).",
+            "Clique em Comprar e pague {p} no PayPal.",
+            "O programa cria o número e o CVV e envia-os ao e-mail do PayPal.",
+            "Descarregue o APK nesta página, instale, e escreva o número e o CVV no app.",
           ],
           install: "Depois do pagamento",
           installList: [
             "No Android, abra o APK. Se pedir, permita instalar desta fonte.",
             "Se já tinha a versão de teste, exporte o backup, desinstale o teste e instale este.",
             "No app: Mais → Restaurar, se tiver um backup.",
-            "No app, introduza o número e o CVV. O CVV só funciona uma vez, neste telemóvel.",
+            "No app, introduza o número e o CVV que chegaram por e-mail. O CVV só funciona uma vez, neste telemóvel.",
             "Não use ChordBook-Lite-teste.apk.",
           ],
           share: "Instalar no grupo e partilhar cifras",
@@ -229,9 +243,11 @@
           lead: "App de pago, sin cuenta y sin anuncios. La biblioteca queda en este aparato. Versión {v}.",
           buy: "Comprar el APK Android",
           try: "Probar en el navegador",
-          payMail: "Aún no hay PayPal automático en esta página. Pulse Comprar para abrir un correo con el pedido. Recibirá el APK 1.1.1 tras el pago de {p}.",
-          payPaypal: "Pague {p} en PayPal. Luego envíe el justificante a {e} si el APK no llega al momento.",
+          payMail: "Aún no hay PayPal automático en esta página. Pulse Comprar para abrir un correo con el pedido.",
+          payPaypal: "Pague {p} en PayPal. El programa envía el número y el CVV al correo de la cuenta PayPal. No hace falta escribirnos.",
           payBizum: "Bizum: {b} ({p}). En el correo indique el nombre usado en Bizum.",
+          paidOk: "Pago hecho. El número y el CVV llegan al correo de PayPal (mire también el spam). Luego descargue el APK en esta página.",
+          apk: "Descargar ChordBook",
           what: "Qué compra",
           whatList: [
             "APK Android firmado, versión {v} (no es el archivo de prueba)",
@@ -245,16 +261,16 @@
           mailSubject: "ChordBook Lite {v} — compra {p}",
           payStepsTitle: "Pasos",
           paySteps: [
-            "Pulse Comprar y envíe el correo (ya va rellenado).",
-            "Pague {p} por el método acordado (PayPal, Bizum en España o transferencia).",
-            "Recibirá el APK, un número de licencia (fijo) y un CVV (cambia en cada compra).",
+            "Pulse Comprar y pague {p} en PayPal.",
+            "El programa crea el número y el CVV y los envía al correo de PayPal.",
+            "Descargue el APK en esta página, instálelo y escriba el número y el CVV en la app.",
           ],
           install: "Después del pago",
           installList: [
             "En Android, abra el APK. Si lo pide, permita instalar desde esta fuente.",
             "Si tenía la versión de prueba, exporte la copia, desinstálela e instale esta.",
             "En la app: Más → Restaurar, si tiene una copia.",
-            "En la app, escriba el número y el CVV. El CVV solo funciona una vez, en este móvil.",
+            "En la app, escriba el número y el CVV que llegaron por correo. El CVV solo funciona una vez, en este móvil.",
             "No use ChordBook-Lite-teste.apk.",
           ],
           share: "Instalar en el grupo y compartir cifras",
@@ -269,9 +285,11 @@
           lead: "Paid app, no account, no ads. Your library stays on this device. Version {v}.",
           buy: "Buy the Android APK",
           try: "Try it in the browser",
-          payMail: "There is no automatic PayPal on this page yet. Tap Buy to open a pre-filled email. You get the 1.1.1 APK after paying {p}.",
-          payPaypal: "Pay {p} with PayPal. Then email the receipt to {e} if the APK does not arrive right away.",
+          payMail: "There is no automatic PayPal on this page yet. Tap Buy to open a pre-filled email.",
+          payPaypal: "Pay {p} with PayPal. The program emails the number and CVV to that PayPal account. You do not need to write to us.",
           payBizum: "Bizum: {b} ({p}). In the email, say the name you used on Bizum.",
+          paidOk: "Payment done. The number and CVV go to your PayPal email (check spam too). Then download the APK on this page.",
+          apk: "Download ChordBook",
           what: "What you get",
           whatList: [
             "Signed Android APK, version {v} (not the test file)",
@@ -285,16 +303,16 @@
           mailSubject: "ChordBook Lite {v} — purchase {p}",
           payStepsTitle: "Steps",
           paySteps: [
-            "Tap Buy and send the email (it is already filled in).",
-            "Pay {p} by the agreed method (PayPal, Bizum in Spain, or bank transfer).",
-            "You receive the APK, a license number (fixed) and a CVV (changes with each purchase).",
+            "Tap Buy and pay {p} with PayPal.",
+            "The program creates the number and CVV and emails them to the PayPal address.",
+            "Download the APK on this page, install it, and enter the number and CVV in the app.",
           ],
           install: "After payment",
           installList: [
             "On Android, open the APK. Allow installs from this source if asked.",
             "If you had the test build, export a backup, uninstall it, then install this one.",
             "In the app: More → Restore, if you have a backup.",
-            "In the app, enter the number and CVV. That CVV works once, on this phone.",
+            "In the app, enter the number and CVV from the email. That CVV works once, on this phone.",
             "Do not use ChordBook-Lite-teste.apk.",
           ],
           share: "Install for the group and share charts",
@@ -318,10 +336,39 @@
         return items.map((item) => "<li>" + fill(item, sale) + "</li>").join("");
       }
 
+      function escapeAttr(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/</g, "&lt;");
+      }
+
+      function paypalFormHtml(sale, t) {
+        const exec = (window.CHORD_BOOK_LICENSE && window.CHORD_BOOK_LICENSE.endpoint) || "";
+        const site = sale.site || "https://chordbook.jogaraprender.com";
+        if (!sale.paypalBusiness || !exec) return "";
+        return (
+          '<form class="paypal" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">' +
+          '<input type="hidden" name="cmd" value="_xclick" />' +
+          '<input type="hidden" name="business" value="' + escapeAttr(sale.paypalBusiness) + '" />' +
+          '<input type="hidden" name="item_name" value="ChordBook Lite ' + escapeAttr(sale.version) + '" />' +
+          '<input type="hidden" name="amount" value="' + escapeAttr(sale.amount || "5.00") + '" />' +
+          '<input type="hidden" name="currency_code" value="EUR" />' +
+          '<input type="hidden" name="charset" value="utf-8" />' +
+          '<input type="hidden" name="no_shipping" value="1" />' +
+          '<input type="hidden" name="rm" value="1" />' +
+          '<input type="hidden" name="notify_url" value="' + escapeAttr(exec) + '" />' +
+          '<input type="hidden" name="return" value="' + escapeAttr(site + "/comprar.html?pago=1") + '" />' +
+          '<input type="hidden" name="cancel_return" value="' + escapeAttr(site + "/comprar.html") + '" />' +
+          '<button class="btn btn-primary" type="submit">' + t.buy + "</button>" +
+          "</form>"
+        );
+      }
+
       function apply(lang) {
         const sale = window.CHORD_BOOK_SALE || {
           price: "5 €",
-          version: "1.1.1",
+          version: "1.1.2",
           email: "ribeirorobertopaulo@gmail.com",
           paypalMe: "",
           bizum: "",
@@ -347,21 +394,43 @@
         const mail = "mailto:" + sale.email
           + "?subject=" + encodeURIComponent(fill(t.mailSubject, sale))
           + "&body=" + encodeURIComponent(fill(t.mailBody, sale));
+        const formHtml = paypalFormHtml(sale, t);
         const buy = document.getElementById("buyBtn");
         buy.textContent = t.buy;
-        if (sale.paypalMe) {
+        buy.onclick = null;
+        if (formHtml) {
+          buy.href = "#pagar";
+          buy.onclick = (event) => {
+            event.preventDefault();
+            const form = document.querySelector("form.paypal");
+            if (form) form.submit();
+          };
+        } else if (sale.paypalMe) {
           buy.href = sale.paypalMe;
         } else {
           buy.href = mail;
         }
 
         let hint = fill(t.payMail, sale);
-        if (sale.paypalMe) hint = fill(t.payPaypal, sale);
+        if (formHtml || sale.paypalMe) hint = fill(t.payPaypal, sale);
         document.getElementById("tPayHint").textContent = hint;
 
+        const banner = document.getElementById("paidBanner");
+        const paid = new URLSearchParams(location.search).get("pago") === "1";
+        banner.hidden = !paid;
+        banner.textContent = paid ? t.paidOk : "";
+
         const extra = [];
-        if (sale.paypalMe) {
+        extra.push('<p id="pagar"></p>');
+        if (formHtml) extra.push(formHtml);
+        else if (sale.paypalMe) {
           extra.push('<p><a class="btn btn-primary" href="' + sale.paypalMe + '">PayPal · ' + sale.price + "</a></p>");
+        }
+        if (sale.apk) {
+          const apkName = sale.apkName || "ChordBook.apk";
+          extra.push(
+            '<p><a class="btn btn-ghost" href="' + sale.apk + '" download="' + apkName + '">' + t.apk + "</a></p>",
+          );
         }
         if (sale.bizum) extra.push("<p>" + fill(t.payBizum, sale) + "</p>");
         extra.push("<p><strong>" + t.payStepsTitle + "</strong></p><ol>" + listHtml(t.paySteps, sale) + "</ol>");

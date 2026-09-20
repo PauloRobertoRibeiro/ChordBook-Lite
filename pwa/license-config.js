@@ -1,4 +1,4 @@
-/* Cole aqui o URL do Web app (termina em /exec) depois de publicar o Google Apps Script. */
+/* URL do Web app Google Apps Script (termina em /exec). */
 window.CHORD_BOOK_LICENSE = {
-  endpoint: "",
+  endpoint: "https://script.google.com/macros/s/AKfycbzTUsm3SXqKUsV0cURKZNdBj9y0YLGMdQQo9iIe5V5AG0FnZCHD0cZaHZnrXRO9Iz_5Cg/exec",
 };
