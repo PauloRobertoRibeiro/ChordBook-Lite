@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
@@ -21,8 +22,13 @@ import android.webkit.WebViewClient;
 
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -206,9 +212,9 @@ public class MainActivity extends Activity {
             try {
                 PackageInfo info = MainActivity.this.getPackageManager()
                     .getPackageInfo(MainActivity.this.getPackageName(), 0);
-                return info.versionName != null ? info.versionName : "1.1.1";
+                return info.versionName != null ? info.versionName : "1.1.2";
             } catch (Exception ignored) {
-                return "1.1.1";
+                return "1.1.2";
             }
         }
 
@@ -224,6 +230,63 @@ public class MainActivity extends Activity {
                     webView.loadUrl(ASSET_INDEX);
                 }
             });
+        }
+
+        @JavascriptInterface
+        public String getDeviceId() {
+            try {
+                String id = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                return id != null ? id : "";
+            } catch (Exception ignored) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public String getLicense() {
+            SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+            try {
+                JSONObject data = new JSONObject();
+                data.put("ok", prefs.getBoolean("lic_ok", false));
+                data.put("number", prefs.getString("lic_number", ""));
+                data.put("token", prefs.getString("lic_token", ""));
+                return data.toString();
+            } catch (Exception ignored) {
+                return "{\"ok\":false}";
+            }
+        }
+
+        @JavascriptInterface
+        public void saveLicense(String number, String token) {
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putBoolean("lic_ok", true)
+                .putString("lic_number", number != null ? number : "")
+                .putString("lic_token", token != null ? token : "")
+                .apply();
+        }
+
+        @JavascriptInterface
+        public void clearLicense() {
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                .putBoolean("lic_ok", false)
+                .remove("lic_number")
+                .remove("lic_token")
+                .apply();
+        }
+
+        @JavascriptInterface
+        public void licenseGet(String url) {
+            new Thread(() -> {
+                String body = httpGet(url);
+                runOnUiThread(() -> {
+                    if (webView == null) return;
+                    String payload = JSONObject.quote(body != null ? body : "");
+                    webView.evaluateJavascript(
+                        "window.ChordBookLicenseResult&&window.ChordBookLicenseResult(" + payload + ")",
+                        null
+                    );
+                });
+            }).start();
         }
 
         @JavascriptInterface
@@ -243,6 +306,35 @@ public class MainActivity extends Activity {
             } catch (Exception ignored) {
                 return "";
             }
+        }
+    }
+
+    private String httpGet(String spec) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(spec);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(20000);
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "ChordBookLite/1.1.2");
+            int code = conn.getResponseCode();
+            InputStream stream = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
+            if (stream == null) return "{\"ok\":false,\"error\":\"empty\"}";
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            StringBuilder out = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                out.append(line);
+            }
+            reader.close();
+            String body = out.toString().trim();
+            return body.isEmpty() ? "{\"ok\":false,\"error\":\"empty\"}" : body;
+        } catch (Exception ignored) {
+            return "{\"ok\":false,\"error\":\"network\"}";
+        } finally {
+            if (conn != null) conn.disconnect();
         }
     }
 

@@ -2707,6 +2707,35 @@ textarea {
   margin-left: auto;
 }
 
+.license-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+#licenseNumber,
+#licenseCvv {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  letter-spacing: 0.06em;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+#licenseCvv {
+  max-width: 6rem;
+}
+
+.license-error {
+  color: #b91c1c;
+  margin: 0;
+}
+
+#licenseBuy {
+  align-self: center;
+}
+
 @media (min-width: 768px) {
   .paste-sheet {
     align-items: center;

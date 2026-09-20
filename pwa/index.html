@@ -9,7 +9,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=87" />
+    <link rel="stylesheet" href="./styles.css?v=89" />
   </head>
   <body>
     <div class="app-shell library-active">
@@ -397,7 +397,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.1</p>
+            <p id="appVersion" class="more-version">Versão 1.1.2</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">Comprar app Android (5 €)</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
@@ -604,6 +604,27 @@
       </div>
     </div>
 
-    <script src="./app.js?v=88" defer></script>
+    <div id="licenseSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 data-i18n="license.title">Activar ChordBook Lite</h2>
+            <p data-i18n="license.lead">Como o cartão do banco: o número é seu e não muda. O CVV muda em cada compra. Um CVV já usado noutro telemóvel não serve.</p>
+          </div>
+        </header>
+        <label class="license-label" for="licenseNumber" data-i18n="license.number">Número</label>
+        <input id="licenseNumber" inputmode="numeric" autocomplete="off" placeholder="6112 3478 9012 3456" maxlength="23" />
+        <label class="license-label" for="licenseCvv" data-i18n="license.cvv">CVV</label>
+        <input id="licenseCvv" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="3" />
+        <p id="licenseError" class="license-error" hidden></p>
+        <div class="paste-sheet-actions">
+          <a id="licenseBuy" href="./comprar.html" data-i18n="license.buy">Comprar 5 €</a>
+          <button type="button" id="licenseActivate" class="primary-action" data-i18n="license.activate">Activar</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./license-config.js"></script>
+    <script src="./app.js?v=89" defer></script>
   </body>
 </html>

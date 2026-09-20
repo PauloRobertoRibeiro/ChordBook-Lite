@@ -1,5 +1,5 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.1.2";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const LOOK_PRESETS = {
@@ -359,6 +359,16 @@ const I18N = {
     "more.version": "Versão {v}",
     "more.privacy": "Política de privacidade",
     "more.buy": "Comprar app Android (5 €)",
+    "license.title": "Activar ChordBook Lite",
+    "license.lead": "Como o cartão do banco: o número é seu e não muda. O CVV muda em cada compra. Um CVV já usado noutro telemóvel não serve.",
+    "license.number": "Número",
+    "license.cvv": "CVV",
+    "license.activate": "Activar",
+    "license.buy": "Comprar 5 €",
+    "license.errInvalid": "Número ou CVV incompletos.",
+    "license.errCvv": "CVV incorrecto ou já usado. Peça um CVV novo.",
+    "license.errNetwork": "Sem internet. A activação precisa de rede.",
+    "license.errUnknown": "Não foi possível activar. Confirme o pagamento e os números.",
     "more.install": "Instalar e partilhar",
     "more.font": "Tamanho da letra",
     "more.fontDefault": "Tamanho da letra padrão",
@@ -775,6 +785,16 @@ const I18N = {
     "more.version": "Versión {v}",
     "more.privacy": "Política de privacidad",
     "more.buy": "Comprar app Android (5 €)",
+    "license.title": "Activar ChordBook Lite",
+    "license.lead": "Como la tarjeta del banco: el número es suyo y no cambia. El CVV cambia en cada compra. Un CVV ya usado en otro móvil no sirve.",
+    "license.number": "Número",
+    "license.cvv": "CVV",
+    "license.activate": "Activar",
+    "license.buy": "Comprar 5 €",
+    "license.errInvalid": "Número o CVV incompletos.",
+    "license.errCvv": "CVV incorrecto o ya usado. Pida un CVV nuevo.",
+    "license.errNetwork": "Sin internet. La activación necesita red.",
+    "license.errUnknown": "No se pudo activar. Confirme el pago y los números.",
     "more.install": "Instalar y compartir",
     "more.font": "Tamaño de letra",
     "more.fontDefault": "Tamaño de letra predeterminado",
@@ -1191,6 +1211,16 @@ const I18N = {
     "more.version": "Version {v}",
     "more.privacy": "Privacy policy",
     "more.buy": "Buy Android app (5 €)",
+    "license.title": "Activate ChordBook Lite",
+    "license.lead": "Like a bank card: your number stays the same. The CVV changes with each purchase. A used CVV will not work on another phone.",
+    "license.number": "Number",
+    "license.cvv": "CVV",
+    "license.activate": "Activate",
+    "license.buy": "Buy 5 €",
+    "license.errInvalid": "Incomplete number or CVV.",
+    "license.errCvv": "Wrong or already used CVV. Ask for a new CVV.",
+    "license.errNetwork": "No internet. Activation needs a network.",
+    "license.errUnknown": "Could not activate. Check the payment and the numbers.",
     "more.install": "Install and share",
     "more.font": "Font size",
     "more.fontDefault": "Default font size",
@@ -1364,6 +1394,126 @@ function restoreAndroidOrigin() {
 }
 
 restoreAndroidOrigin();
+
+function licenseEndpoint() {
+  return String(window.CHORD_BOOK_LICENSE && window.CHORD_BOOK_LICENSE.endpoint || "").trim();
+}
+
+function androidLicenseOn() {
+  return !!(window.ChordBookAndroid && typeof window.ChordBookAndroid.getLicense === "function" && licenseEndpoint());
+}
+
+function digitsOnly(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function groupLicenseNumber(value) {
+  return digitsOnly(value).slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+}
+
+let licenseWait = null;
+window.ChordBookLicenseResult = function (raw) {
+  if (typeof licenseWait === "function") {
+    const done = licenseWait;
+    licenseWait = null;
+    done(raw);
+  }
+};
+
+function licenseRequest(query) {
+  return new Promise((resolve) => {
+    licenseWait = (raw) => {
+      try {
+        resolve(JSON.parse(raw));
+      } catch {
+        resolve({ ok: false, error: "parse" });
+      }
+    };
+    const base = licenseEndpoint();
+    const join = base.includes("?") ? "&" : "?";
+    window.ChordBookAndroid.licenseGet(base + join + query);
+    setTimeout(() => {
+      if (licenseWait) {
+        const done = licenseWait;
+        licenseWait = null;
+        done("{\"ok\":false,\"error\":\"network\"}");
+      }
+    }, 25000);
+  });
+}
+
+function showLicenseError(code) {
+  const node = document.getElementById("licenseError");
+  if (!node) return;
+  const map = { cvv: "license.errCvv", invalid: "license.errInvalid", network: "license.errNetwork", parse: "license.errNetwork" };
+  node.hidden = false;
+  node.textContent = t(map[code] || "license.errUnknown");
+}
+
+function hideLicenseGate() {
+  const sheet = document.getElementById("licenseSheet");
+  if (sheet) sheet.hidden = true;
+}
+
+function showLicenseGate() {
+  const sheet = document.getElementById("licenseSheet");
+  if (!sheet) return;
+  sheet.hidden = false;
+  applyI18n();
+}
+
+async function bootLicense() {
+  if (!androidLicenseOn()) return;
+  let stored = {};
+  try {
+    stored = JSON.parse(window.ChordBookAndroid.getLicense() || "{}");
+  } catch {
+    stored = {};
+  }
+  const device = window.ChordBookAndroid.getDeviceId?.() || "";
+  if (stored.ok && stored.number && stored.token) {
+    const check = await licenseRequest(
+      "action=check&number=" + encodeURIComponent(stored.number) +
+      "&device=" + encodeURIComponent(device) +
+      "&token=" + encodeURIComponent(stored.token)
+    );
+    if (check.ok) {
+      hideLicenseGate();
+      return;
+    }
+    window.ChordBookAndroid.clearLicense();
+  }
+  showLicenseGate();
+}
+
+async function submitLicense() {
+  const number = digitsOnly(document.getElementById("licenseNumber")?.value);
+  const cvv = digitsOnly(document.getElementById("licenseCvv")?.value);
+  if (number.length !== 16 || cvv.length !== 3) {
+    showLicenseError("invalid");
+    return;
+  }
+  const device = window.ChordBookAndroid.getDeviceId?.() || "";
+  const result = await licenseRequest(
+    "action=activate&number=" + encodeURIComponent(number) +
+    "&cvv=" + encodeURIComponent(cvv) +
+    "&device=" + encodeURIComponent(device)
+  );
+  if (!result.ok) {
+    showLicenseError(result.error || "unknown");
+    return;
+  }
+  window.ChordBookAndroid.saveLicense(result.number || number, result.token || "");
+  hideLicenseGate();
+}
+
+document.getElementById("licenseNumber")?.addEventListener("input", (event) => {
+  event.target.value = groupLicenseNumber(event.target.value);
+});
+document.getElementById("licenseActivate")?.addEventListener("click", () => {
+  submitLicense();
+});
+
 const state = loadState();
 let activeView = "library";
 let libraryFilter = "all";
@@ -1638,6 +1788,7 @@ bindEvents();
 persist();
 render();
 registerServiceWorker();
+bootLicense();
 window.ChordBookNative = {
   stageStep(direction) {
     return applyStageStep(direction === "prev" ? -1 : 1);
@@ -6691,7 +6842,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=88").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=89").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
