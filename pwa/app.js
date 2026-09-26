@@ -4556,7 +4556,7 @@ function renderChordProChunks(line, semitones) {
     return `<div class="stage-line"><span class="lyric-row">${escapeHtml(line.replace(/\[[^\]]+\]/g, ""))}</span></div>`;
   }
   return `<div class="stage-line chordpro-line">${chunks.map((chunk) => {
-    return `<span class="chord-lyric"><span class="chord">${escapeHtml(chunk.chord)}</span><span class="lyric">${escapeHtml(chunk.lyric || " ")}</span></span>`;
+    return `<span class="chord-lyric notranslate"><span class="chord">${escapeHtml(chunk.chord)}</span><span class="lyric">${escapeHtml(chunk.lyric || " ")}</span></span>`;
   }).join("")}</div>`;
 }
 

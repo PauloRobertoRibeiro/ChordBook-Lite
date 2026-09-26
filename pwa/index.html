@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" translate="no" class="notranslate">
   <head>
     <meta charset="utf-8" />
+    <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#2563eb" />
     <meta name="description" content="Cifras, setlists e modo palco neste aparelho. Sem conta." />
@@ -9,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=89" />
+    <link rel="stylesheet" href="./styles.css?v=91" />
   </head>
   <body>
     <div class="app-shell library-active">
@@ -128,7 +129,7 @@
             <div id="songReadMenu" class="song-read-menu" hidden></div>
             <div class="song-read-layout">
               <div class="song-sheet">
-                <header class="song-sheet-head">
+                <header class="song-sheet-head notranslate" translate="no">
                   <div>
                     <strong id="songReadTitle">Canção</strong>
                     <span id="songReadMeta"></span>
@@ -147,7 +148,7 @@
                     </div>
                   </div>
                 </header>
-                <article id="songReadContent" class="song-read-content"></article>
+                <article id="songReadContent" class="song-read-content notranslate" translate="no"></article>
                 <p id="songCapoHint" class="song-capo-hint" hidden></p>
               </div>
               <aside class="song-tools-panel" id="songToolsPanel" aria-label="Esta cifra">
@@ -206,7 +207,7 @@
             <p id="stageCueNote" class="stage-cue-note stage-chrome" hidden></p>
             <span id="stageCapoBadge" class="stage-capo-badge" hidden></span>
             <div id="mobileSongMenu" class="mobile-song-menu" hidden></div>
-            <article id="stageContent" class="stage-content"></article>
+            <article id="stageContent" class="stage-content notranslate" translate="no"></article>
             <button id="stagePrevBtn" class="stage-nav-btn" type="button" aria-label="Anterior" data-i18n-aria="stage.prev">‹</button>
             <button id="stageNextBtn" class="stage-nav-btn" type="button" aria-label="Proxima" data-i18n-aria="stage.next">›</button>
             <footer class="stage-mode-footer">
@@ -625,6 +626,6 @@
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./app.js?v=89" defer></script>
+    <script src="./app.js?v=91" defer></script>
   </body>
 </html>
