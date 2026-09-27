@@ -6892,7 +6892,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=100").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=101").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
