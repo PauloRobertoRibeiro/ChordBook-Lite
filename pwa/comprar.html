@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#2563eb" />
-    <meta name="description" content="ChordBook Lite: cifras, setlists e palco no telemóvel. 5 €. Sem conta." />
+    <meta name="description" content="ChordBook Lite: cifras, setlists e palco no telemóvel. Sem conta." />
     <title>Comprar — ChordBook Lite</title>
     <link rel="icon" href="./icons/favicon.png" />
     <style>
@@ -68,15 +68,7 @@
       h2 { font-size: 1.08rem; margin: 28px 0 8px; }
       .muted { color: var(--muted); margin: 0 0 20px; }
       a { color: var(--blue); }
-      .price {
-        display: inline-block;
-        background: #eef4ff;
-        color: var(--blue);
-        font-weight: 700;
-        border-radius: 999px;
-        padding: 4px 12px;
-        margin-bottom: 12px;
-      }
+      .price[hidden] { display: none; }
       .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 8px; }
       .btn {
         display: inline-block;
@@ -87,6 +79,8 @@
       }
       .btn-primary { background: var(--blue); color: #fff; }
       .btn-ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+      .btn[hidden] { display: none; }
+      h2[hidden], .card[hidden], .muted[hidden] { display: none; }
       .card {
         background: #fff;
         border: 1px solid var(--line);
@@ -132,7 +126,7 @@
       footer { color: var(--muted); font-size: 0.9rem; margin-top: 36px; }
     </style>
     <script src="./license-config.js"></script>
-    <script src="./sale.js?v=90"></script>
+    <script src="./sale.js?v=93"></script>
   </head>
   <body>
     <header>
@@ -199,6 +193,7 @@
         pt: {
           title: "Cifras, setlists e palco no telemóvel",
           lead: "App pago, sem conta e sem anúncios. A biblioteca fica neste aparelho. Versão {v}.",
+          leadWait: "A Play Store ainda está em teste com o grupo. O preço volta quando a loja abrir. Pode provar no browser agora. Versão {v}.",
           buy: "Comprar o APK Android",
           try: "Provar no browser",
           payMail: "Ainda não há PayPal automático nesta página. Clique em Comprar para abrir um e-mail com o pedido.",
@@ -234,6 +229,7 @@
           share: "Instalar no grupo e partilhar cifras",
           privacy: "Política de privacidade",
           foot: "ChordBook Lite · {v} · {p} · {e}",
+          footWait: "ChordBook Lite · {v} · {e}",
           c1: "Biblioteca",
           c2: "Tom e capo",
           c3: "Modo palco",
@@ -241,6 +237,7 @@
         es: {
           title: "Cifras, setlists y escenario en el móvil",
           lead: "App de pago, sin cuenta y sin anuncios. La biblioteca queda en este aparato. Versión {v}.",
+          leadWait: "Google Play sigue en prueba con el grupo. El precio vuelve cuando abra la tienda. Puede probar en el navegador ahora. Versión {v}.",
           buy: "Comprar el APK Android",
           try: "Probar en el navegador",
           payMail: "Aún no hay PayPal automático en esta página. Pulse Comprar para abrir un correo con el pedido.",
@@ -276,6 +273,7 @@
           share: "Instalar en el grupo y compartir cifras",
           privacy: "Política de privacidad",
           foot: "ChordBook Lite · {v} · {p} · {e}",
+          footWait: "ChordBook Lite · {v} · {e}",
           c1: "Biblioteca",
           c2: "Tono y cejilla",
           c3: "Modo escenario",
@@ -283,6 +281,7 @@
         en: {
           title: "Charts, setlists and stage mode on your phone",
           lead: "Paid app, no account, no ads. Your library stays on this device. Version {v}.",
+          leadWait: "Google Play is still in closed testing. The price comes back when the store opens. You can try it in the browser now. Version {v}.",
           buy: "Buy the Android APK",
           try: "Try it in the browser",
           payMail: "There is no automatic PayPal on this page yet. Tap Buy to open a pre-filled email.",
@@ -318,6 +317,7 @@
           share: "Install for the group and share charts",
           privacy: "Privacy policy",
           foot: "ChordBook Lite · {v} · {p} · {e}",
+          footWait: "ChordBook Lite · {v} · {e}",
           c1: "Library",
           c2: "Key and capo",
           c3: "Stage mode",
@@ -367,26 +367,33 @@
 
       function apply(lang) {
         const sale = window.CHORD_BOOK_SALE || {
+          showPrice: false,
           price: "5 €",
           version: "1.1.2",
           email: "ribeirorobertopaulo@gmail.com",
           paypalMe: "",
           bizum: "",
         };
+        const showPrice = sale.showPrice !== false;
         const t = I18N[lang] || I18N.pt;
         document.documentElement.lang = lang;
-        document.getElementById("pricePill").textContent = sale.price;
+        const pill = document.getElementById("pricePill");
+        pill.hidden = !showPrice;
+        pill.textContent = showPrice ? sale.price : "";
         document.getElementById("tTitle").textContent = t.title;
-        document.getElementById("tLead").textContent = fill(t.lead, sale);
+        document.getElementById("tLead").textContent = fill(showPrice ? t.lead : t.leadWait, sale);
         document.getElementById("tryBtn").textContent = t.try;
         document.getElementById("tWhat").textContent = t.what;
-        document.getElementById("tWhatList").innerHTML = listHtml(t.whatList, sale);
+        document.getElementById("tWhatList").innerHTML = listHtml(
+          showPrice ? t.whatList : t.whatList.slice(0, -1),
+          sale,
+        );
         document.getElementById("tHow").textContent = t.how;
         document.getElementById("tInstall").textContent = t.install;
         document.getElementById("tInstallList").innerHTML = listHtml(t.installList, sale);
         document.getElementById("tShare").textContent = t.share;
         document.getElementById("tPrivacy").textContent = t.privacy;
-        document.getElementById("tFoot").textContent = fill(t.foot, sale);
+        document.getElementById("tFoot").textContent = fill(showPrice ? t.foot : (t.footWait || t.foot), sale);
         document.getElementById("c1").textContent = t.c1;
         document.getElementById("c2").textContent = t.c2;
         document.getElementById("c3").textContent = t.c3;
@@ -398,7 +405,10 @@
         const buy = document.getElementById("buyBtn");
         buy.textContent = t.buy;
         buy.onclick = null;
-        if (formHtml) {
+        buy.hidden = !showPrice;
+        if (!showPrice) {
+          buy.removeAttribute("href");
+        } else if (formHtml) {
           buy.href = "#pagar";
           buy.onclick = (event) => {
             event.preventDefault();
@@ -413,29 +423,39 @@
 
         let hint = fill(t.payMail, sale);
         if (formHtml || sale.paypalMe) hint = fill(t.payPaypal, sale);
-        document.getElementById("tPayHint").textContent = hint;
+        const payHint = document.getElementById("tPayHint");
+        payHint.textContent = showPrice ? hint : "";
+        payHint.hidden = !showPrice;
+        document.getElementById("tHow").hidden = !showPrice;
+        document.getElementById("payBox").hidden = !showPrice;
+        document.getElementById("tInstall").hidden = !showPrice;
+        document.getElementById("tInstall").nextElementSibling.hidden = !showPrice;
 
         const banner = document.getElementById("paidBanner");
         const paid = new URLSearchParams(location.search).get("pago") === "1";
         banner.hidden = !paid;
         banner.textContent = paid ? t.paidOk : "";
 
-        const extra = [];
-        extra.push('<p id="pagar"></p>');
-        if (formHtml) extra.push(formHtml);
-        else if (sale.paypalMe) {
-          extra.push('<p><a class="btn btn-primary" href="' + sale.paypalMe + '">PayPal · ' + sale.price + "</a></p>");
+        if (showPrice) {
+          const extra = [];
+          extra.push('<p id="pagar"></p>');
+          if (formHtml) extra.push(formHtml);
+          else if (sale.paypalMe) {
+            extra.push('<p><a class="btn btn-primary" href="' + sale.paypalMe + '">PayPal · ' + sale.price + "</a></p>");
+          }
+          if (sale.apk) {
+            const apkName = sale.apkName || "ChordBook.apk";
+            extra.push(
+              '<p><a class="btn btn-ghost" href="' + sale.apk + '" download="' + apkName + '">' + t.apk + "</a></p>",
+            );
+          }
+          if (sale.bizum) extra.push("<p>" + fill(t.payBizum, sale) + "</p>");
+          extra.push("<p><strong>" + t.payStepsTitle + "</strong></p><ol>" + listHtml(t.paySteps, sale) + "</ol>");
+          extra.push('<p><a href="' + mail + '">' + sale.email + "</a></p>");
+          document.getElementById("payBox").innerHTML = extra.join("");
+        } else {
+          document.getElementById("payBox").innerHTML = "";
         }
-        if (sale.apk) {
-          const apkName = sale.apkName || "ChordBook.apk";
-          extra.push(
-            '<p><a class="btn btn-ghost" href="' + sale.apk + '" download="' + apkName + '">' + t.apk + "</a></p>",
-          );
-        }
-        if (sale.bizum) extra.push("<p>" + fill(t.payBizum, sale) + "</p>");
-        extra.push("<p><strong>" + t.payStepsTitle + "</strong></p><ol>" + listHtml(t.paySteps, sale) + "</ol>");
-        extra.push('<p><a href="' + mail + '">' + sale.email + "</a></p>");
-        document.getElementById("payBox").innerHTML = extra.join("");
 
         document.querySelectorAll(".langs button").forEach((button) => {
           button.setAttribute("aria-pressed", button.dataset.lang === lang ? "true" : "false");

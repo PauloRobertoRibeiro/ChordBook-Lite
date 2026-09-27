@@ -4,19 +4,36 @@
     <meta charset="utf-8" />
     <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="theme-color" content="#4a4450" />
     <meta name="description" content="Cifras, setlists e modo palco neste aparelho. Sem conta." />
     <title>ChordBook Lite</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=92" />
+    <link rel="stylesheet" href="./styles.css?v=100" />
   </head>
-  <body class="notranslate" translate="no">
+  <body class="notranslate cb-gated" translate="no">
+    <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
+      <div class="cb-gate-langs">
+        <button type="button" data-lang="pt">PT</button>
+        <button type="button" data-lang="es">ES</button>
+      </div>
+      <div class="cb-gate-inner">
+        <p class="cb-gate-kicker" data-i18n="splash.kicker">Ensaio · Palco · Cifra</p>
+        <h1 class="cb-gate-title">
+          <span data-i18n="splash.line">ChordBook</span>
+          <strong id="cbGateName" data-i18n="splash.name">Lite</strong>
+        </h1>
+        <p class="cb-gate-lede" data-i18n="splash.lede">Guitarra, piano, voz. A cifra no telemóvel, no momento de tocar.</p>
+        <button class="cb-gate-cta" type="button" id="cbGateEnter" data-i18n="splash.enter">Entrar nas cifras</button>
+      </div>
+      <p class="cb-gate-foot" data-i18n="splash.foot">Sem conta · neste aparelho</p>
+    </div>
+
     <div class="app-shell library-active notranslate" translate="no">
       <aside class="sidebar" aria-label="Navegação principal" data-i18n-aria="aria.nav">
         <div class="brand">
-          <span class="brand-mark" aria-hidden="true">CB</span>
+          <img class="brand-mark" src="./img/brand-guitar.jpg?v=100" alt="" />
           <div>
             <strong>ChordBook Lite</strong>
             <span data-i18n="brand.tagline">Suas músicas sempre com você</span>
@@ -400,7 +417,7 @@
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
             <p id="appVersion" class="more-version">Versão 1.1.2</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
-            <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">Comprar app Android (5 €)</a></p>
+            <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
             <p class="more-privacy"><a href="./privacy.html" data-i18n="more.privacy">Política de privacidade</a></p>
             <pre id="fileLog" class="file-log">Pronto.</pre>
@@ -619,13 +636,13 @@
         <input id="licenseCvv" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="3" />
         <p id="licenseError" class="license-error" hidden></p>
         <div class="paste-sheet-actions">
-          <a id="licenseBuy" href="./comprar.html" data-i18n="license.buy">Comprar 5 €</a>
+          <a id="licenseBuy" href="./comprar.html" data-i18n="license.buy">Obter o Android</a>
           <button type="button" id="licenseActivate" class="primary-action" data-i18n="license.activate">Activar</button>
         </div>
       </div>
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./app.js?v=92" defer></script>
+    <script src="./app.js?v=100" defer></script>
   </body>
 </html>

@@ -1,4 +1,5 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
+const GATE_KEY = "chordbook-lite-in";
 const APP_VERSION = "1.1.2";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
@@ -42,6 +43,12 @@ const CHORD_SHAPES = {
 const I18N = {
   pt: {
     "brand.tagline": "Suas músicas sempre com você",
+    "splash.kicker": "Ensaio · Palco · Cifra",
+    "splash.line": "ChordBook",
+    "splash.name": "Lite",
+    "splash.lede": "Guitarra, piano, voz. A cifra no telemóvel, no momento de tocar.",
+    "splash.enter": "Entrar nas cifras",
+    "splash.foot": "Sem conta · neste aparelho",
     "nav.songs": "Músicas",
     "nav.setlists": "Agenda",
     "nav.chart": "Cifra",
@@ -358,13 +365,13 @@ const I18N = {
     "more.aboutLegal": "Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.",
     "more.version": "Versão {v}",
     "more.privacy": "Política de privacidade",
-    "more.buy": "Comprar app Android (5 €)",
+    "more.buy": "App Android",
     "license.title": "Activar ChordBook Lite",
     "license.lead": "Como o cartão do banco: o número é seu e não muda. O CVV muda em cada compra. Um CVV já usado noutro telemóvel não serve.",
     "license.number": "Número",
     "license.cvv": "CVV",
     "license.activate": "Activar",
-    "license.buy": "Comprar 5 €",
+    "license.buy": "Obter o Android",
     "license.errInvalid": "Número ou CVV incompletos.",
     "license.errCvv": "CVV incorrecto ou já usado. Peça um CVV novo.",
     "license.errNetwork": "Sem internet. A activação precisa de rede.",
@@ -468,6 +475,12 @@ const I18N = {
   },
   es: {
     "brand.tagline": "Tus canciones siempre contigo",
+    "splash.kicker": "Ensayo · Escenario · Cifra",
+    "splash.line": "ChordBook",
+    "splash.name": "Lite",
+    "splash.lede": "Guitarra, piano, voz. La cifra en el teléfono, en el momento de tocar.",
+    "splash.enter": "Entrar a las cifras",
+    "splash.foot": "Sin cuenta · en este aparato",
     "nav.songs": "Canciones",
     "nav.setlists": "Agenda",
     "nav.chart": "Cifra",
@@ -784,13 +797,13 @@ const I18N = {
     "more.aboutLegal": "Los datos quedan en este teléfono. Un computador solo entra con el código y su permiso. Exporte una copia antes de desinstalar.",
     "more.version": "Versión {v}",
     "more.privacy": "Política de privacidad",
-    "more.buy": "Comprar app Android (5 €)",
+    "more.buy": "App Android",
     "license.title": "Activar ChordBook Lite",
     "license.lead": "Como la tarjeta del banco: el número es suyo y no cambia. El CVV cambia en cada compra. Un CVV ya usado en otro móvil no sirve.",
     "license.number": "Número",
     "license.cvv": "CVV",
     "license.activate": "Activar",
-    "license.buy": "Comprar 5 €",
+    "license.buy": "Obter o Android",
     "license.errInvalid": "Número o CVV incompletos.",
     "license.errCvv": "CVV incorrecto o ya usado. Pida un CVV nuevo.",
     "license.errNetwork": "Sin internet. La activación necesita red.",
@@ -894,6 +907,12 @@ const I18N = {
   },
   en: {
     "brand.tagline": "Your songs, always with you",
+    "splash.kicker": "Rehearsal · Stage · Chart",
+    "splash.line": "ChordBook",
+    "splash.name": "Lite",
+    "splash.lede": "Guitar, piano, voice. The chart on your phone when you play.",
+    "splash.enter": "Open the charts",
+    "splash.foot": "No account · on this device",
     "nav.songs": "Songs",
     "nav.setlists": "Agenda",
     "nav.chart": "Chart",
@@ -1210,13 +1229,13 @@ const I18N = {
     "more.aboutLegal": "Your data stays on this phone. A computer can join only with the code and your permission. Export a backup before uninstalling.",
     "more.version": "Version {v}",
     "more.privacy": "Privacy policy",
-    "more.buy": "Buy Android app (5 €)",
+    "more.buy": "Android app",
     "license.title": "Activate ChordBook Lite",
     "license.lead": "Like a bank card: your number stays the same. The CVV changes with each purchase. A used CVV will not work on another phone.",
     "license.number": "Number",
     "license.cvv": "CVV",
     "license.activate": "Activate",
-    "license.buy": "Buy 5 €",
+    "license.buy": "Get Android",
     "license.errInvalid": "Incomplete number or CVV.",
     "license.errCvv": "Wrong or already used CVV. Ask for a new CVV.",
     "license.errNetwork": "No internet. Activation needs a network.",
@@ -1785,6 +1804,7 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 });
 
 bindEvents();
+bootSplash();
 persist();
 render();
 registerServiceWorker();
@@ -1798,7 +1818,37 @@ window.ChordBookNative = {
   },
 };
 
+function bootSplash() {
+  const gate = document.getElementById("cbGate");
+  const theme = document.querySelector('meta[name="theme-color"]');
+  if (sessionStorage.getItem(GATE_KEY) === "1") {
+    document.body.classList.remove("cb-gated");
+    if (gate) gate.hidden = true;
+    if (theme) theme.setAttribute("content", "#2563eb");
+    return;
+  }
+  document.body.classList.add("cb-gated");
+  if (gate) {
+    gate.hidden = false;
+    gate.classList.remove("is-leaving");
+  }
+  if (theme) theme.setAttribute("content", "#4a4450");
+}
+
+function enterChordBook() {
+  sessionStorage.setItem(GATE_KEY, "1");
+  document.body.classList.remove("cb-gated");
+  const gate = document.getElementById("cbGate");
+  const theme = document.querySelector('meta[name="theme-color"]');
+  if (theme) theme.setAttribute("content", "#2563eb");
+  if (gate) {
+    gate.classList.add("is-leaving");
+    setTimeout(() => { gate.hidden = true; }, 420);
+  }
+}
+
 function bindEvents() {
+  document.getElementById("cbGateEnter")?.addEventListener("click", enterChordBook);
   el.homeShortcuts.forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
   el.toolbarFavs?.addEventListener("click", () => {
     switchView("library");
@@ -6842,7 +6892,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=89").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=100").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
