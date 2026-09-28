@@ -8,9 +8,9 @@
     <meta name="description" content="Cifras, setlists e modo palco neste aparelho. Sem conta." />
     <title>ChordBook Lite</title>
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./icons/favicon.png?v=101" />
-    <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=101" />
-    <link rel="stylesheet" href="./styles.css?v=101" />
+    <link rel="icon" href="./icons/favicon.png?v=102" />
+    <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=102" />
+    <link rel="stylesheet" href="./styles.css?v=102" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -33,7 +33,7 @@
     <div class="app-shell library-active notranslate" translate="no">
       <aside class="sidebar" aria-label="Navegação principal" data-i18n-aria="aria.nav">
         <div class="brand">
-          <img class="brand-mark" src="./img/brand-guitar.jpg?v=101" alt="" />
+          <img class="brand-mark" src="./img/brand-guitar.jpg?v=102" alt="" />
           <div>
             <strong>ChordBook Lite</strong>
             <span data-i18n="brand.tagline">Suas músicas sempre com você</span>
@@ -387,6 +387,7 @@
                 <input id="importFileInputAlt" type="file" accept=".json,.txt,.chordpro,.chordbook,.chordbook-library,application/json,text/plain" />
               </label>
               <button id="exportRepertoireBtn" type="button" data-i18n="more.exportAll">Exportar backup</button>
+              <p class="more-hint" data-i18n="more.exportHint">Inclui músicas, repertórios, equipe, agenda, tema, idioma e visual do palco. Não inclui códigos de ligação ao computador.</p>
               <label class="file-button large">
                 <span data-i18n="more.restore">Restaurar backup</span>
                 <input id="restoreFileInput" type="file" accept=".json,.txt,.chordpro,.chordbook,.chordbook-library,application/json,text/plain" />
@@ -415,7 +416,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.2</p>
+            <p id="appVersion" class="more-version">Versão 1.1.3</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
@@ -642,7 +643,28 @@
       </div>
     </div>
 
+    <div id="importConflictSheet" class="paste-sheet" hidden>
+      <div class="paste-sheet-card">
+        <header class="paste-sheet-bar">
+          <div>
+            <h2 data-i18n="import.conflictTitle">Versões diferentes neste arquivo</h2>
+            <p data-i18n="import.conflictLead">Há itens neste aparelho mais recentes ou diferentes dos do arquivo. Nada será alterado até você escolher.</p>
+          </div>
+          <button type="button" id="importConflictClose" data-i18n="import.conflictCancel">Cancelar</button>
+        </header>
+        <ul id="importConflictList" class="import-conflict-list"></ul>
+        <div class="paste-sheet-actions import-conflict-actions">
+          <button type="button" id="importConflictKeep" data-i18n="import.conflictKeep">Manter as daqui</button>
+          <button type="button" id="importConflictBoth" data-i18n="import.conflictBoth">Guardar ambas</button>
+          <button type="button" id="importConflictReplace" class="primary-action" data-i18n="import.conflictReplace">Usar as importadas</button>
+          <button type="button" id="importConflictCancel" data-i18n="import.conflictCancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <script src="./license-config.js"></script>
-    <script src="./app.js?v=101" defer></script>
+    <script src="./chart-core.js?v=102" defer></script>
+    <script src="./backup-merge.js?v=102" defer></script>
+    <script src="./app.js?v=102" defer></script>
   </body>
 </html>

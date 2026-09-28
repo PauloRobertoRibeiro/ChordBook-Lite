@@ -74,5 +74,5 @@ Publique de novo `pwa/privacy.html` no GitHub Pages se o texto local estiver mai
 
 - **Não** envie `ChordBook-Lite-teste.apk` (chave de debug).
 - Corra `pwa-android\Gerar-APK-Release.ps1` (keystore em `%USERPROFILE%\.chordbook\upload-keystore.jks`).
-- Versão de venda: **1.1.1** (`versionCode` 102).
+- Versão de venda: **1.1.3** (`versionCode` 104).
 - Quem tem o APK de teste: exportar backup, desinstalar o teste, instalar o de venda.

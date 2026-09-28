@@ -3,7 +3,7 @@ window.CHORD_BOOK_SALE = {
   showPrice: false,
   price: "5 €",
   amount: "5.00",
-  version: "1.1.2",
+  version: "1.1.3",
   email: "ribeirorobertopaulo@gmail.com",
   paypalBusiness: "prr281064@gmail.com",
   paypalMe: "https://paypal.me/jogaraprender/5",

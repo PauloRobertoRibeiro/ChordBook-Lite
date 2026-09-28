@@ -33,8 +33,8 @@ try {
   $androidJar = Join-Path $sdk "platforms\android-36\android.jar"
   $jdk = "C:\Program Files\Eclipse Adoptium\jdk-17.0.19.10-hotspot\bin"
   $store = Join-Path $env:USERPROFILE ".chordbook\upload-keystore.jks"
-  $versionCode = 102
-  $versionName = "1.1.2"
+  $versionCode = 104
+  $versionName = "1.1.3"
   $out = Join-Path $root "build\release-$versionName"
 
   Write-Host ""

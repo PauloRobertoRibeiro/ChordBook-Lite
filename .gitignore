@@ -23,6 +23,14 @@ pwa-android/.gradle/
 # Machine-specific SDK path
 pwa-android/local.properties
 
+# Testes (Playwright / npm local)
+tests/node_modules/
+tests/test-results/
+tests/playwright-report/
+tests/blob-report/
+tests/playwright/.cache/
+
+
 # Release signing — never commit
 *.jks
 *.keystore

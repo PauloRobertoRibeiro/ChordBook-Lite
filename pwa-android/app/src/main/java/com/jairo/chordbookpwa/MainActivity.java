@@ -212,9 +212,9 @@ public class MainActivity extends Activity {
             try {
                 PackageInfo info = MainActivity.this.getPackageManager()
                     .getPackageInfo(MainActivity.this.getPackageName(), 0);
-                return info.versionName != null ? info.versionName : "1.1.2";
+                return info.versionName != null ? info.versionName : "1.1.3";
             } catch (Exception ignored) {
-                return "1.1.2";
+                return "1.1.3";
             }
         }
 
@@ -318,7 +318,7 @@ public class MainActivity extends Activity {
             conn.setConnectTimeout(15000);
             conn.setReadTimeout(20000);
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "ChordBookLite/1.1.2");
+            conn.setRequestProperty("User-Agent", "ChordBookLite/1.1.3");
             int code = conn.getResponseCode();
             InputStream stream = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
             if (stream == null) return "{\"ok\":false,\"error\":\"empty\"}";

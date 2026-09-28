@@ -1,0 +1,13 @@
+{
+  "name": "chordbook-lite-tests",
+  "private": true,
+  "description": "Testes de lógica e Playwright do ChordBook Lite. Não publica nem altera o repertório do utilizador.",
+  "scripts": {
+    "test": "node run-logic.js && playwright test",
+    "test:logic": "node run-logic.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

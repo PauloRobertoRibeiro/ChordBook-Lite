@@ -10,7 +10,7 @@ Projeto independente do núcleo leve do ChordBook. Não depende do app Flutter a
 
 O ChordBook antigo em `C:\Users\Jairo\Desktop\ChordBook\chordbook` permanece como backup e não deve ser alterado a partir daqui.
 
-Versão de venda: **1.1.1** (`versionCode` 102). O `applicationId` continua `com.jairo.chordbookpwa`.
+Versão de venda: **1.1.3** (`versionCode` 104). O `applicationId` continua `com.jairo.chordbookpwa`.
 
 ## Teste com o grupo
 
@@ -44,7 +44,7 @@ cd C:\Users\Jairo\Desktop\ChordBook-Lite\pwa-android
 
 1. Uma vez: `pwa-android\Criar-Keystore-Release.bat` — a chave fica em `%USERPROFILE%\.chordbook\upload-keystore.jks`, fora do Git. Guarde a senha.
 2. Gerar: `pwa-android\Gerar-APK-Release.bat`
-3. Quem já tem o APK de teste precisa exportar o backup, desinstalar o teste e instalar o 1.1.1. Chaves diferentes não atualizam o mesmo app.
+3. Quem já tem o APK de teste precisa exportar o backup, desinstalar o teste e instalar o 1.1.3. Chaves diferentes não atualizam o mesmo app.
 
 Textos da Play: `docs/loja/LISTAGEM.md`. Política no app: `pwa/privacy.html` (publique também em HTTPS para o Console).
 
