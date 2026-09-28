@@ -159,6 +159,9 @@ const I18N = {
     "song.tools": "Ajustes",
     "song.key": "Tom {key}",
     "song.capoChip": "Capo {capo}",
+    "song.stepperCapo": "Capo {capo}",
+    "song.capoDown": "Capo -",
+    "song.capoUp": "Capo +",
     "song.sounds": "soa {key}",
     "stage.mode": "Modo Palco",
     "stage.menu": "Menu",
@@ -607,6 +610,9 @@ const I18N = {
     "song.tools": "Ajustes",
     "song.key": "Tono {key}",
     "song.capoChip": "Cejilla {capo}",
+    "song.stepperCapo": "Cej. {capo}",
+    "song.capoDown": "Cejilla -",
+    "song.capoUp": "Cejilla +",
     "song.sounds": "suena {key}",
     "stage.mode": "Modo escenario",
     "stage.menu": "Menú",
@@ -1055,6 +1061,9 @@ const I18N = {
     "song.tools": "Adjust",
     "song.key": "Key {key}",
     "song.capoChip": "Capo {capo}",
+    "song.stepperCapo": "Capo {capo}",
+    "song.capoDown": "Capo -",
+    "song.capoUp": "Capo +",
     "song.sounds": "sounds {key}",
     "stage.mode": "Stage mode",
     "stage.menu": "Menu",
@@ -2762,7 +2771,7 @@ function renderSongView() {
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
-  if (el.songCapoValue) el.songCapoValue.textContent = t("capo.short", { capo: song.capo || 0 });
+  if (el.songCapoValue) el.songCapoValue.textContent = t("song.stepperCapo", { capo: song.capo || 0 });
   if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
 }
 
@@ -6793,7 +6802,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=102").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=103").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

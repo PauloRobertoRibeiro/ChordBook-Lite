@@ -78,4 +78,21 @@ test.describe("10. Layout computador e telemóvel (emulação de ecrã)", () => 
     await page.locator(".bottom-nav-btn[data-view=import]").click();
     await expect(page.locator("#exportRepertoireBtn")).toBeVisible();
   });
+
+  test("telemóvel: Tom e capo cabem no ecrã ao lado da cifra", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openApp(page, sampleRepertoire());
+    await page.locator("[data-play-id=fix-alfa]").click();
+    await expect(page.locator("#songReadTitle")).toHaveText("Alfa Fictícia");
+    await expect(page.locator("#songKeyStepper")).toBeVisible();
+    await expect(page.locator("#songCapoStepper")).toBeVisible();
+    const viewport = { width: 390, height: 844 };
+    for (const selector of ["#songKeyStepper", "#songCapoStepper"]) {
+      const box = await page.locator(selector).boundingBox();
+      expect(box, selector).toBeTruthy();
+      expect(box.x, `${selector} sai à esquerda`).toBeGreaterThanOrEqual(0);
+      expect(box.y, `${selector} sai acima`).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, `${selector} sai à direita`).toBeLessThanOrEqual(viewport.width + 1);
+    }
+  });
 });

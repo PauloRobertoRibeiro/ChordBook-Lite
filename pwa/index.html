@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png?v=102" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=102" />
-    <link rel="stylesheet" href="./styles.css?v=102" />
+    <link rel="stylesheet" href="./styles.css?v=103" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -147,7 +147,7 @@
             <div class="song-read-layout">
               <div class="song-sheet">
                 <header class="song-sheet-head notranslate" translate="no">
-                  <div>
+                  <div class="song-sheet-title">
                     <strong id="songReadTitle">Canção</strong>
                     <span id="songReadMeta"></span>
                     <span id="songCueNote" class="song-cue-note" hidden></span>
@@ -159,9 +159,9 @@
                       <button id="songKeyBadgeUp" type="button" aria-label="Tom +" data-i18n-aria="song.transposeUp">+</button>
                     </div>
                     <div id="songCapoStepper" class="song-key-stepper song-capo-stepper">
-                      <button id="songCapoDown" type="button" aria-label="Capo -">−</button>
+                      <button id="songCapoDown" type="button" aria-label="Capo -" data-i18n-aria="song.capoDown">−</button>
                       <strong id="songCapoValue">Capo 0</strong>
-                      <button id="songCapoUp" type="button" aria-label="Capo +">+</button>
+                      <button id="songCapoUp" type="button" aria-label="Capo +" data-i18n-aria="song.capoUp">+</button>
                     </div>
                   </div>
                 </header>
@@ -663,8 +663,8 @@
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./chart-core.js?v=102" defer></script>
-    <script src="./backup-merge.js?v=102" defer></script>
-    <script src="./app.js?v=102" defer></script>
+    <script src="./chart-core.js?v=103" defer></script>
+    <script src="./backup-merge.js?v=103" defer></script>
+    <script src="./app.js?v=103" defer></script>
   </body>
 </html>

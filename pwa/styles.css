@@ -1178,15 +1178,25 @@ textarea {
   display: flex;
   gap: 12px;
   justify-content: space-between;
+  min-width: 0;
   padding: 16px 18px 0;
 }
 
-.song-sheet-head strong {
+.song-sheet-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.song-sheet-title span {
+  overflow-wrap: anywhere;
+}
+
+.song-sheet-title strong {
   display: block;
   font-size: 22px;
 }
 
-.song-sheet-head span {
+.song-sheet-title span {
   color: var(--muted);
   display: block;
   margin-top: 4px;
@@ -1398,9 +1408,12 @@ textarea {
 .song-sheet-controls {
   align-items: center;
   display: flex;
+  flex: 0 1 auto;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .song-key-stepper {
@@ -4016,7 +4029,7 @@ textarea {
   width: 220px;
 }
 
-.song-sheet-head strong {
+.song-sheet-title strong {
   font-size: 28px;
   letter-spacing: -0.03em;
 }
@@ -4251,7 +4264,7 @@ textarea {
     padding: 0;
   }
 
-  .song-sheet-head strong {
+  .song-sheet-title strong {
     font-size: 32px;
   }
 
@@ -4394,8 +4407,45 @@ textarea {
     display: grid;
   }
 
-  .song-sheet-head strong {
+  .song-sheet-head {
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 12px 0;
+  }
+
+  .song-sheet-title {
+    flex: 1 1 100%;
+  }
+
+  .song-sheet-title strong {
     font-size: 22px;
+  }
+
+  .song-sheet-controls {
+    justify-content: flex-start;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .song-key-stepper {
+    flex: 0 1 auto;
+    max-width: calc(50% - 3px);
+  }
+
+  .song-key-stepper button {
+    min-height: 28px;
+    min-width: 28px;
+    font-size: 14px;
+    padding: 0 6px;
+  }
+
+  #songKeyBadge,
+  #songCapoValue {
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 0;
+    padding: 0 2px;
   }
 
   .song-read-content,
