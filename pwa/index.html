@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png?v=102" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=102" />
-    <link rel="stylesheet" href="./styles.css?v=103" />
+    <link rel="stylesheet" href="./styles.css?v=104" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -136,13 +136,23 @@
             <header class="song-read-bar">
               <button id="songBackBtn" type="button" data-i18n="nav.libraryBack">‹ Biblioteca</button>
               <div class="song-read-shortcuts">
-                <button id="songFavBtn" type="button" aria-label="Favorito" data-i18n-aria="library.favorite">★</button>
+                <button id="songFavBtn" type="button" aria-label="Favorito" data-i18n-aria="library.favorite">
+                  <span class="song-fav-star" aria-hidden="true">★</span>
+                  <span class="song-overflow-label" data-i18n="library.favorite">Favorito</span>
+                </button>
                 <button id="songEditBtn" type="button" data-i18n="song.editShort">Editar</button>
                 <button id="songScrollBtn" class="song-wide-only" type="button" data-i18n="song.scroll">Rolagem</button>
                 <button id="songOpenStageBtn" type="button" class="primary-action" data-i18n="nav.stage">Palco</button>
-                <button id="songMoreBtn" class="song-wide-only" type="button" data-i18n="nav.more">Mais</button>
+                <button id="songMoreBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="songOverflowSheet" data-i18n-aria="nav.more" data-i18n-title="nav.more">
+                  <span class="song-more-label song-wide-only" data-i18n="nav.more">Mais</span>
+                  <span class="song-more-dots song-phone-only" aria-hidden="true">···</span>
+                </button>
               </div>
             </header>
+            <div id="songOverflowSheet" class="song-overflow-sheet" hidden>
+              <button type="button" id="songOverflowBackdrop" class="song-overflow-backdrop" data-i18n-aria="chords.close" aria-label="Fechar"></button>
+              <div id="songOverflowCard" class="song-overflow-card" role="menu"></div>
+            </div>
             <div id="songReadMenu" class="song-read-menu" hidden></div>
             <div class="song-read-layout">
               <div class="song-sheet">
@@ -416,7 +426,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.3</p>
+            <p id="appVersion" class="more-version">Versão 1.1.4</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
@@ -663,8 +673,8 @@
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./chart-core.js?v=103" defer></script>
-    <script src="./backup-merge.js?v=103" defer></script>
-    <script src="./app.js?v=103" defer></script>
+    <script src="./chart-core.js?v=104" defer></script>
+    <script src="./backup-merge.js?v=104" defer></script>
+    <script src="./app.js?v=104" defer></script>
   </body>
 </html>

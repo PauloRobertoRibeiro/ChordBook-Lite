@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.3";
+const APP_VERSION = "1.1.4";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const LOOK_PRESETS = {
@@ -1617,6 +1617,7 @@ let isPeoplePickerOpen = false;
 let isAgendaSettingsOpen = false;
 let isMobileSongMenuOpen = false;
 let isSongReadMenuOpen = false;
+let isSongOverflowOpen = false;
 let isSetlistPickerOpen = false;
 let isChordSheetOpen = false;
 let isStageFocus = false;
@@ -1706,6 +1707,12 @@ const el = {
   songFav: document.querySelector("#songFavBtn"),
   songEdit: document.querySelector("#songEditBtn"),
   songMore: document.querySelector("#songMoreBtn"),
+  songOverflowSheet: document.querySelector("#songOverflowSheet"),
+  songOverflowCard: document.querySelector("#songOverflowCard"),
+  songOverflowBackdrop: document.querySelector("#songOverflowBackdrop"),
+  songSheetControls: document.querySelector(".song-sheet-controls"),
+  songSheetHead: document.querySelector(".song-sheet-head"),
+  songReadShortcuts: document.querySelector(".song-read-shortcuts"),
   songToolsPanel: document.querySelector("#songToolsPanel"),
   songToolsHandle: document.querySelector("#songToolsHandle"),
   songReadMenu: document.querySelector("#songReadMenu"),
@@ -1967,6 +1974,7 @@ function bindEvents() {
   window.addEventListener("resize", () => {
     updateResponsiveStageFont();
     updateSyncUi();
+    syncSongOverflow();
   });
   window.addEventListener("keydown", handleStageHotkeys);
   window.addEventListener("keydown", handleEditorSaveHotkey);
@@ -2008,6 +2016,7 @@ function bindEvents() {
   el.setlistPlayExit?.addEventListener("click", () => handleAppBack());
   el.songFav.addEventListener("click", toggleFavorite);
   el.songMore.addEventListener("click", toggleSongReadMenu);
+  el.songOverflowBackdrop?.addEventListener("click", closeSongOverflow);
   el.songTransposeDown.addEventListener("click", () => transposeSelected(-1));
   el.songTransposeUp.addEventListener("click", () => transposeSelected(1));
   el.songKeyBadgeDown?.addEventListener("click", () => transposeSelected(-1));
@@ -2244,6 +2253,7 @@ function switchView(view) {
   }
   if (view !== "song") {
     isSongReadMenuOpen = false;
+    isSongOverflowOpen = false;
     isSetlistPickerOpen = false;
     isChordSheetOpen = false;
   }
@@ -2262,6 +2272,7 @@ function switchView(view) {
   if (view === "stage" || (view === "song" && isSetlistPlaying)) requestStageWakeLock();
   else releaseStageWakeLock();
   renderSongReadMenu();
+  syncSongOverflow();
   renderMobileSongMenu();
   renderLibraryRail();
   if (keepScroll) startAutoScroll();
@@ -2409,6 +2420,10 @@ function handleAppBack() {
   }
   if (isSongToolsOpen) {
     setSongToolsOpen(false);
+    return true;
+  }
+  if (isSongOverflowOpen) {
+    closeSongOverflow();
     return true;
   }
   if (isSongReadMenuOpen) {
@@ -2732,6 +2747,7 @@ function songChartHtml(song) {
 function renderSongView() {
   const song = selectedSong();
   renderSongReadMenu();
+  syncSongOverflow();
   renderChordSheet();
   renderCapoHint(song);
   if (!song) {
@@ -2923,6 +2939,7 @@ function setStageFocus(on) {
 
 function setSongToolsOpen(on) {
   isSongToolsOpen = Boolean(on);
+  if (isSongToolsOpen) closeSongOverflow();
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   if (el.songToolsHandle) el.songToolsHandle.setAttribute("aria-expanded", isSongToolsOpen ? "true" : "false");
   if (el.songToolsPanel) el.songToolsPanel.style.transform = "";
@@ -3093,10 +3110,75 @@ function songsMatchingStageQuery() {
   });
 }
 
+function isCompactSongChrome() {
+  return window.matchMedia("(max-width: 767px)").matches;
+}
+
+function closeSongOverflow() {
+  if (!isSongOverflowOpen) {
+    syncSongOverflow();
+    return;
+  }
+  isSongOverflowOpen = false;
+  syncSongOverflow();
+}
+
+function syncSongMoreAria() {
+  if (!el.songMore) return;
+  const open = isCompactSongChrome() ? isSongOverflowOpen : isSongReadMenuOpen;
+  el.songMore.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function syncSongOverflow() {
+  const sheet = el.songOverflowSheet;
+  const card = el.songOverflowCard;
+  const controls = el.songSheetControls;
+  const shortcuts = el.songReadShortcuts;
+  const head = el.songSheetHead;
+  if (!sheet || !card || !controls || !shortcuts || !head || !el.songFav || !el.songEdit || !el.songOpenStage || !el.songMore) {
+    syncSongMoreAria();
+    return;
+  }
+  const compact = isCompactSongChrome();
+  if (compact) {
+    card.appendChild(el.songFav);
+    card.appendChild(el.songEdit);
+    card.appendChild(el.songOpenStage);
+    card.appendChild(controls);
+    sheet.hidden = !isSongOverflowOpen;
+    el.appShell.classList.toggle("song-overflow-open", isSongOverflowOpen);
+  } else {
+    isSongOverflowOpen = false;
+    if (el.songScroll) shortcuts.insertBefore(el.songFav, el.songScroll);
+    else shortcuts.insertBefore(el.songFav, el.songMore);
+    if (el.songScroll) shortcuts.insertBefore(el.songEdit, el.songScroll);
+    else shortcuts.insertBefore(el.songEdit, el.songMore);
+    shortcuts.insertBefore(el.songOpenStage, el.songMore);
+    head.appendChild(controls);
+    sheet.hidden = true;
+    el.appShell.classList.remove("song-overflow-open");
+  }
+  syncSongMoreAria();
+}
+
 function toggleSongReadMenu() {
+  if (isCompactSongChrome()) {
+    isSongOverflowOpen = !isSongOverflowOpen;
+    if (isSongOverflowOpen) {
+      isSongReadMenuOpen = false;
+      isSetlistPickerOpen = false;
+      renderSongReadMenu();
+      setSongToolsOpen(false);
+    }
+    syncSongOverflow();
+    return;
+  }
+  isSongOverflowOpen = false;
+  syncSongOverflow();
   isSongReadMenuOpen = !isSongReadMenuOpen;
   if (!isSongReadMenuOpen) isSetlistPickerOpen = false;
   renderSongReadMenu();
+  syncSongMoreAria();
 }
 
 function renderSongReadMenu() {
@@ -6802,7 +6884,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=103").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=104").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

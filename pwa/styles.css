@@ -1269,7 +1269,10 @@ textarea {
 }
 
 .app-shell.chart-focus .song-tools-panel,
-.app-shell.chart-focus .song-read-shortcuts {
+.app-shell.chart-focus .song-read-shortcuts #songFavBtn,
+.app-shell.chart-focus .song-read-shortcuts #songEditBtn,
+.app-shell.chart-focus .song-read-shortcuts #songScrollBtn,
+.app-shell.chart-focus .song-read-shortcuts #songOpenStageBtn {
   display: none;
 }
 
@@ -1383,6 +1386,11 @@ textarea {
 #songEditBtn:hover {
   background: #dbeafe;
   color: #1d4ed8;
+}
+
+#songMoreBtn {
+  flex: 0 0 auto;
+  min-width: 36px;
 }
 
 :root.dark .song-read-bar > button,
@@ -1595,6 +1603,90 @@ textarea {
 
 .song-read-menu button:disabled {
   opacity: 0.55;
+}
+
+.song-overflow-label {
+  display: none;
+}
+
+.song-overflow-sheet {
+  display: none;
+}
+
+.song-overflow-backdrop {
+  background: rgba(15, 23, 42, 0.18);
+  border: 0;
+  inset: 0;
+  padding: 0;
+  position: absolute;
+}
+
+.song-overflow-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  display: grid;
+  gap: 8px;
+  max-height: min(72dvh, 480px);
+  overflow: auto;
+  padding: 12px;
+  position: absolute;
+  right: 10px;
+  top: 50px;
+  width: min(300px, calc(100% - 20px));
+  z-index: 1;
+}
+
+.song-overflow-card #songFavBtn,
+.song-overflow-card #songEditBtn,
+.song-overflow-card #songOpenStageBtn {
+  border-radius: 12px;
+  height: 44px;
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: 0 14px;
+  width: 100%;
+}
+
+.song-overflow-card #songFavBtn {
+  min-width: 0;
+  width: 100%;
+}
+
+.song-overflow-card #songFavBtn .song-overflow-label {
+  display: inline;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.song-overflow-card .song-sheet-controls {
+  display: grid;
+  gap: 8px;
+  justify-content: stretch;
+  max-width: none;
+  width: 100%;
+}
+
+.song-overflow-card .song-key-stepper {
+  flex: none;
+  justify-content: space-between;
+  max-width: none;
+  width: 100%;
+}
+
+.song-overflow-card .song-key-stepper button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+:root.dark .song-overflow-card {
+  background: #151b22;
+  border-color: #2a3442;
+}
+
+:root.dark .song-overflow-backdrop {
+  background: rgba(2, 6, 23, 0.45);
 }
 
 .song-sheet,
@@ -3866,6 +3958,44 @@ textarea {
     display: inline-flex;
   }
 
+  .song-read-shortcuts #songFavBtn,
+  .song-read-shortcuts #songEditBtn,
+  .song-read-shortcuts #songOpenStageBtn {
+    display: none !important;
+  }
+
+  .song-sheet-head > .song-sheet-controls {
+    display: none;
+  }
+
+  #songMoreBtn {
+    align-items: center;
+    font-size: 18px;
+    font-weight: 800;
+    height: 36px;
+    justify-content: center;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    min-height: 36px;
+    min-width: 36px;
+    overflow: hidden;
+    padding: 0 0 4px;
+    width: 36px;
+  }
+
+  .song-more-dots {
+    display: block;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .song-overflow-sheet:not([hidden]) {
+    display: block;
+    inset: 0;
+    position: absolute;
+    z-index: 34;
+  }
+
   .bottom-nav {
     background: #f3f4f6;
     border-top: 1px solid var(--line);
@@ -3966,6 +4096,23 @@ textarea {
 
   #songOpenStageBtn.primary-action {
     padding: 0 13px;
+  }
+
+  #songMoreBtn {
+    height: 36px;
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0 0 5px;
+    width: 36px;
+  }
+
+  .song-overflow-card #songFavBtn,
+  .song-overflow-card #songEditBtn,
+  .song-overflow-card #songOpenStageBtn,
+  .song-overflow-card #songOpenStageBtn.primary-action {
+    height: 44px;
+    min-height: 44px;
+    padding: 0 14px;
   }
 
   .library-fab {
@@ -4431,6 +4578,12 @@ textarea {
   .song-key-stepper {
     flex: 0 1 auto;
     max-width: calc(50% - 3px);
+  }
+
+  .song-overflow-card .song-key-stepper {
+    flex: none;
+    max-width: none;
+    width: 100%;
   }
 
   .song-key-stepper button {

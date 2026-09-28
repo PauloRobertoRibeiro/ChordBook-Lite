@@ -60,6 +60,17 @@ test.describe("10. Layout computador e telemóvel (emulação de ecrã)", () => 
     expect(navDisplay).toBe("none");
   });
 
+  test("computador mantém Tom, capo e o botão Mais visíveis", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openApp(page, sampleRepertoire());
+    await page.locator("[data-play-id=fix-alfa]").click();
+    await expect(page.locator("#songReadTitle")).toHaveText("Alfa Fictícia");
+    await expect(page.locator("#songMoreBtn")).toBeVisible();
+    await expect(page.locator("#songKeyStepper")).toBeVisible();
+    await expect(page.locator("#songCapoStepper")).toBeVisible();
+    await expect(page.locator("#songOverflowSheet")).toBeHidden();
+  });
+
   test("telemóvel 390×844 (emulação CSS, não Android real) mostra barra inferior e FAB", async ({ page }) => {
     test.info().annotations.push({
       type: "note",
@@ -79,15 +90,26 @@ test.describe("10. Layout computador e telemóvel (emulação de ecrã)", () => 
     await expect(page.locator("#exportRepertoireBtn")).toBeVisible();
   });
 
-  test("telemóvel: Tom e capo cabem no ecrã ao lado da cifra", async ({ page }) => {
+  test("telemóvel: estrela, Editar, Escenario, Tom e capo ficam no menu ⋯", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openApp(page, sampleRepertoire());
     await page.locator("[data-play-id=fix-alfa]").click();
     await expect(page.locator("#songReadTitle")).toHaveText("Alfa Fictícia");
+    await expect(page.locator("#songFavBtn")).toBeHidden();
+    await expect(page.locator("#songEditBtn")).toBeHidden();
+    await expect(page.locator("#songOpenStageBtn")).toBeHidden();
+    await expect(page.locator("#songKeyStepper")).toBeHidden();
+    await expect(page.locator("#songCapoStepper")).toBeHidden();
+    await expect(page.locator("#songMoreBtn")).toBeVisible();
+    await page.locator("#songMoreBtn").click();
+    await expect(page.locator("#songOverflowSheet")).toBeVisible();
+    await expect(page.locator("#songEditBtn")).toBeVisible();
+    await expect(page.locator("#songOpenStageBtn")).toBeVisible();
+    await expect(page.locator("#songFavBtn")).toBeVisible();
     await expect(page.locator("#songKeyStepper")).toBeVisible();
     await expect(page.locator("#songCapoStepper")).toBeVisible();
     const viewport = { width: 390, height: 844 };
-    for (const selector of ["#songKeyStepper", "#songCapoStepper"]) {
+    for (const selector of ["#songKeyStepper", "#songCapoStepper", "#songEditBtn", "#songOpenStageBtn"]) {
       const box = await page.locator(selector).boundingBox();
       expect(box, selector).toBeTruthy();
       expect(box.x, `${selector} sai à esquerda`).toBeGreaterThanOrEqual(0);
