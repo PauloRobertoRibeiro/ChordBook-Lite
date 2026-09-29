@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.7";
+const APP_VERSION = "1.1.8";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -2820,16 +2820,16 @@ function renderStage() {
   const song = selectedSong();
   syncStageChrome();
   renderMobileSongMenu();
-  const position = activeSetlistPosition();
-  const nextSong = position ? setlistSongs(activeSetlist())[position.index + 1] : null;
-  el.stagePosition.textContent = position ? `${position.index + 1}/${position.total}` : "1/1";
+  const position = stageSongPosition();
+  const nextSong = position && position.index >= 0 ? position.songs[position.index + 1] : null;
+  el.stagePosition.textContent = position && position.index >= 0 ? `${position.index + 1}/${position.total}` : "1/1";
   if (el.stageDots) {
     const total = position?.total || 1;
-    const index = position?.index || 0;
-    el.stageDots.innerHTML = Array.from({ length: total }, (_, i) => `<span class="stage-dot ${i === index ? "on" : ""}"></span>`).join("");
+    const index = position && position.index >= 0 ? position.index : 0;
+    el.stageDots.innerHTML = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="stage-dot ${i === index ? "on" : ""}"></span>`).join("");
   }
   el.stagePrev.disabled = !position || position.index <= 0;
-  el.stageNext.disabled = !position || position.index >= position.total - 1;
+  el.stageNext.disabled = !position || position.index < 0 || position.index >= position.total - 1;
   if (el.stageNextHint) {
     el.stageNextHint.hidden = !nextSong;
     el.stageNextHint.textContent = nextSong ? t("stage.after", { title: nextSong.title || t("song.noTitle") }) : "";
@@ -2926,6 +2926,11 @@ function handleStageContentClick(event) {
     return;
   }
   if (event.target.closest("button, input, textarea, select")) return;
+  if (isTelaoDisplay()) {
+    const rect = el.stageContent.getBoundingClientRect();
+    moveSetlistStage(event.clientX - rect.left < rect.width / 2 ? -1 : 1);
+    return;
+  }
   if (isMobileSongMenuOpen) {
     if (isStageRundownWide()) return;
     isMobileSongMenuOpen = false;
@@ -4555,12 +4560,29 @@ function setlistSongs(setlist) {
   return setlist.songIds.map((id) => state.songs.find((song) => song.id === id)).filter(Boolean);
 }
 
-function moveSetlistStage(delta) {
+function stageSongQueue() {
   const setlist = activeSetlist();
+  if (setlist) return setlistSongs(setlist);
+  return (state.songs || []).filter(Boolean);
+}
+
+function stageSongPosition() {
+  const songs = stageSongQueue();
   const song = selectedSong();
-  if (!setlist || !song) return;
-  const songs = setlistSongs(setlist);
-  const currentIndex = songs.findIndex((item) => item.id === song.id);
+  if (!song || !songs.length) return null;
+  const index = songs.findIndex((item) => item.id === song.id);
+  if (index < 0) return { index: -1, total: songs.length, songs };
+  return { index, total: songs.length, songs };
+}
+
+function moveSetlistStage(delta) {
+  const song = selectedSong();
+  if (!song) return;
+  const position = stageSongPosition();
+  const songs = position?.songs || stageSongQueue();
+  if (!songs.length) return;
+  let currentIndex = position && position.index >= 0 ? position.index : -1;
+  if (currentIndex < 0) currentIndex = delta > 0 ? -1 : songs.length;
   const nextSong = songs[currentIndex + delta];
   if (!nextSong) {
     if (delta > 0 && isSetlistPlaying) {
@@ -4582,9 +4604,9 @@ function moveSetlistStage(delta) {
 }
 
 function applyStageStep(delta) {
-  const playingSetlist = el.appShell.classList.contains("stage-active")
+  const onChart = el.appShell.classList.contains("stage-active")
     || el.appShell.classList.contains("song-active");
-  if (!playingSetlist || !activeSetlist()) return false;
+  if (!onChart) return false;
   moveSetlistStage(delta);
   return true;
 }
@@ -5463,8 +5485,12 @@ function broadcastPlayhead() {
 function applyPlayhead(payload, prevSongId) {
   if (!payload) return;
   const beforeSongId = prevSongId === undefined ? selectedSongId : prevSongId;
-  if (payload.activeSetlistId && state.setlists.some((setlist) => setlist.id === payload.activeSetlistId)) {
-    activeSetlistId = payload.activeSetlistId;
+  if (Object.prototype.hasOwnProperty.call(payload, "activeSetlistId")) {
+    if (payload.activeSetlistId && state.setlists.some((setlist) => setlist.id === payload.activeSetlistId)) {
+      activeSetlistId = payload.activeSetlistId;
+    } else {
+      activeSetlistId = null;
+    }
   }
   if (payload.playView === "song" || payload.playView === "stage") {
     if (typeof payload.isSetlistPlaying === "boolean") isSetlistPlaying = payload.isSetlistPlaying;
@@ -5481,10 +5507,6 @@ function applyPlayhead(payload, prevSongId) {
   if (!playing && !songChanged && !oldClientOpened) return;
   if (isTelaoDisplay()) {
     switchView("stage");
-    return;
-  }
-  if (playing) {
-    switchView(payload.playView);
     return;
   }
   if (activeView !== "song" && activeView !== "stage") switchView("song");
@@ -7058,7 +7080,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=108").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=109").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

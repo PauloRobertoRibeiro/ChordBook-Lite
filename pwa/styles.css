@@ -1273,7 +1273,6 @@ textarea {
 .app-shell.telao-active .sync-banner,
 .app-shell.telao-active .stage-chrome,
 .app-shell.telao-active .stage-capo-badge,
-.app-shell.telao-active .stage-nav-btn,
 .app-shell.telao-active .stage-footer-tools {
   display: none !important;
 }
@@ -1282,6 +1281,10 @@ textarea {
   font-size: clamp(2.2rem, 5.5vw, 4.4rem);
   line-height: 1.35;
   padding: 8vh 6vw 12vh;
+}
+
+.app-shell.telao-active .stage-nav-btn {
+  opacity: 0.85;
 }
 
 .app-shell.telao-active .stage-mode-title strong {
