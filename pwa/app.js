@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.8";
+const APP_VERSION = "1.1.9";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -1642,6 +1642,9 @@ const syncLink = {
   conns: [],
 };
 let applyingSync = false;
+let applyingScrollSync = false;
+let lastSyncLine = 0;
+let scrollSyncTimer = 0;
 let telaoWanted = true;
 try {
   const savedTelao = localStorage.getItem(TELAO_KEY);
@@ -2065,6 +2068,8 @@ function bindEvents() {
   el.stageContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
   el.songReadContent.addEventListener("wheel", handleStageManualScroll, { passive: true });
   el.songReadContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
+  el.stageContent.addEventListener("scroll", handleChartScroll, { passive: true });
+  el.songReadContent.addEventListener("scroll", handleChartScroll, { passive: true });
   el.newSetlist.addEventListener("click", () => {
     if (agendaHub === "team") openMemberEditor();
     else createSetlist();
@@ -2811,6 +2816,8 @@ function renderSongView() {
   el.songFav.classList.toggle("on", Boolean(song.isFavorite));
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
+  stampSyncLines(el.songReadContent);
+  restoreSyncLine(el.songReadContent);
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
   if (el.songCapoValue) el.songCapoValue.textContent = t("song.stepperCapo", { capo: song.capo || 0 });
   if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
@@ -2868,11 +2875,15 @@ function renderStage() {
     el.stageCueNote.textContent = song.cue || "";
   }
   const signature = `${song.id}:${song.transposeValue || 0}:${song.capo || 0}`;
+  let rebuilt = false;
   if (el.stageContent.dataset.sig !== signature) {
     el.stageContent.dataset.sig = signature;
     el.stageContent.innerHTML = renderChartLines(song.lines, song.transposeValue || 0);
     el.stageContent.scrollTop = 0;
+    rebuilt = true;
   }
+  stampSyncLines(el.stageContent);
+  if (rebuilt || applyingSync) restoreSyncLine(el.stageContent);
 }
 
 function handleStageTouchStart(event) {
@@ -3060,6 +3071,77 @@ function activeScrollPane() {
   return null;
 }
 
+function stampSyncLines(root) {
+  if (!root) return;
+  let index = 0;
+  root.querySelectorAll(".stage-line, .stage-section").forEach((node) => {
+    if (node.classList.contains("chord-only") || node.classList.contains("blank")) return;
+    node.setAttribute("data-sync-line", String(index));
+    index += 1;
+  });
+}
+
+function visibleSyncLine(pane) {
+  if (!pane) return 0;
+  const lines = [...pane.querySelectorAll("[data-sync-line]")];
+  if (!lines.length) return 0;
+  const cutoff = pane.getBoundingClientRect().top + Math.min(56, pane.clientHeight * 0.14);
+  let found = 0;
+  for (const node of lines) {
+    if (node.getBoundingClientRect().top <= cutoff) found = Number(node.getAttribute("data-sync-line")) || 0;
+    else break;
+  }
+  return found;
+}
+
+function scrollToSyncLine(pane, line) {
+  if (!pane) return;
+  const node = pane.querySelector(`[data-sync-line="${Number(line) || 0}"]`);
+  if (!node) {
+    pane.scrollTop = 0;
+    return;
+  }
+  pane.scrollTop += node.getBoundingClientRect().top - pane.getBoundingClientRect().top - 10;
+}
+
+function restoreSyncLine(pane) {
+  if (!pane || !pane.querySelector("[data-sync-line]")) return;
+  applyingScrollSync = true;
+  scrollToSyncLine(pane, lastSyncLine);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { applyingScrollSync = false; });
+  });
+}
+
+function followPane() {
+  if (isTelaoDisplay() || el.appShell.classList.contains("stage-active")) return el.stageContent;
+  return el.songReadContent;
+}
+
+function applyRemoteScroll(line, songId) {
+  if (songId && selectedSongId && songId !== selectedSongId) return;
+  lastSyncLine = Math.max(0, Number(line) || 0);
+  applyingScrollSync = true;
+  scrollToSyncLine(followPane(), lastSyncLine);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { applyingScrollSync = false; });
+  });
+}
+
+function handleChartScroll() {
+  if (applyingScrollSync || applyingSync || !syncLink.authorized) return;
+  const pane = activeScrollPane();
+  if (!pane) return;
+  clearTimeout(scrollSyncTimer);
+  scrollSyncTimer = setTimeout(() => {
+    if (applyingScrollSync || applyingSync || !syncLink.authorized) return;
+    const line = visibleSyncLine(pane);
+    if (line === lastSyncLine) return;
+    lastSyncLine = line;
+    sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line } });
+  }, 40);
+}
+
 function toggleAutoScroll() {
   if (isAutoScrolling) stopAutoScroll();
   else startAutoScroll();
@@ -3109,6 +3191,7 @@ function startAutoScroll() {
           return;
         }
         pane.scrollTop = next;
+        handleChartScroll();
       }, 100);
     });
   });
@@ -4594,6 +4677,7 @@ function moveSetlistStage(delta) {
   }
   setlistPlayFinished = false;
   selectedSongId = nextSong.id;
+  lastSyncLine = 0;
   const keepScroll = isAutoScrolling;
   stopAutoScroll();
   el.stageContent.scrollTop = 0;
@@ -5437,6 +5521,7 @@ function playheadSnapshot() {
     isSetlistPlaying,
     setlistPlayFinished,
     playView: playing ? activeView : "idle",
+    line: lastSyncLine,
   };
 }
 
@@ -5505,6 +5590,8 @@ function applyPlayhead(payload, prevSongId) {
   const songChanged = Boolean(payload.selectedSongId && payload.selectedSongId !== beforeSongId);
   const oldClientOpened = payload.playView == null && Boolean(payload.selectedSongId);
   if (!playing && !songChanged && !oldClientOpened) return;
+  if (songChanged) lastSyncLine = typeof payload.line === "number" ? payload.line : 0;
+  else if (typeof payload.line === "number") lastSyncLine = payload.line;
   if (isTelaoDisplay()) {
     switchView("stage");
     return;
@@ -5609,6 +5696,10 @@ function handleSyncMessage(message) {
   if (message.type === "auth-deny" && syncLink.role === "host") {
     notify(t("sync.denied"));
     stopSyncLink(true);
+    return;
+  }
+  if (message.type === "scroll" && syncLink.authorized) {
+    applyRemoteScroll(message.payload?.line, message.payload?.songId);
     return;
   }
   if (message.type === "playhead" && syncLink.authorized) {
@@ -7080,7 +7171,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=109").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=110").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
