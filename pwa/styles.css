@@ -1287,6 +1287,28 @@ textarea {
   opacity: 0.85;
 }
 
+.block-size-field {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.block-size-field .more-hint {
+  margin: 0;
+}
+
+.app-shell.block-paging.song-active .song-read-content,
+.app-shell.block-paging.stage-active .stage-content {
+  overflow-y: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.app-shell.block-paging.song-active .song-read-content [data-sync-line]:not(.in-block),
+.app-shell.block-paging.stage-active .stage-content [data-sync-line]:not(.in-block) {
+  display: none;
+}
+
 .app-shell.telao-active .stage-mode-title strong {
   font-size: 1.1rem;
 }

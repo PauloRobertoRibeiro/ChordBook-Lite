@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png?v=104" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=104" />
-    <link rel="stylesheet" href="./styles.css?v=110" />
+    <link rel="stylesheet" href="./styles.css?v=111" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -108,6 +108,14 @@
                   <span data-i18n="editor.cue">Recado no palco</span>
                   <input id="cueInput" maxlength="80" placeholder="Ex.: entra no 2. verso" data-i18n-placeholder="editor.cuePh" />
                 </label>
+                <div class="block-size-field">
+                  <span data-i18n="editor.blockSize">Bloco no telão</span>
+                  <div class="more-inline lang-pills">
+                    <button type="button" data-block-size="2" data-i18n="editor.block2">2 linhas</button>
+                    <button type="button" data-block-size="4" class="active" data-i18n="editor.block4">4 linhas</button>
+                  </div>
+                  <p class="more-hint" data-i18n="editor.blockHint">No telemóvel, deslize para cima ou para baixo: avança um bloco. O computador segue.</p>
+                </div>
                 <label class="lyrics-field">
                   <span data-i18n="editor.lyrics">Letra e cifras</span>
                   <textarea id="linesInput" spellcheck="false" placeholder="{key: A}&#10;Intro:&#10;A | E | F#m | D&#10;&#10;Verso 1:&#10;A      E       F#m     D&#10;Aqui escrevo a primeira frase&#10;A      E       D&#10;Aqui continuo a letra"></textarea>
@@ -430,7 +438,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.9</p>
+            <p id="appVersion" class="more-version">Versão 1.1.10</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
@@ -677,8 +685,8 @@
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./chart-core.js?v=110" defer></script>
-    <script src="./backup-merge.js?v=110" defer></script>
-    <script src="./app.js?v=110" defer></script>
+    <script src="./chart-core.js?v=111" defer></script>
+    <script src="./backup-merge.js?v=111" defer></script>
+    <script src="./app.js?v=111" defer></script>
   </body>
 </html>

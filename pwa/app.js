@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.9";
+const APP_VERSION = "1.1.10";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -120,6 +120,10 @@ const I18N = {
     "editor.capo": "Capo",
     "editor.cue": "Recado no palco",
     "editor.cuePh": "Ex.: entra no 2. verso",
+    "editor.blockSize": "Bloco no telão",
+    "editor.block2": "2 linhas",
+    "editor.block4": "4 linhas",
+    "editor.blockHint": "No telemóvel, deslize para cima ou para baixo: avança um bloco. O computador segue.",
     "editor.lyrics": "Letra e cifras",
     "editor.viewChart": "Ver cifra",
     "editor.duplicate": "Duplicar",
@@ -572,6 +576,10 @@ const I18N = {
     "editor.capo": "Cejilla",
     "editor.cue": "Recado en el escenario",
     "editor.cuePh": "Ej.: entra en el 2. verso",
+    "editor.blockSize": "Bloque en el telón",
+    "editor.block2": "2 líneas",
+    "editor.block4": "4 líneas",
+    "editor.blockHint": "En el teléfono, deslice arriba o abajo: avanza un bloque. El computador sigue.",
     "editor.lyrics": "Letra y cifras",
     "editor.viewChart": "Ver cifra",
     "editor.duplicate": "Duplicar",
@@ -1024,6 +1032,10 @@ const I18N = {
     "editor.capo": "Capo",
     "editor.cue": "Stage cue",
     "editor.cuePh": "e.g. come in on verse 2",
+    "editor.blockSize": "Projector block",
+    "editor.block2": "2 lines",
+    "editor.block4": "4 lines",
+    "editor.blockHint": "On the phone, swipe up or down to move one block. The computer follows.",
     "editor.lyrics": "Lyrics and chords",
     "editor.viewChart": "View chart",
     "editor.duplicate": "Duplicate",
@@ -1687,6 +1699,7 @@ const el = {
   category: document.querySelector("#categoryInput"),
   capo: document.querySelector("#capoInput"),
   cue: document.querySelector("#cueInput"),
+  blockSize: document.querySelectorAll("[data-block-size]"),
   lines: document.querySelector("#linesInput"),
   favorite: document.querySelector("#favoriteBtn"),
   duplicate: document.querySelector("#duplicateBtn"),
@@ -1966,6 +1979,17 @@ function bindEvents() {
   [el.title, el.artist, el.category, el.capo, el.cue, el.lines].forEach((field) => {
     field?.addEventListener("input", updateEditorPreview);
   });
+  el.blockSize.forEach((button) => {
+    button.addEventListener("click", () => {
+      const song = selectedSong();
+      if (!song) return;
+      song.blockSize = Number(button.dataset.blockSize) === 2 ? 2 : 4;
+      lastSyncLine = Math.floor(lastSyncLine / song.blockSize) * song.blockSize;
+      persist();
+      renderEditor();
+      applyBlockView();
+    });
+  });
   el.themePills.forEach((button) => button.addEventListener("click", () => setTheme(button.dataset.theme)));
   el.songCapoDown?.addEventListener("click", () => changeCapo(-1));
   el.songCapoUp?.addEventListener("click", () => changeCapo(1));
@@ -2064,10 +2088,10 @@ function bindEvents() {
   el.songRead?.addEventListener("touchstart", handleSongSetlistTouchStart, { passive: true });
   el.songRead?.addEventListener("touchend", handleSongSetlistTouchEnd, { passive: true });
   el.stageContent.addEventListener("click", handleStageContentClick);
-  el.stageContent.addEventListener("wheel", handleStageManualScroll, { passive: true });
-  el.stageContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
-  el.songReadContent.addEventListener("wheel", handleStageManualScroll, { passive: true });
-  el.songReadContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
+  el.stageContent.addEventListener("wheel", handleBlockWheel, { passive: false });
+  el.songReadContent.addEventListener("wheel", handleBlockWheel, { passive: false });
+  el.stageContent.addEventListener("touchmove", handleBlockTouchMove, { passive: false });
+  el.songReadContent.addEventListener("touchmove", handleBlockTouchMove, { passive: false });
   el.stageContent.addEventListener("scroll", handleChartScroll, { passive: true });
   el.songReadContent.addEventListener("scroll", handleChartScroll, { passive: true });
   el.newSetlist.addEventListener("click", () => {
@@ -2760,11 +2784,15 @@ function renderEditor() {
   [el.title, el.artist, el.category, el.capo, el.cue, el.lines, el.favorite, el.duplicate, el.delete, el.openStageFromEditor].forEach((field) => {
     if (field) field.disabled = disabled;
   });
+  el.blockSize.forEach((button) => { button.disabled = disabled; });
   el.title.value = song?.title ?? "";
   el.artist.value = song?.artist ?? "";
   el.category.value = song?.category ?? "";
   el.capo.value = song?.capo ?? 0;
   if (el.cue) el.cue.value = song?.cue ?? "";
+  el.blockSize.forEach((button) => {
+    button.classList.toggle("active", songBlockSize(song) === Number(button.dataset.blockSize));
+  });
   el.lines.value = song ? foldStackedChords(song.lines).join("\n") : "";
   el.favorite.textContent = song?.isFavorite ? t("library.unfavorite") : t("library.favorite");
   updateEditorPreview();
@@ -2817,6 +2845,7 @@ function renderSongView() {
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
   stampSyncLines(el.songReadContent);
+  markBlockLines(el.songReadContent);
   restoreSyncLine(el.songReadContent);
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
   if (el.songCapoValue) el.songCapoValue.textContent = t("song.stepperCapo", { capo: song.capo || 0 });
@@ -2883,6 +2912,7 @@ function renderStage() {
     rebuilt = true;
   }
   stampSyncLines(el.stageContent);
+  markBlockLines(el.stageContent);
   if (rebuilt || applyingSync) restoreSyncLine(el.stageContent);
 }
 
@@ -2908,6 +2938,10 @@ function handleSongSetlistTouchEnd(event) {
   const dy = touch.clientY - stageTouchStart.y;
   stageTouchStart = null;
   if (!el.appShell.classList.contains("song-active")) return;
+  if (Math.abs(dy) >= 36 && Math.abs(dy) > Math.abs(dx)) {
+    moveLyricBlock(dy < 0 ? 1 : -1);
+    return;
+  }
   if (Math.abs(dx) >= 70 && Math.abs(dx) >= Math.abs(dy) * 1.35 && activeSetlist()) {
     moveSetlistStage(dx < 0 ? 1 : -1);
   }
@@ -2920,6 +2954,11 @@ function handleStageTouchEnd(event) {
   const dy = touch.clientY - stageTouchStart.y;
   stageTouchStart = null;
 
+  if (Math.abs(dy) >= 36 && Math.abs(dy) > Math.abs(dx)) {
+    stageTouchUsed = true;
+    moveLyricBlock(dy < 0 ? 1 : -1);
+    return;
+  }
   if (Math.abs(dx) >= 70 && Math.abs(dx) >= Math.abs(dy) * 1.35 && activeSetlist()) {
     stageTouchUsed = true;
     moveSetlistStage(dx < 0 ? 1 : -1);
@@ -2939,7 +2978,7 @@ function handleStageContentClick(event) {
   if (event.target.closest("button, input, textarea, select")) return;
   if (isTelaoDisplay()) {
     const rect = el.stageContent.getBoundingClientRect();
-    moveSetlistStage(event.clientX - rect.left < rect.width / 2 ? -1 : 1);
+    moveLyricBlock(event.clientY - rect.top < rect.height / 2 ? -1 : 1);
     return;
   }
   if (isMobileSongMenuOpen) {
@@ -2951,6 +2990,21 @@ function handleStageContentClick(event) {
     return;
   }
   toggleStageFocus();
+}
+
+function handleBlockTouchMove(event) {
+  if (!stageTouchStart || !event.cancelable || !event.touches[0]) return;
+  const dy = Math.abs(event.touches[0].clientY - stageTouchStart.y);
+  const dx = Math.abs(event.touches[0].clientX - stageTouchStart.x);
+  if (dy > 8 && dy > dx) event.preventDefault();
+}
+
+function handleBlockWheel(event) {
+  event.preventDefault();
+  if (handleBlockWheel.lock) return;
+  handleBlockWheel.lock = true;
+  moveLyricBlock(event.deltaY > 0 ? 1 : -1);
+  setTimeout(() => { handleBlockWheel.lock = false; }, 260);
 }
 
 function handleStageManualScroll(event) {
@@ -3120,12 +3174,63 @@ function followPane() {
 
 function applyRemoteScroll(line, songId) {
   if (songId && selectedSongId && songId !== selectedSongId) return;
-  lastSyncLine = Math.max(0, Number(line) || 0);
+  const size = songBlockSize();
+  lastSyncLine = Math.floor(Math.max(0, Number(line) || 0) / size) * size;
+  applyBlockView();
+}
+
+function songBlockSize(song = selectedSong()) {
+  return Number(song?.blockSize) === 2 ? 2 : 4;
+}
+
+function songBlockSizeFromUi() {
+  const on = [...el.blockSize].find((button) => button.classList.contains("active"));
+  return Number(on?.dataset.blockSize) === 2 ? 2 : 4;
+}
+
+function syncLineCount(root) {
+  const nodes = root?.querySelectorAll("[data-sync-line]");
+  if (!nodes?.length) return 0;
+  return Math.max(...[...nodes].map((node) => Number(node.getAttribute("data-sync-line")) || 0)) + 1;
+}
+
+function markBlockLines(root) {
+  if (!root) return;
+  const size = songBlockSize();
+  const start = Math.floor(lastSyncLine / size) * size;
+  const end = start + size;
+  el.appShell?.classList.add("block-paging");
+  root.querySelectorAll("[data-sync-line]").forEach((node) => {
+    const index = Number(node.getAttribute("data-sync-line")) || 0;
+    node.classList.toggle("in-block", index >= start && index < end);
+  });
+}
+
+function applyBlockView() {
+  [el.songReadContent, el.stageContent].forEach((pane) => {
+    if (!pane) return;
+    stampSyncLines(pane);
+    markBlockLines(pane);
+  });
   applyingScrollSync = true;
-  scrollToSyncLine(followPane(), lastSyncLine);
+  scrollToSyncLine(followPane() || activeScrollPane(), lastSyncLine);
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { applyingScrollSync = false; });
   });
+}
+
+function moveLyricBlock(delta) {
+  const pane = el.songReadContent || el.stageContent;
+  if (pane) stampSyncLines(pane);
+  const size = songBlockSize();
+  const total = Math.max(1, syncLineCount(pane) || syncLineCount(el.stageContent));
+  const maxBlock = Math.max(0, Math.ceil(total / size) - 1);
+  const next = Math.max(0, Math.min(maxBlock, Math.floor(lastSyncLine / size) + delta));
+  lastSyncLine = next * size;
+  applyBlockView();
+  if (syncLink.authorized && !applyingSync) {
+    sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line: lastSyncLine } });
+  }
 }
 
 function handleChartScroll() {
@@ -3136,9 +3241,12 @@ function handleChartScroll() {
   scrollSyncTimer = setTimeout(() => {
     if (applyingScrollSync || applyingSync || !syncLink.authorized) return;
     const line = visibleSyncLine(pane);
-    if (line === lastSyncLine) return;
-    lastSyncLine = line;
-    sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line } });
+    const size = songBlockSize();
+    const snapped = Math.floor(line / size) * size;
+    if (snapped === lastSyncLine) return;
+    lastSyncLine = snapped;
+    markBlockLines(pane);
+    sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line: lastSyncLine } });
   }, 40);
 }
 
@@ -3160,41 +3268,8 @@ function updateScrollButtons() {
 }
 
 function startAutoScroll() {
-  isMobileSongMenuOpen = false;
-  renderMobileSongMenu();
   stopAutoScroll();
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const box = activeScrollPane();
-      if (!box) return;
-      const max = box.scrollHeight - box.clientHeight;
-      if (max <= 8) {
-        notify(t("stage.noScroll"));
-        updateScrollButtons();
-        return;
-      }
-      isAutoScrolling = true;
-      autoScrollGuardUntil = Date.now() + 500;
-      updateScrollButtons();
-      autoScrollTimer = setInterval(() => {
-        const pane = activeScrollPane();
-        if (!pane) return;
-        const end = pane.scrollHeight - pane.clientHeight;
-        if (end <= 1) {
-          stopAutoScroll();
-          return;
-        }
-        const next = pane.scrollTop + Math.max(1, scrollSpeed / 10);
-        if (next >= end - 0.5) {
-          pane.scrollTop = end;
-          stopAutoScroll();
-          return;
-        }
-        pane.scrollTop = next;
-        handleChartScroll();
-      }, 100);
-    });
-  });
+  moveLyricBlock(1);
 }
 
 function stopAutoScroll() {
@@ -3670,6 +3745,7 @@ function createSong() {
     artist: "",
     category: "Geral",
     capo: 0,
+    blockSize: 4,
     lines: [
       "{key: A}",
       "Intro:",
@@ -3880,6 +3956,7 @@ function saveSong(event) {
     category: el.category.value.trim() || "Geral",
     capo: Number(el.capo.value || 0),
     cue: String(el.cue?.value || "").trim().slice(0, 80),
+    blockSize: songBlockSizeFromUi(),
     lines: foldStackedChords(el.lines.value.replace(/\r/g, "").split("\n")),
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
@@ -4705,8 +4782,15 @@ function handleEditorSaveHotkey(event) {
 function handleStageHotkeys(event) {
   if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.target.closest("input, textarea, select")) return;
-  const goNext = event.key === "ArrowRight" || event.key === "PageDown" || event.key === "MediaTrackNext";
-  const goPrev = event.key === "ArrowLeft" || event.key === "PageUp" || event.key === "MediaTrackPrevious";
+  const blockNext = event.key === "ArrowDown" || event.key === "PageDown";
+  const blockPrev = event.key === "ArrowUp" || event.key === "PageUp";
+  if (blockNext || blockPrev) {
+    event.preventDefault();
+    moveLyricBlock(blockNext ? 1 : -1);
+    return;
+  }
+  const goNext = event.key === "ArrowRight" || event.key === "MediaTrackNext";
+  const goPrev = event.key === "ArrowLeft" || event.key === "MediaTrackPrevious";
   if (!goNext && !goPrev) return;
   if (!applyStageStep(goNext ? 1 : -1)) return;
   event.preventDefault();
@@ -5592,6 +5676,8 @@ function applyPlayhead(payload, prevSongId) {
   if (!playing && !songChanged && !oldClientOpened) return;
   if (songChanged) lastSyncLine = typeof payload.line === "number" ? payload.line : 0;
   else if (typeof payload.line === "number") lastSyncLine = payload.line;
+  const size = songBlockSize();
+  lastSyncLine = Math.floor(Math.max(0, lastSyncLine) / size) * size;
   if (isTelaoDisplay()) {
     switchView("stage");
     return;
@@ -5989,6 +6075,7 @@ function normalizeSong(song) {
     lines: Array.isArray(song.lines) ? song.lines.map(String) : String(song.lines || "").split("\n"),
     capo: Number(song.capo || 0),
     cue: String(song.cue || "").trim().slice(0, 80),
+    blockSize: Number(song.blockSize) === 2 ? 2 : 4,
     transposeValue: Number(song.transposeValue || 0),
     lastOpenedAt: song.lastOpenedAt || "",
     updatedAt: song.updatedAt || new Date().toISOString(),
@@ -7171,7 +7258,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=110").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=111").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
