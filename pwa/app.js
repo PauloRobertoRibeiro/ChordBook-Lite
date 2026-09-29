@@ -1,8 +1,9 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.5";
+const APP_VERSION = "1.1.7";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
+const TELAO_KEY = "chordbook.telao.v1";
 const LOOK_PRESETS = {
   night: { stageBg: "#0d100f", lyricColor: "#f5f8f6", chordColor: "#8ec5ff" },
   forest: { stageBg: "#10211c", lyricColor: "#e7f6f0", chordColor: "#5ee0c5" },
@@ -403,7 +404,7 @@ const I18N = {
     "import.conflictAgenda": "Agenda e campos do culto",
     "import.copySuffix": "importada",
     "sync.title": "Computador",
-    "sync.lead": "Abra o ChordBook no computador, mostre o código e autorize neste celular. Depois edite lá e use aqui.",
+    "sync.lead": "No computador: Mais → Computador → mostrar código. No telemóvel: o mesmo código e Permitir. Depois a música que abrires num lado abre no outro. No computador podes ligar o Telão (só letra na TV).",
     "sync.showCode": "Mostrar código neste computador",
     "sync.codeLabel": "Código do computador",
     "sync.connect": "Ligar ao computador",
@@ -418,7 +419,8 @@ const I18N = {
     "sync.waiting": "Aguardando o celular…",
     "sync.waitingAuth": "Aguardando permissão no celular…",
     "sync.joining": "A ligar…",
-    "sync.connected": "Ligado. O que você salvar num lado aparece no outro.",
+    "sync.connected": "Ligado. Cifras e a música aberta vão juntos. Um muda, os outros seguem.",
+    "sync.telao": "Telão: só letra neste ecrã",
     "sync.disconnected": "Ligação encerrada.",
     "sync.denied": "O celular recusou este computador.",
     "sync.needCode": "Digite o código de 6 números que aparece no computador.",
@@ -854,7 +856,7 @@ const I18N = {
     "import.conflictAgenda": "Agenda y campos del culto",
     "import.copySuffix": "importada",
     "sync.title": "Computador",
-    "sync.lead": "Abra ChordBook en el computador, muestre el código y autorice en este teléfono. Después edite allí y use aquí.",
+    "sync.lead": "En el computador: Más → Computador → mostrar código. En el teléfono: el mismo código y Permitir. Luego la canción que abras en un lado se abre en el otro. En el computador puedes activar el Telón (solo letra en la TV).",
     "sync.showCode": "Mostrar código en este computador",
     "sync.codeLabel": "Código del computador",
     "sync.connect": "Conectar al computador",
@@ -869,7 +871,8 @@ const I18N = {
     "sync.waiting": "Esperando el teléfono…",
     "sync.waitingAuth": "Esperando permiso en el teléfono…",
     "sync.joining": "Conectando…",
-    "sync.connected": "Conectado. Lo que guarde en un lado aparece en el otro.",
+    "sync.connected": "Conectado. Las cifras y la canción abierta van juntas. Uno cambia, los demás siguen.",
+    "sync.telao": "Telón: solo letra en esta pantalla",
     "sync.disconnected": "Conexión cerrada.",
     "sync.denied": "El teléfono rechazó este computador.",
     "sync.needCode": "Escriba el código de 6 números que aparece en el computador.",
@@ -1305,7 +1308,7 @@ const I18N = {
     "import.conflictAgenda": "Service agenda fields",
     "import.copySuffix": "imported",
     "sync.title": "Computer",
-    "sync.lead": "Open ChordBook on the computer, show the code, and approve it on this phone. Then edit there and play here.",
+    "sync.lead": "On the computer: More → Computer → show code. On the phone: same code and Allow. Then the song you open on one device opens on the others. On the computer you can turn on the projector view (lyrics only).",
     "sync.showCode": "Show code on this computer",
     "sync.codeLabel": "Computer code",
     "sync.connect": "Connect to computer",
@@ -1320,7 +1323,8 @@ const I18N = {
     "sync.waiting": "Waiting for the phone…",
     "sync.waitingAuth": "Waiting for permission on the phone…",
     "sync.joining": "Connecting…",
-    "sync.connected": "Linked. What you save on one side appears on the other.",
+    "sync.connected": "Linked. Charts and the open song stay in sync. One changes, the others follow.",
+    "sync.telao": "Projector: lyrics only on this screen",
     "sync.disconnected": "Connection closed.",
     "sync.denied": "The phone declined this computer.",
     "sync.needCode": "Type the 6-digit code shown on the computer.",
@@ -1635,7 +1639,17 @@ const syncLink = {
   authorized: false,
   hostRetries: 0,
   pushTimer: 0,
+  conns: [],
 };
+let applyingSync = false;
+let telaoWanted = true;
+try {
+  const savedTelao = localStorage.getItem(TELAO_KEY);
+  if (savedTelao === "0") telaoWanted = false;
+  if (savedTelao === "1") telaoWanted = true;
+} catch {
+  /* private mode */
+}
 let autoScrollTimer = null;
 let autoScrollGuardUntil = 0;
 let stageMenuQuery = "";
@@ -1853,6 +1867,8 @@ const el = {
   syncHostBtn: document.querySelector("#syncHostBtn"),
   syncJoinBtn: document.querySelector("#syncJoinBtn"),
   syncStopBtn: document.querySelector("#syncStopBtn"),
+  syncTelaoRow: document.querySelector("#syncTelaoRow"),
+  syncTelaoSwitch: document.querySelector("#syncTelaoSwitch"),
   syncJoinInput: document.querySelector("#syncJoinInput"),
   syncCodeDisplay: document.querySelector("#syncCodeDisplay"),
   syncStatus: document.querySelector("#syncStatus"),
@@ -1930,6 +1946,7 @@ function bindEvents() {
   el.syncHostBtn?.addEventListener("click", () => startComputerHost({ openSheet: true }));
   el.syncJoinBtn?.addEventListener("click", joinComputerHost);
   el.syncStopBtn?.addEventListener("click", () => stopSyncLink(true));
+  el.syncTelaoSwitch?.addEventListener("change", () => setTelaoWanted(el.syncTelaoSwitch.checked));
   el.syncJoinInput?.addEventListener("input", formatSyncCodeInput);
   el.syncJoinInput?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -2330,6 +2347,7 @@ function openEditorSong() {
   markSongOpened(selectedSongId);
   switchView("song");
   renderSongView();
+  broadcastPlayhead();
 }
 
 function openSongView() {
@@ -2337,12 +2355,14 @@ function openSongView() {
   markSongOpened(selectedSongId);
   switchView("song");
   renderSongView();
+  broadcastPlayhead();
 }
 
 function openStageMode() {
   if (!selectedSong()) return;
   markSongOpened(selectedSongId);
   switchView("stage");
+  broadcastPlayhead();
 }
 
 function markSongOpened(songId) {
@@ -2615,6 +2635,7 @@ function renderSongs() {
       markSongOpened(selectedSongId);
       render();
       switchView("song");
+      broadcastPlayhead();
     });
   });
   el.songList.querySelectorAll("[data-fav-id]").forEach((button) => {
@@ -2636,11 +2657,13 @@ function renderSongs() {
         markSongOpened(selectedSongId);
         render();
         switchView("stage");
+        broadcastPlayhead();
       }
       if (action === "chart") {
         markSongOpened(selectedSongId);
         render();
         switchView("song");
+        broadcastPlayhead();
       }
       if (action === "youtube") openMusicSearch("youtube");
     });
@@ -3325,6 +3348,7 @@ function jumpToStageSong(songId) {
   persist();
   render();
   switchView("stage");
+  broadcastPlayhead();
 }
 
 function activeSetlistPosition() {
@@ -3842,9 +3866,10 @@ function setTheme(theme) {
 
 function syncChartPrefs() {
   if (!el.appShell) return;
-  el.appShell.classList.toggle("hide-chords", state.showChords === false);
+  el.appShell.classList.toggle("hide-chords", state.showChords === false || isTelaoDisplay());
   el.appShell.classList.toggle("hide-lyrics", state.showLyrics === false);
   el.appShell.classList.toggle("chart-focus", Boolean(state.focusChart));
+  el.appShell.classList.toggle("telao-active", isTelaoDisplay());
   [el.songAutoScrollSwitch, el.moreAutoScrollSwitch].forEach((input) => {
     if (input) input.checked = Boolean(state.preferAutoScroll) || isAutoScrolling;
   });
@@ -4283,6 +4308,7 @@ function openSetlistSong(songId) {
   selectedSongId = songId;
   render();
   switchView("song");
+  broadcastPlayhead();
 }
 
 function addCurrentSongToSetlist(setlistId) {
@@ -4500,6 +4526,7 @@ function openSelectedSetlist(mode) {
   persist();
   render();
   switchView(playMode);
+  broadcastPlayhead();
 }
 
 function openSelectedSetlistOnStage() {
@@ -4551,6 +4578,7 @@ function moveSetlistStage(delta) {
   if (el.songReadContent) el.songReadContent.scrollTop = 0;
   render();
   if (keepScroll) startAutoScroll();
+  broadcastPlayhead();
 }
 
 function applyStageStep(delta) {
@@ -5295,7 +5323,7 @@ function persist(options = {}) {
     state.team = normalizeTeam(state.team);
     state.agenda = normalizeAgenda(state.agenda);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    if (!options.fromSync) scheduleSyncPush();
+    if (!options.fromSync && !applyingSync) scheduleSyncPush();
     return true;
   } catch {
     if (!options.silent) {
@@ -5360,32 +5388,113 @@ function setPairingStayAwake(on) {
   if (!el.appShell.classList.contains("stage-active") && !isSetlistPlaying) releaseStageWakeLock();
 }
 
+function isTelaoDisplay() {
+  return Boolean(telaoWanted && syncLink.authorized && syncLink.role === "host" && isDesktopComputer());
+}
+
+function setTelaoWanted(on) {
+  telaoWanted = Boolean(on);
+  try {
+    localStorage.setItem(TELAO_KEY, telaoWanted ? "1" : "0");
+  } catch {
+    /* ignore quota / private mode */
+  }
+  syncChartPrefs();
+  if (isTelaoDisplay() && selectedSong()) {
+    switchView("stage");
+    render();
+  }
+}
+
+function playheadSnapshot() {
+  const playing = activeView === "song" || activeView === "stage";
+  return {
+    selectedSongId,
+    selectedSetlistId,
+    activeSetlistId,
+    isSetlistPlaying,
+    setlistPlayFinished,
+    playView: playing ? activeView : "idle",
+  };
+}
+
 function librarySnapshot() {
   return {
     songs: state.songs,
     setlists: state.setlists,
     team: state.team,
     agenda: state.agenda,
-    selectedSongId,
-    selectedSetlistId,
+    ...playheadSnapshot(),
   };
 }
 
-function sendSyncMessage(message) {
-  if (!syncLink.conn || syncLink.conn.open === false) return false;
+function liveSyncConns() {
+  syncLink.conns = (syncLink.conns || []).filter((conn) => conn && conn.open !== false);
+  if (syncLink.conn && syncLink.conn.open !== false && !syncLink.conns.includes(syncLink.conn)) {
+    syncLink.conns.push(syncLink.conn);
+  }
+  syncLink.conn = syncLink.conns[0] || null;
+  return syncLink.conns;
+}
+
+function sendToConn(conn, message) {
+  if (!conn || conn.open === false) return false;
   try {
-    syncLink.conn.send(message);
+    conn.send(message);
     return true;
   } catch {
     return false;
   }
 }
 
+function sendSyncMessage(message) {
+  let sent = false;
+  liveSyncConns().forEach((conn) => {
+    if (sendToConn(conn, message)) sent = true;
+  });
+  return sent;
+}
+
+function broadcastPlayhead() {
+  if (applyingSync || !syncLink.authorized) return;
+  sendSyncMessage({ type: "playhead", payload: playheadSnapshot() });
+}
+
+function applyPlayhead(payload, prevSongId) {
+  if (!payload) return;
+  const beforeSongId = prevSongId === undefined ? selectedSongId : prevSongId;
+  if (payload.activeSetlistId && state.setlists.some((setlist) => setlist.id === payload.activeSetlistId)) {
+    activeSetlistId = payload.activeSetlistId;
+  }
+  if (payload.playView === "song" || payload.playView === "stage") {
+    if (typeof payload.isSetlistPlaying === "boolean") isSetlistPlaying = payload.isSetlistPlaying;
+    if (typeof payload.setlistPlayFinished === "boolean") setlistPlayFinished = payload.setlistPlayFinished;
+  }
+  if (payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId)) {
+    selectedSongId = payload.selectedSongId;
+  }
+  if (payload.playView === "idle") return;
+  if (!selectedSong()) return;
+  const playing = payload.playView === "song" || payload.playView === "stage";
+  const songChanged = Boolean(payload.selectedSongId && payload.selectedSongId !== beforeSongId);
+  const oldClientOpened = payload.playView == null && Boolean(payload.selectedSongId);
+  if (!playing && !songChanged && !oldClientOpened) return;
+  if (isTelaoDisplay()) {
+    switchView("stage");
+    return;
+  }
+  if (playing) {
+    switchView(payload.playView);
+    return;
+  }
+  if (activeView !== "song" && activeView !== "stage") switchView("song");
+}
+
 function scheduleSyncPush() {
-  if (!syncLink.authorized || !syncLink.conn) return;
+  if (applyingSync || !syncLink.authorized || !liveSyncConns().length) return;
   clearTimeout(syncLink.pushTimer);
   syncLink.pushTimer = setTimeout(() => {
-    if (!syncLink.authorized) return;
+    if (applyingSync || !syncLink.authorized) return;
     sendSyncMessage({ type: "state", payload: librarySnapshot() });
   }, 280);
 }
@@ -5411,6 +5520,7 @@ function applySyncState(payload, notifyKey, options = {}) {
     if (payload.team) state.team = normalizeTeam(payload.team);
     if (payload.agenda) state.agenda = normalizeAgenda(payload.agenda);
   }
+  const prevSongId = selectedSongId;
   if (payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId)) {
     selectedSongId = payload.selectedSongId;
   } else if (!state.songs.some((song) => song.id === selectedSongId)) {
@@ -5423,6 +5533,7 @@ function applySyncState(payload, notifyKey, options = {}) {
   }
   persist({ fromSync: true });
   if (options.reply) scheduleSyncPush();
+  applyPlayhead(payload, prevSongId);
   render();
   const key = notifyKey || (options.merge
     ? (incomingEmpty && hadLocal ? "sync.keptLocal" : hadLocal && !incomingEmpty ? "sync.merged" : "sync.received")
@@ -5431,17 +5542,44 @@ function applySyncState(payload, notifyKey, options = {}) {
 }
 
 function handleSyncMessage(message) {
+  if (typeof message === "string") {
+    try { message = JSON.parse(message); } catch { return; }
+  }
   if (!message || typeof message !== "object") return;
   if (message.type === "hello" && syncLink.role === "host") {
+    if (syncLink.authorized) {
+      sendSyncMessage({ type: "session", payload: librarySnapshot() });
+      return;
+    }
     syncLink.status = "auth";
     updateSyncUi();
+    return;
+  }
+  if (message.type === "session" && syncLink.role === "guest") {
+    applyingSync = true;
+    try {
+      syncLink.authorized = true;
+      syncLink.status = "linked";
+      if (el.syncAuthSheet) el.syncAuthSheet.hidden = true;
+      applySyncState(message.payload, "");
+      setPairingStayAwake(true);
+      updateSyncUi();
+      notify(t("sync.connected"));
+    } finally {
+      applyingSync = false;
+    }
     return;
   }
   if (message.type === "auth-ok" && syncLink.role === "host") {
     syncLink.authorized = true;
     syncLink.status = "linked";
     setSyncHostSheetOpen(false);
-    applySyncState(message.payload, "", { merge: true, reply: true });
+    applyingSync = true;
+    try {
+      applySyncState(message.payload, "", { merge: true, reply: true });
+    } finally {
+      applyingSync = false;
+    }
     updateSyncUi();
     setPairingStayAwake(false);
     return;
@@ -5451,28 +5589,55 @@ function handleSyncMessage(message) {
     stopSyncLink(true);
     return;
   }
+  if (message.type === "playhead" && syncLink.authorized) {
+    applyingSync = true;
+    try {
+      applyPlayhead(message.payload, selectedSongId);
+      render();
+    } finally {
+      applyingSync = false;
+    }
+    return;
+  }
   if (message.type === "state" && syncLink.authorized) {
-    applySyncState(message.payload);
+    applyingSync = true;
+    try {
+      applySyncState(message.payload);
+    } finally {
+      applyingSync = false;
+    }
   }
 }
 
 function bindSyncConnection(conn) {
-  syncLink.conn = conn;
+  if (!syncLink.conns) syncLink.conns = [];
+  if (!syncLink.conns.includes(conn)) syncLink.conns.push(conn);
+  syncLink.conn = syncLink.conn && syncLink.conn.open !== false ? syncLink.conn : conn;
   conn.on("data", handleSyncMessage);
   conn.on("close", () => {
-    if (syncLink.conn !== conn) return;
+    syncLink.conns = (syncLink.conns || []).filter((item) => item !== conn);
+    if (syncLink.conn === conn) syncLink.conn = syncLink.conns[0] || null;
+    if (syncLink.conns.length) {
+      updateSyncUi();
+      return;
+    }
     const wasLinked = syncLink.authorized;
     stopSyncLink(false);
     if (wasLinked) notify(t("sync.disconnected"));
   });
   conn.on("error", () => {
-    if (syncLink.conn !== conn) return;
+    syncLink.conns = (syncLink.conns || []).filter((item) => item !== conn);
+    if (syncLink.conn === conn) syncLink.conn = syncLink.conns[0] || null;
+    if (syncLink.conns.length) return;
     notify(t("sync.fail"));
     stopSyncLink(true);
   });
 }
 
 function destroySyncPeer() {
+  (syncLink.conns || []).forEach((conn) => {
+    try { conn.close?.(); } catch { /* already closed */ }
+  });
   try {
     syncLink.conn?.close?.();
   } catch {
@@ -5485,6 +5650,7 @@ function destroySyncPeer() {
   }
   syncLink.peer = null;
   syncLink.conn = null;
+  syncLink.conns = [];
 }
 
 function stopSyncLink(notifyStop) {
@@ -5554,12 +5720,13 @@ async function startComputerHost({ openSheet = false, retry = false } = {}) {
     updateSyncUi();
   });
   peer.on("connection", (conn) => {
-    if (syncLink.authorized && syncLink.conn && syncLink.conn.open) {
-      try { conn.close(); } catch { /* ignore extra guest */ }
-      return;
-    }
     bindSyncConnection(conn);
     conn.on("open", () => {
+      if (syncLink.authorized) {
+        sendToConn(conn, { type: "session", payload: librarySnapshot() });
+        updateSyncUi();
+        return;
+      }
       syncLink.status = "auth";
       updateSyncUi();
     });
@@ -5694,6 +5861,9 @@ function updateSyncUi() {
       el.syncBannerBtn.textContent = t("sync.bannerStart");
     }
   }
+  if (el.syncTelaoRow) el.syncTelaoRow.hidden = !isDesktopComputer();
+  if (el.syncTelaoSwitch) el.syncTelaoSwitch.checked = telaoWanted;
+  syncChartPrefs();
 }
 
 function normalizeSong(song) {
@@ -6888,7 +7058,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=106").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=108").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
