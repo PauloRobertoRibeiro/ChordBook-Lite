@@ -1628,7 +1628,7 @@ textarea {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
   display: grid;
   gap: 8px;
-  max-height: min(72dvh, 480px);
+  max-height: min(82dvh, 620px);
   overflow: auto;
   padding: 12px;
   position: absolute;
@@ -1678,6 +1678,23 @@ textarea {
 .song-overflow-card .song-key-stepper button {
   min-height: 44px;
   min-width: 44px;
+}
+
+.song-overflow-card .song-tools-body {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+  padding: 0;
+}
+
+.song-overflow-card .tool-block > span {
+  font-size: 12px;
+}
+
+.song-overflow-card #songSetlistBtn,
+.song-overflow-card .song-tools-scroll,
+.song-overflow-card .switch-row {
+  width: 100%;
 }
 
 :root.dark .song-overflow-card {
@@ -4770,6 +4787,29 @@ textarea {
 
   .app-shell.song-active .song-tools-panel .tool-stepper {
     grid-template-columns: 40px minmax(0, 1fr) 40px;
+  }
+
+  .app-shell.song-active .song-tools-panel,
+  .app-shell.song-active.tools-open .song-tools-panel,
+  .app-shell.song-active .song-tools-handle {
+    display: none !important;
+  }
+
+  .app-shell.song-active .song-overflow-card .song-tools-body {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .app-shell.song-active .song-overflow-card .song-tools-scroll,
+  .app-shell.song-active .song-overflow-card #songSetlistBtn {
+    grid-column: auto;
+  }
+
+  .app-shell.song-active .song-sheet {
+    padding-bottom: 8px;
   }
 
   #songEditBtn {

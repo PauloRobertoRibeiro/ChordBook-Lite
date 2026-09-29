@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.4";
+const APP_VERSION = "1.1.5";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const LOOK_PRESETS = {
@@ -1713,6 +1713,7 @@ const el = {
   songSheetControls: document.querySelector(".song-sheet-controls"),
   songSheetHead: document.querySelector(".song-sheet-head"),
   songReadShortcuts: document.querySelector(".song-read-shortcuts"),
+  songToolsBody: document.querySelector(".song-tools-body"),
   songToolsPanel: document.querySelector("#songToolsPanel"),
   songToolsHandle: document.querySelector("#songToolsHandle"),
   songReadMenu: document.querySelector("#songReadMenu"),
@@ -2352,6 +2353,7 @@ function markSongOpened(songId) {
 }
 
 function openSetlistPickerFromSong() {
+  closeSongOverflow();
   isSongReadMenuOpen = true;
   isSetlistPickerOpen = true;
   renderSongReadMenu();
@@ -2965,7 +2967,7 @@ function bindSongToolsSheet() {
   const closedShift = () => Math.max(0, panel.offsetHeight - handle.offsetHeight);
 
   const onDown = (event) => {
-    if (!phone() || event.button) return;
+    if (!phone() || isCompactSongChrome() || event.button) return;
     dragging = true;
     moved = 0;
     startY = event.clientY;
@@ -3004,7 +3006,7 @@ function bindSongToolsSheet() {
   handle.addEventListener("pointerup", onUp);
   handle.addEventListener("pointercancel", onUp);
   handle.addEventListener("click", (event) => {
-    if (!phone()) return;
+    if (!phone() || isCompactSongChrome()) return;
     if (moved > 12) {
       event.preventDefault();
       event.stopPropagation();
@@ -3145,6 +3147,7 @@ function syncSongOverflow() {
     card.appendChild(el.songEdit);
     card.appendChild(el.songOpenStage);
     card.appendChild(controls);
+    if (el.songToolsBody) card.appendChild(el.songToolsBody);
     sheet.hidden = !isSongOverflowOpen;
     el.appShell.classList.toggle("song-overflow-open", isSongOverflowOpen);
   } else {
@@ -3155,6 +3158,7 @@ function syncSongOverflow() {
     else shortcuts.insertBefore(el.songEdit, el.songMore);
     shortcuts.insertBefore(el.songOpenStage, el.songMore);
     head.appendChild(controls);
+    if (el.songToolsBody && el.songToolsPanel) el.songToolsPanel.appendChild(el.songToolsBody);
     sheet.hidden = true;
     el.appShell.classList.remove("song-overflow-open");
   }
@@ -6884,7 +6888,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=105").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=106").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

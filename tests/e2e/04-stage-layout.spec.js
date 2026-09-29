@@ -108,8 +108,12 @@ test.describe("10. Layout computador e telemóvel (emulação de ecrã)", () => 
     await expect(page.locator("#songFavBtn")).toBeVisible();
     await expect(page.locator("#songKeyStepper")).toBeVisible();
     await expect(page.locator("#songCapoStepper")).toBeVisible();
+    await expect(page.locator("#songToolsHandle")).toBeHidden();
+    await expect(page.locator("#songFontDown")).toBeVisible();
+    await expect(page.locator("#songSetlistBtn")).toBeVisible();
+    await expect(page.locator("#songAutoScrollSwitch")).toBeVisible();
     const viewport = { width: 390, height: 844 };
-    for (const selector of ["#songKeyStepper", "#songCapoStepper", "#songEditBtn", "#songOpenStageBtn"]) {
+    for (const selector of ["#songKeyStepper", "#songCapoStepper", "#songEditBtn", "#songOpenStageBtn", "#songFontDown"]) {
       const box = await page.locator(selector).boundingBox();
       expect(box, selector).toBeTruthy();
       expect(box.x, `${selector} sai à esquerda`).toBeGreaterThanOrEqual(0);
