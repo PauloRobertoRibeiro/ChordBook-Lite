@@ -3247,6 +3247,15 @@ textarea {
   align-self: center;
 }
 
+#licenseSyncBlock {
+  display: grid;
+  gap: 8px;
+}
+
+#licenseSyncBlock[hidden] {
+  display: none;
+}
+
 @media (min-width: 768px) {
   .paste-sheet {
     align-items: center;

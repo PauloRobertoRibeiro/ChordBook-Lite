@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.23";
+const APP_VERSION = "1.1.24";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -396,6 +396,7 @@ const I18N = {
     "license.trialOverTitle": "A prova de 7 dias acabou",
     "license.trialOverLead": "Para continuar neste telemóvel, compre o Android e escreva o número e o CVV.",
     "license.trialOverWeb": "A prova acabou neste telemóvel. Instale o app Android e active com o número e o CVV do pagamento.",
+    "license.trialOverComputer": "A prova neste computador acabou. Ligue o telemóvel com o código abaixo para o telão continuar, ou compre o Android.",
     "more.install": "Instalar e partilhar",
     "more.font": "Tamanho da letra",
     "more.fontDefault": "Tamanho da letra padrão",
@@ -864,6 +865,7 @@ const I18N = {
     "license.trialOverTitle": "La prueba de 7 días terminó",
     "license.trialOverLead": "Para seguir en este móvil, compre el Android y escriba el número y el CVV.",
     "license.trialOverWeb": "La prueba terminó en este móvil. Instale la app Android y actívela con el número y el CVV del pago.",
+    "license.trialOverComputer": "La prueba en este computador terminó. Enlace el móvil con el código de abajo para que el telón siga, o compre el Android.",
     "more.install": "Instalar y compartir",
     "more.font": "Tamaño de letra",
     "more.fontDefault": "Tamaño de letra predeterminado",
@@ -1332,6 +1334,7 @@ const I18N = {
     "license.trialOverTitle": "The 7-day trial has ended",
     "license.trialOverLead": "To keep using this phone, buy Android and enter the number and CVV.",
     "license.trialOverWeb": "The trial ended on this phone. Install the Android app and activate it with the number and CVV from your payment.",
+    "license.trialOverComputer": "The trial on this computer has ended. Link the phone with the code below so the projector can continue, or buy Android.",
     "more.install": "Install and share",
     "more.font": "Font size",
     "more.fontDefault": "Default font size",
@@ -1535,8 +1538,11 @@ let licenseUnlocked = false;
 
 function trialAppliesHere() {
   if (licenseUnlocked) return false;
-  if (typeof isDesktopComputer === "function" && isDesktopComputer()) return false;
   return true;
+}
+
+function phoneCompanionOpen() {
+  return Boolean(syncLink?.authorized && syncLink.status === "linked");
 }
 
 function readTrial() {
@@ -1598,21 +1604,61 @@ function syncTrialHints(trial) {
 function hideLicenseGate() {
   const sheet = document.getElementById("licenseSheet");
   if (sheet) sheet.hidden = true;
+  const block = document.getElementById("licenseSyncBlock");
+  if (block) block.hidden = true;
+}
+
+function paintLicenseSync() {
+  const block = document.getElementById("licenseSyncBlock");
+  const codeEl = document.getElementById("licenseSyncCode");
+  const statusEl = document.getElementById("licenseSyncStatus");
+  const btn = document.getElementById("licenseSyncBtn");
+  if (!block) return;
+  const desktop = typeof isDesktopComputer === "function" && isDesktopComputer();
+  const sheet = document.getElementById("licenseSheet");
+  if (!desktop || sheet?.hidden) {
+    block.hidden = true;
+    return;
+  }
+  block.hidden = false;
+  const hosting = syncLink.role === "host" && syncLink.status !== "idle";
+  const code = formatSyncCode(syncLink.code);
+  if (codeEl) {
+    codeEl.hidden = !hosting || !syncLink.code;
+    codeEl.textContent = code || "—";
+  }
+  if (statusEl) {
+    if (syncLink.status === "hosting") statusEl.textContent = t("sync.waiting");
+    else if (syncLink.status === "auth") statusEl.textContent = t("sync.waitingAuth");
+    else statusEl.textContent = "";
+  }
+  if (btn) {
+    btn.hidden = hosting;
+    btn.textContent = t("sync.showCode");
+  }
 }
 
 function showLicenseGate() {
   const sheet = document.getElementById("licenseSheet");
   if (!sheet) return;
   const android = androidLicenseOn();
+  const desktop = typeof isDesktopComputer === "function" && isDesktopComputer();
   const title = document.getElementById("licenseTitle");
   const lead = document.getElementById("licenseLead");
   const fields = document.getElementById("licensePayFields");
   const activate = document.getElementById("licenseActivate");
   if (title) title.textContent = t("license.trialOverTitle");
-  if (lead) lead.textContent = android ? t("license.trialOverLead") : t("license.trialOverWeb");
+  if (lead) {
+    lead.textContent = android
+      ? t("license.trialOverLead")
+      : desktop
+        ? t("license.trialOverComputer")
+        : t("license.trialOverWeb");
+  }
   if (fields) fields.hidden = !android;
   if (activate) activate.hidden = !android;
   sheet.hidden = false;
+  paintLicenseSync();
 }
 
 function refreshTrialGate() {
@@ -1621,12 +1667,20 @@ function refreshTrialGate() {
     syncTrialHints(null);
     return;
   }
-  if (!trialAppliesHere()) {
+  const trial = ensureTrial();
+  if (phoneCompanionOpen()) {
     hideLicenseGate();
-    syncTrialHints(null);
+    if (trial.expired) {
+      const hint = document.getElementById("trialHint");
+      if (hint) {
+        hint.hidden = true;
+        hint.textContent = "";
+      }
+    } else {
+      syncTrialHints(trial);
+    }
     return;
   }
-  const trial = ensureTrial();
   syncTrialHints(trial);
   if (trial.expired) showLicenseGate();
   else hideLicenseGate();
@@ -1735,6 +1789,9 @@ document.getElementById("licenseNumber")?.addEventListener("input", (event) => {
 });
 document.getElementById("licenseActivate")?.addEventListener("click", () => {
   submitLicense();
+});
+document.getElementById("licenseSyncBtn")?.addEventListener("click", () => {
+  startComputerHost({ openSheet: false });
 });
 
 const state = loadState();
@@ -6475,6 +6532,7 @@ function updateSyncUi() {
   if (el.syncTelaoRow) el.syncTelaoRow.hidden = !isDesktopComputer();
   if (el.syncTelaoSwitch) el.syncTelaoSwitch.checked = telaoWanted;
   syncChartPrefs();
+  refreshTrialGate();
 }
 
 function normalizeSong(song) {
@@ -7670,7 +7728,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=124").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=125").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
