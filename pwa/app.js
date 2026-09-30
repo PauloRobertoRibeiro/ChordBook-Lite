@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.10";
+const APP_VERSION = "1.1.11";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -123,7 +123,7 @@ const I18N = {
     "editor.blockSize": "Bloco no telão",
     "editor.block2": "2 linhas",
     "editor.block4": "4 linhas",
-    "editor.blockHint": "No telemóvel, deslize para cima ou para baixo: avança um bloco. O computador segue.",
+    "editor.blockHint": "No telemóvel o bloco fica marcado a transparente. Arraste o dedo: a faixa sobe ou desce e o computador segue.",
     "editor.lyrics": "Letra e cifras",
     "editor.viewChart": "Ver cifra",
     "editor.duplicate": "Duplicar",
@@ -579,7 +579,7 @@ const I18N = {
     "editor.blockSize": "Bloque en el telón",
     "editor.block2": "2 líneas",
     "editor.block4": "4 líneas",
-    "editor.blockHint": "En el teléfono, deslice arriba o abajo: avanza un bloque. El computador sigue.",
+    "editor.blockHint": "En el teléfono el bloque queda marcado transparente. Deslice el dedo: la franja sube o baja y el computador sigue.",
     "editor.lyrics": "Letra y cifras",
     "editor.viewChart": "Ver cifra",
     "editor.duplicate": "Duplicar",
@@ -1035,7 +1035,7 @@ const I18N = {
     "editor.blockSize": "Projector block",
     "editor.block2": "2 lines",
     "editor.block4": "4 lines",
-    "editor.blockHint": "On the phone, swipe up or down to move one block. The computer follows.",
+    "editor.blockHint": "On the phone the block is a transparent mark. Drag your finger: the band moves up or down and the computer follows.",
     "editor.lyrics": "Lyrics and chords",
     "editor.viewChart": "View chart",
     "editor.duplicate": "Duplicate",
@@ -1984,7 +1984,7 @@ function bindEvents() {
       const song = selectedSong();
       if (!song) return;
       song.blockSize = Number(button.dataset.blockSize) === 2 ? 2 : 4;
-      lastSyncLine = Math.floor(lastSyncLine / song.blockSize) * song.blockSize;
+      lastSyncLine = clampSyncLine(lastSyncLine);
       persist();
       renderEditor();
       applyBlockView();
@@ -2916,55 +2916,67 @@ function renderStage() {
   if (rebuilt || applyingSync) restoreSyncLine(el.stageContent);
 }
 
+function beginChartTouch(event) {
+  const touch = event.touches[0];
+  const pane = activeScrollPane() || el.songReadContent;
+  stageTouchStart = {
+    x: touch.clientX,
+    y: touch.clientY,
+    line: lastSyncLine,
+    step: lyricStepPx(pane),
+  };
+}
+
 function handleStageTouchStart(event) {
   if (isMobileSongMenuOpen || event.touches.length !== 1) return;
   if (event.target.closest("button, input, textarea, select, .mobile-song-menu, .stage-mode-bar, .stage-mode-footer, .setlist-play-exit")) return;
-  const touch = event.touches[0];
-  stageTouchStart = { x: touch.clientX, y: touch.clientY };
+  beginChartTouch(event);
   stageTouchUsed = false;
 }
 
 function handleSongSetlistTouchStart(event) {
   if (event.touches.length !== 1) return;
   if (event.target.closest("button, input, textarea, select, .song-tools-panel, .song-read-bar, .song-read-menu, .song-key-stepper, .setlist-play-exit")) return;
-  const touch = event.touches[0];
-  stageTouchStart = { x: touch.clientX, y: touch.clientY };
+  beginChartTouch(event);
+}
+
+function finishChartTouch(event) {
+  if (!stageTouchStart) return null;
+  const touch = event.changedTouches[0];
+  const start = stageTouchStart;
+  const dx = touch.clientX - start.x;
+  const dy = touch.clientY - start.y;
+  stageTouchStart = null;
+  if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) >= 8) {
+    setLyricWindow(start.line + Math.round(-dy / (start.step || 44)));
+    return { dx, dy, moved: true };
+  }
+  return { dx, dy, moved: false };
 }
 
 function handleSongSetlistTouchEnd(event) {
-  if (!stageTouchStart) return;
-  const touch = event.changedTouches[0];
-  const dx = touch.clientX - stageTouchStart.x;
-  const dy = touch.clientY - stageTouchStart.y;
-  stageTouchStart = null;
+  const result = finishChartTouch(event);
+  if (!result) return;
   if (!el.appShell.classList.contains("song-active")) return;
-  if (Math.abs(dy) >= 36 && Math.abs(dy) > Math.abs(dx)) {
-    moveLyricBlock(dy < 0 ? 1 : -1);
-    return;
-  }
-  if (Math.abs(dx) >= 70 && Math.abs(dx) >= Math.abs(dy) * 1.35 && activeSetlist()) {
-    moveSetlistStage(dx < 0 ? 1 : -1);
+  if (result.moved) return;
+  if (Math.abs(result.dx) >= 70 && Math.abs(result.dx) >= Math.abs(result.dy) * 1.35 && activeSetlist()) {
+    moveSetlistStage(result.dx < 0 ? 1 : -1);
   }
 }
 
 function handleStageTouchEnd(event) {
-  if (!stageTouchStart) return;
-  const touch = event.changedTouches[0];
-  const dx = touch.clientX - stageTouchStart.x;
-  const dy = touch.clientY - stageTouchStart.y;
-  stageTouchStart = null;
-
-  if (Math.abs(dy) >= 36 && Math.abs(dy) > Math.abs(dx)) {
+  const result = finishChartTouch(event);
+  if (!result) return;
+  if (result.moved) {
     stageTouchUsed = true;
-    moveLyricBlock(dy < 0 ? 1 : -1);
     return;
   }
-  if (Math.abs(dx) >= 70 && Math.abs(dx) >= Math.abs(dy) * 1.35 && activeSetlist()) {
+  if (Math.abs(result.dx) >= 70 && Math.abs(result.dx) >= Math.abs(result.dy) * 1.35 && activeSetlist()) {
     stageTouchUsed = true;
-    moveSetlistStage(dx < 0 ? 1 : -1);
+    moveSetlistStage(result.dx < 0 ? 1 : -1);
     return;
   }
-  if (Math.abs(dx) < 12 && Math.abs(dy) < 12) {
+  if (Math.abs(result.dx) < 12 && Math.abs(result.dy) < 12) {
     stageTouchUsed = true;
     toggleStageFocus();
   }
@@ -2978,7 +2990,7 @@ function handleStageContentClick(event) {
   if (event.target.closest("button, input, textarea, select")) return;
   if (isTelaoDisplay()) {
     const rect = el.stageContent.getBoundingClientRect();
-    moveLyricBlock(event.clientY - rect.top < rect.height / 2 ? -1 : 1);
+    moveLyricBlock(event.clientY - rect.top < rect.height / 2 ? -1 : 1, true);
     return;
   }
   if (isMobileSongMenuOpen) {
@@ -2993,10 +3005,14 @@ function handleStageContentClick(event) {
 }
 
 function handleBlockTouchMove(event) {
-  if (!stageTouchStart || !event.cancelable || !event.touches[0]) return;
-  const dy = Math.abs(event.touches[0].clientY - stageTouchStart.y);
-  const dx = Math.abs(event.touches[0].clientX - stageTouchStart.x);
-  if (dy > 8 && dy > dx) event.preventDefault();
+  if (!stageTouchStart || !event.touches[0]) return;
+  const touch = event.touches[0];
+  const dy = touch.clientY - stageTouchStart.y;
+  const dx = touch.clientX - stageTouchStart.x;
+  if (Math.abs(dy) <= 8 || Math.abs(dy) <= Math.abs(dx)) return;
+  if (event.cancelable) event.preventDefault();
+  stageTouchUsed = true;
+  setLyricWindow(stageTouchStart.line + Math.round(-dy / (stageTouchStart.step || 44)));
 }
 
 function handleBlockWheel(event) {
@@ -3004,7 +3020,7 @@ function handleBlockWheel(event) {
   if (handleBlockWheel.lock) return;
   handleBlockWheel.lock = true;
   moveLyricBlock(event.deltaY > 0 ? 1 : -1);
-  setTimeout(() => { handleBlockWheel.lock = false; }, 260);
+  setTimeout(() => { handleBlockWheel.lock = false; }, 90);
 }
 
 function handleStageManualScroll(event) {
@@ -3174,8 +3190,7 @@ function followPane() {
 
 function applyRemoteScroll(line, songId) {
   if (songId && selectedSongId && songId !== selectedSongId) return;
-  const size = songBlockSize();
-  lastSyncLine = Math.floor(Math.max(0, Number(line) || 0) / size) * size;
+  lastSyncLine = clampSyncLine(line);
   applyBlockView();
 }
 
@@ -3194,16 +3209,60 @@ function syncLineCount(root) {
   return Math.max(...[...nodes].map((node) => Number(node.getAttribute("data-sync-line")) || 0)) + 1;
 }
 
+function lyricStepPx(pane) {
+  const node = pane?.querySelector("[data-sync-line]");
+  const height = node?.getBoundingClientRect().height || 0;
+  return Math.max(32, Math.round(height) || 44);
+}
+
+function clampSyncLine(line, pane = el.songReadContent || el.stageContent) {
+  const size = songBlockSize();
+  const total = Math.max(1, syncLineCount(pane) || syncLineCount(el.stageContent) || syncLineCount(el.songReadContent) || 1);
+  const maxStart = Math.max(0, total - Math.min(size, total));
+  return Math.max(0, Math.min(maxStart, Math.floor(Number(line) || 0)));
+}
+
 function markBlockLines(root) {
   if (!root) return;
   const size = songBlockSize();
-  const start = Math.floor(lastSyncLine / size) * size;
+  const start = lastSyncLine;
   const end = start + size;
   el.appShell?.classList.add("block-paging");
-  root.querySelectorAll("[data-sync-line]").forEach((node) => {
-    const index = Number(node.getAttribute("data-sync-line")) || 0;
-    node.classList.toggle("in-block", index >= start && index < end);
+  root.querySelectorAll(".stage-line, .stage-section").forEach((node) => {
+    node.classList.remove("in-block", "block-start", "block-end");
   });
+  const nodes = [...root.querySelectorAll("[data-sync-line]")];
+  const inBlock = nodes.filter((node) => {
+    const index = Number(node.getAttribute("data-sync-line")) || 0;
+    return index >= start && index < end;
+  });
+  inBlock.forEach((node, index) => {
+    node.classList.add("in-block");
+    if (index === 0) node.classList.add("block-start");
+    if (index === inBlock.length - 1) node.classList.add("block-end");
+  });
+  if (inBlock.length > 1) {
+    let node = inBlock[0].nextElementSibling;
+    const last = inBlock[inBlock.length - 1];
+    while (node && node !== last) {
+      if (node.classList.contains("stage-line") || node.classList.contains("stage-section")) {
+        node.classList.add("in-block");
+      }
+      node = node.nextElementSibling;
+    }
+  }
+}
+
+function ensureBlockVisible(pane) {
+  if (!pane) return;
+  const start = pane.querySelector("[data-sync-line].block-start");
+  const end = pane.querySelector("[data-sync-line].block-end") || start;
+  if (!start) return;
+  const box = pane.getBoundingClientRect();
+  const top = start.getBoundingClientRect();
+  const bottom = end.getBoundingClientRect();
+  if (top.top < box.top + 8) pane.scrollTop += top.top - box.top - 8;
+  else if (bottom.bottom > box.bottom - 8) pane.scrollTop += bottom.bottom - box.bottom + 8;
 }
 
 function applyBlockView() {
@@ -3213,24 +3272,31 @@ function applyBlockView() {
     markBlockLines(pane);
   });
   applyingScrollSync = true;
-  scrollToSyncLine(followPane() || activeScrollPane(), lastSyncLine);
+  const pane = followPane() || activeScrollPane();
+  if (isTelaoDisplay()) scrollToSyncLine(pane, lastSyncLine);
+  else ensureBlockVisible(pane);
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { applyingScrollSync = false; });
   });
 }
 
-function moveLyricBlock(delta) {
+function setLyricWindow(line) {
   const pane = el.songReadContent || el.stageContent;
   if (pane) stampSyncLines(pane);
-  const size = songBlockSize();
-  const total = Math.max(1, syncLineCount(pane) || syncLineCount(el.stageContent));
-  const maxBlock = Math.max(0, Math.ceil(total / size) - 1);
-  const next = Math.max(0, Math.min(maxBlock, Math.floor(lastSyncLine / size) + delta));
-  lastSyncLine = next * size;
+  const next = clampSyncLine(line, pane);
+  if (next === lastSyncLine) return;
+  lastSyncLine = next;
   applyBlockView();
   if (syncLink.authorized && !applyingSync) {
     sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line: lastSyncLine } });
   }
+}
+
+function moveLyricBlock(delta, byBlock = false) {
+  const pane = el.songReadContent || el.stageContent;
+  if (pane) stampSyncLines(pane);
+  const step = byBlock ? songBlockSize() : 1;
+  setLyricWindow(lastSyncLine + delta * step);
 }
 
 function handleChartScroll() {
@@ -3240,11 +3306,9 @@ function handleChartScroll() {
   clearTimeout(scrollSyncTimer);
   scrollSyncTimer = setTimeout(() => {
     if (applyingScrollSync || applyingSync || !syncLink.authorized) return;
-    const line = visibleSyncLine(pane);
-    const size = songBlockSize();
-    const snapped = Math.floor(line / size) * size;
-    if (snapped === lastSyncLine) return;
-    lastSyncLine = snapped;
+    const line = clampSyncLine(visibleSyncLine(pane), pane);
+    if (line === lastSyncLine) return;
+    lastSyncLine = line;
     markBlockLines(pane);
     sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line: lastSyncLine } });
   }, 40);
@@ -4782,11 +4846,17 @@ function handleEditorSaveHotkey(event) {
 function handleStageHotkeys(event) {
   if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
   if (event.target.closest("input, textarea, select")) return;
-  const blockNext = event.key === "ArrowDown" || event.key === "PageDown";
-  const blockPrev = event.key === "ArrowUp" || event.key === "PageUp";
-  if (blockNext || blockPrev) {
+  const onChart = el.appShell.classList.contains("stage-active")
+    || el.appShell.classList.contains("song-active");
+  if (!onChart) return;
+  if (event.key === "PageDown" || event.key === "PageUp") {
     event.preventDefault();
-    moveLyricBlock(blockNext ? 1 : -1);
+    moveLyricBlock(event.key === "PageDown" ? 1 : -1, true);
+    return;
+  }
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    moveLyricBlock(event.key === "ArrowDown" ? 1 : -1);
     return;
   }
   const goNext = event.key === "ArrowRight" || event.key === "MediaTrackNext";
@@ -5676,8 +5746,7 @@ function applyPlayhead(payload, prevSongId) {
   if (!playing && !songChanged && !oldClientOpened) return;
   if (songChanged) lastSyncLine = typeof payload.line === "number" ? payload.line : 0;
   else if (typeof payload.line === "number") lastSyncLine = payload.line;
-  const size = songBlockSize();
-  lastSyncLine = Math.floor(Math.max(0, lastSyncLine) / size) * size;
+  lastSyncLine = clampSyncLine(lastSyncLine);
   if (isTelaoDisplay()) {
     switchView("stage");
     return;
@@ -7258,7 +7327,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=111").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=112").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
