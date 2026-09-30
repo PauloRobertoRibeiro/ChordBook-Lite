@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.15";
+const APP_VERSION = "1.1.16";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -113,7 +113,7 @@ const I18N = {
     "editor.lead": "Preencha os dados e escreva a letra com os acordes.",
     "editor.details": "Mais dados",
     "editor.chordHelp": "A cifra fica na linha de cima; a letra na de baixo. No telão só aparece a letra.",
-    "editor.chordNote": "Ou na própria letra: [G]Grande é o Se[C]nhor",
+    "editor.chordNote": "Toque a cifra para a linha de cima. Na letra, se quiser: [G]",
     "editor.lyricsPh": "Verso 1:\nG          C\nEscreve a letra nesta linha",
     "editor.previewChart": "Cifra",
     "editor.previewTelao": "Ver telão",
@@ -576,7 +576,7 @@ const I18N = {
     "editor.lead": "Completa los datos y escribe la letra con los acordes.",
     "editor.details": "Más datos",
     "editor.chordHelp": "El acorde va en la línea de arriba; la letra en la de abajo. El telón muestra solo la letra.",
-    "editor.chordNote": "O en la propia letra: [G]Grande es el Se[C]ñor",
+    "editor.chordNote": "Toque el acorde para la línea de arriba. En la letra, si quiere: [G]",
     "editor.lyricsPh": "Estrofa 1:\nG          C\nEscribe la letra en esta línea",
     "editor.previewChart": "Cifra",
     "editor.previewTelao": "Ver telón",
@@ -1039,7 +1039,7 @@ const I18N = {
     "editor.lead": "Fill in the details and write lyrics with chords.",
     "editor.details": "More details",
     "editor.chordHelp": "Put chords on the line above; lyrics on the line below. The projector shows lyrics only.",
-    "editor.chordNote": "Or write them in the lyric: [G]Great is the [C]Lord",
+    "editor.chordNote": "Tap a chord for the line above. In the lyric, if you want: [G]",
     "editor.lyricsPh": "Verse 1:\nG          C\nWrite the lyric on this line",
     "editor.previewChart": "Chart",
     "editor.previewTelao": "See projector",
@@ -6195,7 +6195,8 @@ function insertEditorChord(chord) {
   if (!field || field.disabled) return;
   const start = field.selectionStart ?? field.value.length;
   const end = field.selectionEnd ?? start;
-  field.setRangeText(`[${chord}]`, start, end, "end");
+  const token = `${chord}${" ".repeat(Math.max(2, 8 - String(chord).length))}`;
+  field.setRangeText(token, start, end, "end");
   field.focus();
   updateEditorPreview();
 }
@@ -7469,7 +7470,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=116").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=117").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
