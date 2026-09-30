@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.26";
+const APP_VERSION = "1.1.27";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -3014,7 +3014,7 @@ function renderEditor() {
   el.blockSize.forEach((button) => {
     button.classList.toggle("active", songBlockSize(song) === Number(button.dataset.blockSize));
   });
-  el.lines.value = song ? song.lines.join("\n") : "";
+  el.lines.value = song ? unfoldStackedChords(song.lines).join("\n") : "";
   el.favorite.textContent = song?.isFavorite ? t("library.unfavorite") : t("library.favorite");
   syncEditorPreviewChrome();
   updateEditorPreview();
@@ -4362,7 +4362,7 @@ function saveSong(event) {
     capo: Number(el.capo.value || 0),
     cue: String(el.cue?.value || "").trim().slice(0, 80),
     blockSize: songBlockSizeFromUi(),
-    lines: String(el.lines.value || "").replace(/\r/g, "").split("\n"),
+    lines: foldStackedChords(String(el.lines.value || "").replace(/\r/g, "").split("\n")),
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
   });
@@ -7742,7 +7742,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=127").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=128").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

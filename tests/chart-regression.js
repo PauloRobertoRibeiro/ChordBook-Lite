@@ -82,4 +82,18 @@ const gloriaTail = chart.foldStackedChords([
 assert.deepStrictEqual(chordOrder(gloriaTail[0]), ["A", "D"]);
 assert.ok(/\[A\]de/.test(gloriaTail[0]) && /\[D\]Gloria/.test(gloriaTail[0]), "A deve ficar em de e D em Gloria");
 
+const opened = chart.unfoldStackedChords([
+  "{key: G}",
+  "[G]Quando a noite vem, eu [D/F#]lembro",
+  "[Em7]Tua voz me chama para [Cadd9]perto",
+]);
+assert.strictEqual(opened[0], "{key: G}");
+assert.ok(opened[1].startsWith("G") && opened[1].includes("D/F#"), "o editor deve mostrar a cifra na linha de cima");
+assert.strictEqual(opened[2], "Quando a noite vem, eu lembro");
+assert.ok(!opened.some((line) => /\[[^\]]+\]/.test(line)), "músicas antigas não devem abrir com [G] no editor");
+assert.ok(opened[1].indexOf("D/F#") >= opened[2].indexOf("lembro"), "D/F# deve cair sobre lembro");
+
+const savedAgain = chart.foldStackedChords(opened);
+assert.ok(savedAgain.some((line) => /\[G\]Quando/.test(line) && /\[D\/F#\]lembro/.test(line)));
+
 console.log("chart-regression: ok");

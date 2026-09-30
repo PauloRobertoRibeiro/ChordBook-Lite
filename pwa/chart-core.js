@@ -86,6 +86,44 @@
     return out;
   }
 
+  function unfoldChordProLine(line) {
+    const source = String(line || "").replace(/\t/g, "  ");
+    if (!isChordProLine(source)) return [source];
+    let lyric = "";
+    const marks = [];
+    const chordRe = /\[([^\]]+)\]/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = chordRe.exec(source)) !== null) {
+      lyric += source.slice(lastIndex, match.index);
+      const chord = match[1].trim();
+      if (chord) marks.push({ chord, index: lyric.length });
+      lastIndex = chordRe.lastIndex;
+    }
+    lyric += source.slice(lastIndex);
+    if (!marks.length) return [source];
+    if (!lyric.trim()) return [marks.map((mark) => mark.chord).join("  ")];
+    let chordLine = "";
+    marks.forEach((mark) => {
+      if (chordLine.length < mark.index) chordLine += " ".repeat(mark.index - chordLine.length);
+      else if (chordLine.length > mark.index && chordLine && !/\s$/.test(chordLine)) chordLine += " ";
+      chordLine += mark.chord;
+    });
+    return [chordLine, lyric];
+  }
+
+  function unfoldStackedChords(lines) {
+    const out = [];
+    (Array.isArray(lines) ? lines : []).forEach((line) => {
+      if (isChordProLine(line)) {
+        unfoldChordProLine(line).forEach((part) => out.push(part));
+        return;
+      }
+      out.push(line);
+    });
+    return out;
+  }
+
   function nextLyricPartnerIndex(source, index) {
     for (let cursor = index + 1; cursor < source.length; cursor += 1) {
       if (!String(source[cursor] || "").trim()) continue;
@@ -381,6 +419,8 @@
     isChordProLine,
     normalizeChordProToWords,
     foldStackedChords,
+    unfoldChordProLine,
+    unfoldStackedChords,
     nextLyricPartnerIndex,
     splitLabeledChordLine,
     isLyricPartner,
