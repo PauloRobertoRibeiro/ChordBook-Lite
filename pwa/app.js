@@ -1,9 +1,11 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.22";
+const APP_VERSION = "1.1.23";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
+const TRIAL_KEY = "chordbook.trial.v1";
+const TRIAL_DAYS = 7;
 const LOOK_PRESETS = {
   night: { stageBg: "#0d100f", lyricColor: "#f5f8f6", chordColor: "#8ec5ff" },
   forest: { stageBg: "#10211c", lyricColor: "#e7f6f0", chordColor: "#5ee0c5" },
@@ -389,6 +391,11 @@ const I18N = {
     "license.errCvv": "CVV incorrecto ou já usado. Peça um CVV novo.",
     "license.errNetwork": "Sem internet. A activação precisa de rede.",
     "license.errUnknown": "Não foi possível activar. Confirme o pagamento e os números.",
+    "license.trialDays": "Prova grátis: restam {n} dias.",
+    "license.trialDay": "Prova grátis: resta 1 dia.",
+    "license.trialOverTitle": "A prova de 7 dias acabou",
+    "license.trialOverLead": "Para continuar neste telemóvel, compre o Android e escreva o número e o CVV.",
+    "license.trialOverWeb": "A prova acabou neste telemóvel. Instale o app Android e active com o número e o CVV do pagamento.",
     "more.install": "Instalar e partilhar",
     "more.font": "Tamanho da letra",
     "more.fontDefault": "Tamanho da letra padrão",
@@ -852,6 +859,11 @@ const I18N = {
     "license.errCvv": "CVV incorrecto o ya usado. Pida un CVV nuevo.",
     "license.errNetwork": "Sin internet. La activación necesita red.",
     "license.errUnknown": "No se pudo activar. Confirme el pago y los números.",
+    "license.trialDays": "Prueba gratis: quedan {n} días.",
+    "license.trialDay": "Prueba gratis: queda 1 día.",
+    "license.trialOverTitle": "La prueba de 7 días terminó",
+    "license.trialOverLead": "Para seguir en este móvil, compre el Android y escriba el número y el CVV.",
+    "license.trialOverWeb": "La prueba terminó en este móvil. Instale la app Android y actívela con el número y el CVV del pago.",
     "more.install": "Instalar y compartir",
     "more.font": "Tamaño de letra",
     "more.fontDefault": "Tamaño de letra predeterminado",
@@ -1315,6 +1327,11 @@ const I18N = {
     "license.errCvv": "Wrong or already used CVV. Ask for a new CVV.",
     "license.errNetwork": "No internet. Activation needs a network.",
     "license.errUnknown": "Could not activate. Check the payment and the numbers.",
+    "license.trialDays": "Free trial: {n} days left.",
+    "license.trialDay": "Free trial: 1 day left.",
+    "license.trialOverTitle": "The 7-day trial has ended",
+    "license.trialOverLead": "To keep using this phone, buy Android and enter the number and CVV.",
+    "license.trialOverWeb": "The trial ended on this phone. Install the Android app and activate it with the number and CVV from your payment.",
     "more.install": "Install and share",
     "more.font": "Font size",
     "more.fontDefault": "Default font size",
@@ -1514,6 +1531,107 @@ function androidLicenseOn() {
   return !!(window.ChordBookAndroid && typeof window.ChordBookAndroid.getLicense === "function" && licenseEndpoint());
 }
 
+let licenseUnlocked = false;
+
+function trialAppliesHere() {
+  if (licenseUnlocked) return false;
+  if (typeof isDesktopComputer === "function" && isDesktopComputer()) return false;
+  return true;
+}
+
+function readTrial() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TRIAL_KEY) || "{}");
+    const startedAt = Number(raw.startedAt) || 0;
+    if (!startedAt) return null;
+    const endsAt = startedAt + TRIAL_DAYS * 24 * 60 * 60 * 1000;
+    const leftoverMs = Math.max(0, endsAt - Date.now());
+    return {
+      startedAt,
+      endsAt,
+      leftoverMs,
+      expired: leftoverMs <= 0,
+      daysLeft: Math.max(0, Math.ceil(leftoverMs / (24 * 60 * 60 * 1000))),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function ensureTrial() {
+  let trial = readTrial();
+  if (trial) return trial;
+  const startedAt = Date.now();
+  try {
+    localStorage.setItem(TRIAL_KEY, JSON.stringify({ startedAt }));
+  } catch {
+    /* private mode */
+  }
+  return readTrial() || {
+    startedAt,
+    endsAt: startedAt + TRIAL_DAYS * 24 * 60 * 60 * 1000,
+    leftoverMs: TRIAL_DAYS * 24 * 60 * 60 * 1000,
+    expired: false,
+    daysLeft: TRIAL_DAYS,
+  };
+}
+
+function trialLabel(trial) {
+  if (!trial || trial.expired) return t("license.trialOverTitle");
+  if (trial.daysLeft <= 1) return t("license.trialDay");
+  return t("license.trialDays", { n: trial.daysLeft });
+}
+
+function syncTrialHints(trial) {
+  const hint = document.getElementById("trialHint");
+  if (!hint) return;
+  if (!trialAppliesHere() || licenseUnlocked) {
+    hint.hidden = true;
+    hint.textContent = "";
+    return;
+  }
+  const state = trial || ensureTrial();
+  hint.hidden = false;
+  hint.textContent = trialLabel(state);
+}
+
+function hideLicenseGate() {
+  const sheet = document.getElementById("licenseSheet");
+  if (sheet) sheet.hidden = true;
+}
+
+function showLicenseGate() {
+  const sheet = document.getElementById("licenseSheet");
+  if (!sheet) return;
+  const android = androidLicenseOn();
+  const title = document.getElementById("licenseTitle");
+  const lead = document.getElementById("licenseLead");
+  const fields = document.getElementById("licensePayFields");
+  const activate = document.getElementById("licenseActivate");
+  if (title) title.textContent = t("license.trialOverTitle");
+  if (lead) lead.textContent = android ? t("license.trialOverLead") : t("license.trialOverWeb");
+  if (fields) fields.hidden = !android;
+  if (activate) activate.hidden = !android;
+  sheet.hidden = false;
+}
+
+function refreshTrialGate() {
+  if (licenseUnlocked) {
+    hideLicenseGate();
+    syncTrialHints(null);
+    return;
+  }
+  if (!trialAppliesHere()) {
+    hideLicenseGate();
+    syncTrialHints(null);
+    return;
+  }
+  const trial = ensureTrial();
+  syncTrialHints(trial);
+  if (trial.expired) showLicenseGate();
+  else hideLicenseGate();
+}
+
 function digitsOnly(value) {
   return String(value || "").replace(/\D/g, "");
 }
@@ -1561,40 +1679,32 @@ function showLicenseError(code) {
   node.textContent = t(map[code] || "license.errUnknown");
 }
 
-function hideLicenseGate() {
-  const sheet = document.getElementById("licenseSheet");
-  if (sheet) sheet.hidden = true;
-}
-
-function showLicenseGate() {
-  const sheet = document.getElementById("licenseSheet");
-  if (!sheet) return;
-  sheet.hidden = false;
-  applyI18n();
-}
-
 async function bootLicense() {
-  if (!androidLicenseOn()) return;
-  let stored = {};
-  try {
-    stored = JSON.parse(window.ChordBookAndroid.getLicense() || "{}");
-  } catch {
-    stored = {};
-  }
-  const device = window.ChordBookAndroid.getDeviceId?.() || "";
-  if (stored.ok && stored.number && stored.token) {
-    const check = await licenseRequest(
-      "action=check&number=" + encodeURIComponent(stored.number) +
-      "&device=" + encodeURIComponent(device) +
-      "&token=" + encodeURIComponent(stored.token)
-    );
-    if (check.ok) {
-      hideLicenseGate();
-      return;
+  licenseUnlocked = false;
+  if (androidLicenseOn()) {
+    let stored = {};
+    try {
+      stored = JSON.parse(window.ChordBookAndroid.getLicense() || "{}");
+    } catch {
+      stored = {};
     }
-    window.ChordBookAndroid.clearLicense();
+    const device = window.ChordBookAndroid.getDeviceId?.() || "";
+    if (stored.ok && stored.number && stored.token) {
+      const check = await licenseRequest(
+        "action=check&number=" + encodeURIComponent(stored.number) +
+        "&device=" + encodeURIComponent(device) +
+        "&token=" + encodeURIComponent(stored.token)
+      );
+      if (check.ok) {
+        licenseUnlocked = true;
+        hideLicenseGate();
+        syncTrialHints(null);
+        return;
+      }
+      window.ChordBookAndroid.clearLicense();
+    }
   }
-  showLicenseGate();
+  refreshTrialGate();
 }
 
 async function submitLicense() {
@@ -1615,7 +1725,9 @@ async function submitLicense() {
     return;
   }
   window.ChordBookAndroid.saveLicense(result.number || number, result.token || "");
+  licenseUnlocked = true;
   hideLicenseGate();
+  syncTrialHints(null);
 }
 
 document.getElementById("licenseNumber")?.addEventListener("input", (event) => {
@@ -2305,6 +2417,7 @@ function render() {
   syncChartPrefs();
   updateScrollButtons();
   syncSetlistPlayChrome();
+  refreshTrialGate();
 }
 
 function isStageRundownWide() {
@@ -7557,7 +7670,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=123").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=124").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

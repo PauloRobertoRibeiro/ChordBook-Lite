@@ -3227,6 +3227,22 @@ textarea {
   margin: 0;
 }
 
+.more-trial {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+#licensePayFields {
+  display: grid;
+  gap: 8px;
+}
+
+#licensePayFields[hidden] {
+  display: none;
+}
+
 #licenseBuy {
   align-self: center;
 }
