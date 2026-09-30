@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.19";
+const APP_VERSION = "1.1.20";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -2360,6 +2360,7 @@ function switchView(view) {
   el.appShell.classList.toggle("stage-active", view === "stage");
   el.appShell.classList.toggle("editing-song", view === "library" && isEditingSong);
   el.appShell.classList.toggle("editing-setlist", view === "setlists" && isEditingSetlist);
+  syncChartPrefs();
   if (view === "stage" || (view === "song" && isSetlistPlaying)) requestStageWakeLock();
   else releaseStageWakeLock();
   renderSongReadMenu();
@@ -2412,6 +2413,7 @@ function editSelectedSong() {
 function closeSongEditor() {
   isEditingSong = false;
   el.appShell.classList.remove("editing-song");
+  syncChartPrefs();
 }
 
 function openEditorSong() {
@@ -4216,7 +4218,7 @@ function setTheme(theme) {
 
 function syncChartPrefs() {
   if (!el.appShell) return;
-  el.appShell.classList.toggle("hide-chords", state.showChords === false || isTelaoDisplay());
+  el.appShell.classList.toggle("hide-chords", (state.showChords === false || isTelaoDisplay()) && !el.appShell.classList.contains("editing-song"));
   el.appShell.classList.toggle("hide-lyrics", state.showLyrics === false);
   el.appShell.classList.toggle("chart-focus", Boolean(state.focusChart));
   el.appShell.classList.toggle("telao-active", isTelaoDisplay());
@@ -7473,7 +7475,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=120").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=121").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

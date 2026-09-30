@@ -1428,17 +1428,25 @@ textarea {
   width: 36px;
 }
 
-.app-shell.hide-chords .chord-row,
-.app-shell.hide-chords .chord-only,
-.app-shell.hide-chords .chord,
-.editor-preview.hide-chords .chord-row,
-.editor-preview.hide-chords .chord-only,
-.editor-preview.hide-chords .chord {
+.app-shell.hide-chords .song-read .chord-row,
+.app-shell.hide-chords .song-read .chord-only,
+.app-shell.hide-chords .song-read .chord,
+.app-shell.hide-chords .stage-content .chord-row,
+.app-shell.hide-chords .stage-content .chord-only,
+.app-shell.hide-chords .stage-content .chord {
   display: none;
 }
 
-.app-shell.hide-lyrics .lyric-row,
-.app-shell.hide-lyrics .chord-lyric .lyric {
+.app-shell.hide-chords .editor-preview:not(.hide-chords) .chord-row,
+.app-shell.hide-chords .editor-preview:not(.hide-chords) .chord-only,
+.app-shell.hide-chords .editor-preview:not(.hide-chords) .chord {
+  display: revert;
+}
+
+.app-shell.hide-lyrics .song-read .lyric-row,
+.app-shell.hide-lyrics .song-read .chord-lyric .lyric,
+.app-shell.hide-lyrics .stage-content .lyric-row,
+.app-shell.hide-lyrics .stage-content .chord-lyric .lyric {
   display: none;
 }
 
