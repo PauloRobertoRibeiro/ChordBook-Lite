@@ -65,4 +65,21 @@ const unknownQuality = chart.foldStackedChords([
 assert.strictEqual(unknownQuality.length, 2, "um acorde desconhecido não pode transformar a linha inteira em letra");
 assert.ok(unknownQuality[1].includes("C7M"));
 
+function chordOrder(line) {
+  return [...String(line || "").matchAll(/\[([^\]]+)\]/g)].map((match) => match[1]);
+}
+
+const gloria = chart.foldStackedChords([
+  "D                    F#m           G                       A     D",
+  "Alma Bendice al Señor Rey potente de Gloria",
+]);
+assert.deepStrictEqual(chordOrder(gloria[0]).slice(-2), ["A", "D"], "A D no fim da frase não podem inverter para D A");
+
+const gloriaTail = chart.foldStackedChords([
+  "                                        A     D",
+  "de Gloria",
+]);
+assert.deepStrictEqual(chordOrder(gloriaTail[0]), ["A", "D"]);
+assert.ok(/\[A\]de/.test(gloriaTail[0]) && /\[D\]Gloria/.test(gloriaTail[0]), "A deve ficar em de e D em Gloria");
+
 console.log("chart-regression: ok");

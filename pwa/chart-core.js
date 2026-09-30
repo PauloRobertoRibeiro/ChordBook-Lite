@@ -172,19 +172,64 @@
     const tokens = chordMarkers(chordLine);
     if (!tokens.length) return lyrics;
     const spans = wordSpans(lyrics);
-    const used = new Set();
-    const placed = tokens.map((token) => {
-      const raw = Math.min(Math.max(token.index - shift, 0), lyrics.length);
-      const at = snapToUnusedWordStart(spans, raw, used);
-      used.add(at);
-      return { chord: token.chord, at };
-    });
-    placed.sort((a, b) => b.at - a.at);
+    if (!spans.length) {
+      return `${tokens.map((token) => `[${token.chord}]`).join("")}${lyrics}`;
+    }
+    const preferred = tokens.map((token) => nearestWordIndex(spans, Math.max(token.index - shift, 0)));
+    const indexes = spreadWordIndexes(preferred, spans.length);
+    const placed = tokens.map((token, index) => ({
+      chord: token.chord,
+      at: spans[indexes[index]].start,
+      order: index,
+    }));
+    placed.sort((left, right) => right.at - left.at || right.order - left.order);
     let result = lyrics;
     placed.forEach((item) => {
       result = `${result.slice(0, item.at)}[${item.chord}]${result.slice(item.at)}`;
     });
     return result;
+  }
+
+  function nearestWordIndex(spans, index) {
+    let best = 0;
+    let bestDist = Infinity;
+    spans.forEach((span, i) => {
+      const dist = index < span.start
+        ? span.start - index
+        : index >= span.end
+          ? index - (span.end - 1)
+          : 0;
+      if (dist < bestDist || (dist === bestDist && index >= span.start && i > best)) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    return best;
+  }
+
+  function spreadWordIndexes(preferred, wordCount) {
+    const out = preferred.map((index) => Math.max(0, Math.min(wordCount - 1, index)));
+    for (let i = 1; i < out.length; i += 1) {
+      if (out[i] < out[i - 1]) out[i] = out[i - 1];
+    }
+    let cursor = out.length - 1;
+    while (cursor >= 0) {
+      let start = cursor;
+      while (start > 0 && out[start - 1] === out[cursor]) start -= 1;
+      const run = cursor - start + 1;
+      if (run > 1) {
+        const lastWord = out[cursor];
+        const prevWord = start > 0 ? out[start - 1] : -1;
+        const use = Math.min(run, Math.max(1, lastWord - prevWord));
+        const firstSlot = lastWord - use + 1;
+        const extra = run - use;
+        for (let k = 0; k < run; k += 1) {
+          out[start + k] = k < extra ? firstSlot : firstSlot + (k - extra);
+        }
+      }
+      cursor = start - 1;
+    }
+    return out;
   }
 
   function wordSpans(lyrics) {
@@ -199,29 +244,6 @@
 
   function allWordStarts(lyrics) {
     return wordSpans(lyrics).map((span) => span.start);
-  }
-
-  function snapToUnusedWordStart(spans, index, used) {
-    if (!spans.length) return index;
-    const starts = spans.map((span) => span.start);
-    const inside = spans.find((span) => index >= span.start && index < span.end);
-    let best = inside ? inside.start : starts[0];
-    if (!inside) {
-      const previous = [...spans].reverse().find((span) => span.end <= index);
-      const next = spans.find((span) => span.start >= index);
-      if (previous && next) {
-        const toPrev = index - previous.end;
-        const toNext = next.start - index;
-        best = toPrev <= toNext ? previous.start : next.start;
-      } else {
-        best = (previous || next || spans[0]).start;
-      }
-    }
-    if (!used.has(best)) return best;
-    const after = starts.find((start) => start > best && !used.has(start));
-    if (after != null) return after;
-    const before = [...starts].reverse().find((start) => start < best && !used.has(start));
-    return before != null ? before : best;
   }
 
   function mergeChordsByWords(chordLine, lyrics) {
