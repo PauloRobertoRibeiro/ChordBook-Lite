@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.17";
+const APP_VERSION = "1.1.18";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -6195,7 +6195,7 @@ function insertEditorChord(chord) {
   if (!field || field.disabled) return;
   const start = field.selectionStart ?? field.value.length;
   const end = field.selectionEnd ?? start;
-  const token = `${chord}${" ".repeat(Math.max(2, 8 - String(chord).length))}`;
+  const token = `${chord}${" ".repeat(Math.max(2, 10 - String(chord).length))}`;
   field.setRangeText(token, start, end, "end");
   field.focus();
   updateEditorPreview();
@@ -7470,7 +7470,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=118").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=119").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

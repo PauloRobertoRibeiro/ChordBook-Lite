@@ -954,6 +954,11 @@ h1 { font-size: 22px; line-height: 1.15; margin: 0; }
 }
 
 .chord-insert {
+  display: grid;
+  gap: 6px;
+}
+
+.chord-insert-row {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
@@ -973,6 +978,12 @@ h1 { font-size: 22px; line-height: 1.15; margin: 0; }
   min-height: 36px;
   min-width: 40px;
   padding: 0 8px;
+}
+
+.chord-insert-more button {
+  font-size: 12px;
+  min-width: auto;
+  padding: 0 10px;
 }
 
 .lyrics-workspace textarea {
