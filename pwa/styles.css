@@ -1459,10 +1459,33 @@ textarea {
   display: none !important;
 }
 
+.app-shell.telao-active .stage-shell {
+  grid-template-rows: auto auto minmax(0, 1fr) 0;
+}
+
+.app-shell.telao-active .stage-mode-footer {
+  bottom: 14px;
+  left: 0;
+  opacity: 0.72;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  z-index: 6;
+}
+
+.app-shell.telao-active #stageChartScroll {
+  overflow: hidden;
+}
+
 .app-shell.telao-active .stage-content {
-  font-size: clamp(2.2rem, 5.5vw, 4.4rem);
-  line-height: 1.35;
-  padding: 8vh 6vw 12vh;
+  align-items: center;
+  display: flex;
+  font-size: 42px;
+  height: 100%;
+  justify-content: center;
+  line-height: 1.28;
+  overflow: hidden;
+  padding: 2vh 5vw 7vh;
 }
 
 .app-shell.telao-active .stage-nav-btn {
@@ -1547,8 +1570,11 @@ textarea {
   background: transparent;
   border: 0;
   grid-template-columns: 1fr;
-  min-height: 100%;
-  padding: 8vh 4vw;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 1vw;
+  width: 100%;
 }
 
 .app-shell.telao-active .lyric-slide-tag {
@@ -1556,8 +1582,18 @@ textarea {
 }
 
 .app-shell.telao-active .lyric-slide-body {
-  font-size: 1.25em;
+  font-size: 1em;
   text-align: center;
+  width: 100%;
+}
+
+.app-shell.telao-active .stage-line {
+  margin: 0 0 0.22em;
+}
+
+.app-shell.telao-active .lyric-row {
+  display: block;
+  white-space: normal;
 }
 
 .app-shell.telao-active .stage-mode-title strong {

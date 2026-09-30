@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.21";
+const APP_VERSION = "1.1.22";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -2067,6 +2067,7 @@ function bindEvents() {
     updateResponsiveStageFont();
     updateSyncUi();
     syncSongOverflow();
+    scheduleFitTelaoSlide();
   });
   window.addEventListener("keydown", handleStageHotkeys);
   window.addEventListener("keydown", handleEditorSaveHotkey);
@@ -2968,6 +2969,7 @@ function renderStage() {
   lastSyncLine = clampSyncLine(lastSyncLine, el.stageContent);
   markBlockLines(el.stageContent);
   if (rebuilt || applyingSync) ensureBlockVisible(el.stageContent);
+  scheduleFitTelaoSlide();
 }
 
 function beginChartTouch(event) {
@@ -3391,6 +3393,39 @@ function ensureBlockVisible(pane) {
   });
 }
 
+function fitTelaoSlide() {
+  if (!el.stageContent) return;
+  const telao = Boolean(el.appShell?.classList.contains("telao-active"));
+  if (!telao) {
+    el.stageContent.style.fontSize = "";
+    return;
+  }
+  const slide = el.stageContent.querySelector(".lyric-slide.on");
+  const host = document.querySelector("#stageChartScroll") || el.stageContent;
+  if (!slide || !host) return;
+  const maxH = Math.max(80, host.clientHeight - 12);
+  const maxW = Math.max(80, host.clientWidth - 12);
+  let lo = 16;
+  let hi = Math.min(88, Math.floor(Math.min(maxW / 7, maxH / 2.4)));
+  let best = lo;
+  for (let step = 0; step < 14; step += 1) {
+    const mid = (lo + hi) / 2;
+    el.stageContent.style.fontSize = `${mid}px`;
+    if (slide.scrollHeight > maxH + 2 || slide.scrollWidth > maxW + 2) hi = mid;
+    else {
+      best = mid;
+      lo = mid;
+    }
+  }
+  el.stageContent.style.fontSize = `${best}px`;
+}
+
+function scheduleFitTelaoSlide() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(fitTelaoSlide);
+  });
+}
+
 function applyBlockView() {
   [el.songReadContent, el.stageContent].forEach((pane) => {
     if (!pane) return;
@@ -3402,6 +3437,7 @@ function applyBlockView() {
     ? el.songReadContent
     : (followPane() || activeScrollPane());
   ensureBlockVisible(visible);
+  scheduleFitTelaoSlide();
 }
 
 function setLyricWindow(line) {
@@ -4232,6 +4268,7 @@ function syncChartPrefs() {
   el.appShell.classList.toggle("hide-lyrics", state.showLyrics === false);
   el.appShell.classList.toggle("chart-focus", Boolean(state.focusChart));
   el.appShell.classList.toggle("telao-active", isTelaoDisplay());
+  scheduleFitTelaoSlide();
   [el.songAutoScrollSwitch, el.moreAutoScrollSwitch].forEach((input) => {
     if (input) input.checked = Boolean(state.preferAutoScroll) || isAutoScrolling;
   });
@@ -7520,7 +7557,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=122").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=123").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
