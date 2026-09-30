@@ -1299,13 +1299,52 @@ textarea {
 
 .app-shell.block-paging.song-active .song-read-content,
 .app-shell.block-paging.stage-active .stage-content {
-  overscroll-behavior: none;
-  touch-action: none;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
-.app-shell.block-paging.song-active .song-read-content,
-.app-shell.block-paging.stage-active:not(.telao-active) .stage-content {
-  overflow-y: auto;
+.chart-scroll {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+#stageChartScroll {
+  grid-area: content;
+}
+
+.chart-scroll .song-read-content,
+.chart-scroll .stage-content {
+  height: 100%;
+}
+
+.lyric-guide {
+  border-radius: 14px;
+  left: 10px;
+  pointer-events: none;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 4;
+}
+
+#songLyricGuide {
+  background: color-mix(in srgb, var(--chord) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chord) 32%, transparent);
+}
+
+#stageLyricGuide {
+  background: color-mix(in srgb, var(--stage-chord) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stage-chord) 40%, transparent);
+}
+
+.lyric-guide[hidden] {
+  display: none !important;
+}
+
+.app-shell.telao-active .lyric-guide {
+  display: none !important;
 }
 
 .app-shell.telao-active.block-paging .stage-content {
@@ -1314,38 +1353,6 @@ textarea {
 
 .app-shell.telao-active.block-paging .stage-content [data-sync-line]:not(.in-block) {
   display: none;
-}
-
-.app-shell.block-paging.song-active .song-read-content .in-block {
-  background: color-mix(in srgb, var(--chord) 16%, transparent);
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--chord) 42%, transparent);
-  margin-bottom: 0;
-  margin-left: -8px;
-  padding-bottom: 0.45em;
-  padding-left: 11px;
-  padding-right: 8px;
-}
-
-.app-shell.block-paging.stage-active:not(.telao-active) .stage-content .in-block {
-  background: color-mix(in srgb, var(--stage-chord) 18%, transparent);
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--stage-chord) 48%, transparent);
-  margin-bottom: 0;
-  margin-left: -8px;
-  padding-bottom: 0.45em;
-  padding-left: 11px;
-  padding-right: 8px;
-}
-
-.app-shell.block-paging:not(.telao-active) [data-sync-line].block-start {
-  border-radius: 10px 10px 0 0;
-}
-
-.app-shell.block-paging:not(.telao-active) [data-sync-line].block-end {
-  border-radius: 0 0 10px 10px;
-}
-
-.app-shell.block-paging:not(.telao-active) [data-sync-line].block-start.block-end {
-  border-radius: 10px;
 }
 
 .app-shell.telao-active .stage-mode-title strong {
