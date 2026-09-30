@@ -988,7 +988,28 @@ h1 { font-size: 22px; line-height: 1.15; margin: 0; }
 
 .lyrics-workspace textarea {
   min-height: 280px;
+  overflow-x: auto;
   tab-size: 8;
+  white-space: pre;
+}
+
+.editor-preview .song-read-content {
+  font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+  font-size: 15px;
+  line-height: 1.28;
+  overflow-x: auto;
+}
+
+.editor-preview .stage-line,
+.editor-preview .chord-only,
+.editor-preview .chord-only .chord,
+.editor-preview .lyric-row {
+  white-space: pre;
+  font-family: inherit;
+}
+
+.editor-preview .stage-line {
+  line-height: 1.28;
 }
 
 .editor-preview.hide-chords .chord-row,
@@ -4738,8 +4759,10 @@ textarea {
   }
 
   .editor-preview .song-read-content {
+    font-size: 15px;
+    line-height: 1.28;
     min-width: 0;
-    overflow-x: hidden;
+    overflow-x: auto;
     padding: 0;
   }
 
@@ -4750,6 +4773,11 @@ textarea {
   .song-read-content,
   .stage-content {
     font-size: calc(var(--stage-font, 22px) + 2px);
+  }
+
+  .editor-preview .song-read-content {
+    font-size: 15px;
+    line-height: 1.28;
   }
 }
 

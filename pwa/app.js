@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.18";
+const APP_VERSION = "1.1.19";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -2839,14 +2839,14 @@ function renderEditor() {
   el.blockSize.forEach((button) => {
     button.classList.toggle("active", songBlockSize(song) === Number(button.dataset.blockSize));
   });
-  el.lines.value = song ? foldStackedChords(song.lines).join("\n") : "";
+  el.lines.value = song ? song.lines.join("\n") : "";
   el.favorite.textContent = song?.isFavorite ? t("library.unfavorite") : t("library.favorite");
   syncEditorPreviewChrome();
   updateEditorPreview();
 }
 
-function songChartHtml(song) {
-  return renderChartLines(song.lines, song.transposeValue || 0);
+function songChartHtml(song, options = {}) {
+  return renderChartLines(song.lines, song.transposeValue || 0, options);
 }
 
 function renderSongView() {
@@ -4142,7 +4142,7 @@ function saveSong(event) {
     capo: Number(el.capo.value || 0),
     cue: String(el.cue?.value || "").trim().slice(0, 80),
     blockSize: songBlockSizeFromUi(),
-    lines: foldStackedChords(el.lines.value.replace(/\r/g, "").split("\n")),
+    lines: String(el.lines.value || "").replace(/\r/g, "").split("\n"),
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
   });
@@ -5268,9 +5268,10 @@ function mergeSetlists(setlists) {
   selectedSetlistId ||= state.setlists[0]?.id ?? null;
 }
 
-function renderChartLines(lines, semitones) {
+function renderChartLines(lines, semitones, options = {}) {
   const html = [];
   const source = Array.isArray(lines) ? lines : [];
+  const mirror = Boolean(options.mirror);
   for (let index = 0; index < source.length; index += 1) {
     let line = source[index];
     if (isChartMetaLine(line)) continue;
@@ -5283,14 +5284,16 @@ function renderChartLines(lines, semitones) {
       html.push(renderChordLine(line, semitones));
       continue;
     }
-    line = expandGluedChords(line);
-    const partnerAt = nextLyricPartnerIndex(source, index);
-    if (isChordOnlyLine(line) && partnerAt >= 0) {
-      const pair = mergeChordLyricPair(line, source[partnerAt]);
-      if (pair.heading) html.push(renderChordLine(pair.heading, semitones));
-      html.push(renderChordLine(pair.merged, semitones));
-      index = partnerAt;
-      continue;
+    if (!mirror) {
+      line = expandGluedChords(line);
+      const partnerAt = nextLyricPartnerIndex(source, index);
+      if (isChordOnlyLine(line) && partnerAt >= 0) {
+        const pair = mergeChordLyricPair(line, source[partnerAt]);
+        if (pair.heading) html.push(renderChordLine(pair.heading, semitones));
+        html.push(renderChordLine(pair.merged, semitones));
+        index = partnerAt;
+        continue;
+      }
     }
     html.push(renderChordLine(line, semitones));
   }
@@ -6223,14 +6226,14 @@ function updateEditorPreview() {
     artist,
     capo,
     transposeValue: song?.transposeValue || 0,
-    lines: foldStackedChords(String(el.lines?.value || song?.lines?.join("\n") || "").replace(/\r/g, "").split("\n")),
+    lines: String(el.lines?.value || song?.lines?.join("\n") || "").replace(/\r/g, "").split("\n"),
   };
   if (el.editorPreviewTitle) el.editorPreviewTitle.textContent = title;
   if (el.editorPreviewMeta) {
     el.editorPreviewMeta.textContent = [artist, capo ? t("capo.short", { capo }) : ""].filter(Boolean).join(" · ");
   }
   el.editorPreview?.classList.toggle("hide-chords", editorPreviewTelao);
-  el.editorPreviewBody.innerHTML = songChartHtml(draft);
+  el.editorPreviewBody.innerHTML = songChartHtml(draft, { mirror: true });
 }
 
 function updateSyncUi() {
@@ -7470,7 +7473,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=119").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=120").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
