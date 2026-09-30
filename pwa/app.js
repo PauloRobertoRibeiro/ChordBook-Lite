@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.24";
+const APP_VERSION = "1.1.26";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -2852,7 +2852,7 @@ function renderSongs() {
     .filter((song) => !libraryKeyFilter || songWrittenKey(song) === libraryKeyFilter)
     .sort((a, b) => {
       if (libraryFilter === "recent") return String(b.lastOpenedAt || "").localeCompare(String(a.lastOpenedAt || ""));
-      return Number(b.isFavorite) - Number(a.isFavorite) || a.title.localeCompare(b.title);
+      return compareSongTitles(a, b);
     });
 
   el.libraryCount.textContent = libraryFilter === "favorites"
@@ -3704,11 +3704,13 @@ function changeScrollSpeed(delta) {
 
 function songsMatchingStageQuery() {
   const query = normalize(stageMenuQuery);
-  if (!query) return state.songs;
-  return state.songs.filter((song) => {
-    const hay = normalize([song.title, song.artist, song.category, songKey(song)].filter(Boolean).join(" "));
-    return hay.includes(query);
-  });
+  const songs = !query
+    ? state.songs.slice()
+    : state.songs.filter((song) => {
+      const hay = normalize([song.title, song.artist, song.category, songKey(song)].filter(Boolean).join(" "));
+      return hay.includes(query);
+    });
+  return songs.sort(compareSongTitles);
 }
 
 function isCompactSongChrome() {
@@ -4944,7 +4946,7 @@ function songCheckListHtml(setlist) {
   const songs = state.songs
     .filter((song) => !query || normalize(`${song.title} ${song.artist || ""}`).includes(query))
     .slice()
-    .sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    .sort(compareSongTitles);
   if (!songs.length) {
     return `<p class="empty compact">${state.songs.length ? t("stage.noMatch") : t("setlists.noSongs")}</p>`;
   }
@@ -6535,10 +6537,22 @@ function updateSyncUi() {
   refreshTrialGate();
 }
 
+function stripCopiedListNumber(title) {
+  const raw = String(title || "").trim();
+  const cleaned = raw.replace(/^\d{1,3}\s*[.)]\s+/, "").trim();
+  return cleaned || raw;
+}
+
+function compareSongTitles(a, b) {
+  const left = normalize(stripCopiedListNumber(a?.title || ""));
+  const right = normalize(stripCopiedListNumber(b?.title || ""));
+  return left.localeCompare(right) || String(a?.title || "").localeCompare(String(b?.title || ""));
+}
+
 function normalizeSong(song) {
   return {
     id: safeId(song.id),
-    title: String(song.title || "Sem título"),
+    title: stripCopiedListNumber(song.title) || "Sem título",
     artist: String(song.artist || ""),
     category: String(song.category || "Geral"),
     isFavorite: Boolean(song.isFavorite),
@@ -7728,7 +7742,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=125").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=127").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

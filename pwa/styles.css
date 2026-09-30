@@ -3611,14 +3611,31 @@ textarea {
   }
   .app-shell.editing-song .lyrics-workspace {
     display: grid;
-    grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    gap: 6px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     min-height: 0;
+  }
+  .app-shell.editing-song .lyrics-toolbar {
+    order: 1;
   }
   .app-shell.editing-song .lyrics-workspace textarea,
   .app-shell.editing-song .song-form textarea {
     height: 100%;
     min-height: 0;
+    order: 2;
     resize: none;
+  }
+  .app-shell.editing-song .chord-insert {
+    gap: 4px;
+    order: 3;
+  }
+  .app-shell.editing-song .chord-insert button {
+    min-height: 32px;
+  }
+  .app-shell.editing-song .editor-chord-help,
+  .app-shell.editing-song .editor-chord-sample,
+  .app-shell.editing-song .editor-chord-note {
+    display: none;
   }
   .app-shell.editing-song .editor-panel.preview-open .editor-preview {
     background: #f9fbfa;
@@ -3675,6 +3692,29 @@ textarea {
   .form-actions .primary-action {
     grid-column: 1 / -1;
     min-height: 50px;
+  }
+  .app-shell.editing-song .editor-titlebar {
+    padding: 8px 16px;
+  }
+  .app-shell.editing-song .editor-titlebar h2 {
+    font-size: 17px;
+  }
+  .app-shell.editing-song .editor-name input {
+    font-size: 16px;
+    min-height: 40px;
+  }
+  .app-shell.editing-song .editor-meta summary {
+    padding: 8px 0;
+  }
+  .app-shell.editing-song .form-actions {
+    gap: 6px;
+  }
+  .app-shell.editing-song .form-actions .primary-action {
+    display: none;
+  }
+  .app-shell.editing-song .form-actions button {
+    font-size: 13px;
+    min-height: 40px;
   }
   .song-list {
     gap: 0;
