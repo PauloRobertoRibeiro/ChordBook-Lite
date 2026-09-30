@@ -1,4 +1,4 @@
-const CACHE_NAME = "chordbook-lite-v114";
+const CACHE_NAME = "chordbook-lite-v115";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,10 +6,10 @@ const ASSETS = [
   "./app.js",
   "./chart-core.js",
   "./backup-merge.js",
-  "./styles.css?v=114",
-  "./app.js?v=114",
-  "./chart-core.js?v=114",
-  "./backup-merge.js?v=114",
+  "./styles.css?v=115",
+  "./app.js?v=115",
+  "./chart-core.js?v=115",
+  "./backup-merge.js?v=115",
   "./vendor/peerjs.min.js",
   "./privacy.html",
   "./instalar.html",
