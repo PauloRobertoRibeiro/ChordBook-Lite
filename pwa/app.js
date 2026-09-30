@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.12";
+const APP_VERSION = "1.1.13";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -120,10 +120,10 @@ const I18N = {
     "editor.capo": "Capo",
     "editor.cue": "Recado no palco",
     "editor.cuePh": "Ex.: entra no 2. verso",
-    "editor.blockSize": "Bloco no telão",
+    "editor.blockSize": "Linhas por diapositiva",
     "editor.block2": "2 linhas",
     "editor.block4": "4 linhas",
-    "editor.blockHint": "No telemóvel a faixa transparente fica quieta. Arraste a cifra: as linhas sobem ou descem por ela e o computador mostra o mesmo.",
+    "editor.blockHint": "A cifra vira diapositivas. Toque numa para a marcar; o computador mostra só essa.",
     "editor.lyrics": "Letra e cifras",
     "editor.viewChart": "Ver cifra",
     "editor.duplicate": "Duplicar",
@@ -576,10 +576,10 @@ const I18N = {
     "editor.capo": "Cejilla",
     "editor.cue": "Recado en el escenario",
     "editor.cuePh": "Ej.: entra en el 2. verso",
-    "editor.blockSize": "Bloque en el telón",
+    "editor.blockSize": "Líneas por diapositiva",
     "editor.block2": "2 líneas",
     "editor.block4": "4 líneas",
-    "editor.blockHint": "En el teléfono la franja transparente se queda quieta. Deslice la cifra: las líneas suben o bajan por ella y el computador muestra lo mismo.",
+    "editor.blockHint": "La cifra se vuelve diapositivas. Toque una para marcarla; el computador muestra solo esa.",
     "editor.lyrics": "Letra y cifras",
     "editor.viewChart": "Ver cifra",
     "editor.duplicate": "Duplicar",
@@ -1032,10 +1032,10 @@ const I18N = {
     "editor.capo": "Capo",
     "editor.cue": "Stage cue",
     "editor.cuePh": "e.g. come in on verse 2",
-    "editor.blockSize": "Projector block",
+    "editor.blockSize": "Lines per slide",
     "editor.block2": "2 lines",
     "editor.block4": "4 lines",
-    "editor.blockHint": "On the phone the transparent band stays still. Drag the chart: the lines move up or down through it and the computer shows the same.",
+    "editor.blockHint": "The chart becomes slides. Tap one to mark it; the computer shows only that slide.",
     "editor.lyrics": "Lyrics and chords",
     "editor.viewChart": "View chart",
     "editor.duplicate": "Duplicate",
@@ -1749,8 +1749,6 @@ const el = {
   songReadMenu: document.querySelector("#songReadMenu"),
   songRead: document.querySelector(".song-read"),
   songReadContent: document.querySelector("#songReadContent"),
-  songLyricGuide: document.querySelector("#songLyricGuide"),
-  stageLyricGuide: document.querySelector("#stageLyricGuide"),
   songTransposeDown: document.querySelector("#songTransposeDown"),
   songTransposeUp: document.querySelector("#songTransposeUp"),
   songFontDown: document.querySelector("#songFontDown"),
@@ -2090,12 +2088,11 @@ function bindEvents() {
   el.songRead?.addEventListener("touchstart", handleSongSetlistTouchStart, { passive: true });
   el.songRead?.addEventListener("touchend", handleSongSetlistTouchEnd, { passive: true });
   el.stageContent.addEventListener("click", handleStageContentClick);
+  el.songReadContent.addEventListener("click", handleLyricSlideClick);
   el.stageContent.addEventListener("wheel", handleBlockWheel, { passive: false });
   el.songReadContent.addEventListener("wheel", handleBlockWheel, { passive: false });
   el.stageContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
   el.songReadContent.addEventListener("touchmove", handleStageManualScroll, { passive: true });
-  el.stageContent.addEventListener("scroll", handleChartScroll, { passive: true });
-  el.songReadContent.addEventListener("scroll", handleChartScroll, { passive: true });
   el.newSetlist.addEventListener("click", () => {
     if (agendaHub === "team") openMemberEditor();
     else createSetlist();
@@ -2846,11 +2843,9 @@ function renderSongView() {
   el.songFav.classList.toggle("on", Boolean(song.isFavorite));
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
-  stampSyncLines(el.songReadContent);
+  wrapLyricSlides(el.songReadContent);
   markBlockLines(el.songReadContent);
-  syncLyricGuide();
-  restoreSyncLine(el.songReadContent);
-  requestAnimationFrame(() => syncLyricGuide());
+  ensureBlockVisible(el.songReadContent);
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
   if (el.songCapoValue) el.songCapoValue.textContent = t("song.stepperCapo", { capo: song.capo || 0 });
   if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
@@ -2907,7 +2902,7 @@ function renderStage() {
     el.stageCueNote.hidden = !song.cue;
     el.stageCueNote.textContent = song.cue || "";
   }
-  const signature = `${song.id}:${song.transposeValue || 0}:${song.capo || 0}`;
+  const signature = `${song.id}:${song.transposeValue || 0}:${song.capo || 0}:${songBlockSize(song)}`;
   let rebuilt = false;
   if (el.stageContent.dataset.sig !== signature) {
     el.stageContent.dataset.sig = signature;
@@ -2915,20 +2910,18 @@ function renderStage() {
     el.stageContent.scrollTop = 0;
     rebuilt = true;
   }
-  stampSyncLines(el.stageContent);
+  if (rebuilt) wrapLyricSlides(el.stageContent);
+  else stampSyncLines(el.stageContent);
   markBlockLines(el.stageContent);
-  syncLyricGuide();
-  if (rebuilt || applyingSync) restoreSyncLine(el.stageContent);
+  if (rebuilt || applyingSync) ensureBlockVisible(el.stageContent);
 }
 
 function beginChartTouch(event) {
   const touch = event.touches[0];
-  const pane = activeScrollPane() || el.songReadContent;
   stageTouchStart = {
     x: touch.clientX,
     y: touch.clientY,
     line: lastSyncLine,
-    step: lyricStepPx(pane),
   };
 }
 
@@ -2988,6 +2981,7 @@ function handleStageContentClick(event) {
     return;
   }
   if (event.target.closest("button, input, textarea, select")) return;
+  if (handleLyricSlideClick(event)) return;
   if (isTelaoDisplay()) {
     const rect = el.stageContent.getBoundingClientRect();
     moveLyricBlock(event.clientY - rect.top < rect.height / 2 ? -1 : 1, true);
@@ -3134,7 +3128,7 @@ function activeScrollPane() {
 function stampSyncLines(root) {
   if (!root) return;
   let index = 0;
-  root.querySelectorAll(".stage-line, .stage-section").forEach((node) => {
+  root.querySelectorAll(".stage-line").forEach((node) => {
     if (node.classList.contains("chord-only") || node.classList.contains("blank")) return;
     node.setAttribute("data-sync-line", String(index));
     index += 1;
@@ -3199,131 +3193,155 @@ function syncLineCount(root) {
   return Math.max(...[...nodes].map((node) => Number(node.getAttribute("data-sync-line")) || 0)) + 1;
 }
 
-function lyricStepPx(pane) {
-  const node = pane?.querySelector("[data-sync-line]");
-  const height = node?.getBoundingClientRect().height || 0;
-  return Math.max(32, Math.round(height) || 44);
+function slideSectionLabel(text, counts) {
+  const raw = String(text || "").replace(/[{}#:]/g, " ").replace(/start_of_|end_of_/gi, " ").trim();
+  const numberedVerse = raw.match(/(?:verso|verse|estrofa)\s*(\d+)/i);
+  if (numberedVerse) {
+    counts.verse = Number(numberedVerse[1]);
+    return `V${counts.verse}`;
+  }
+  const numberedChorus = raw.match(/(?:coro|chorus|estribillo)\s*(\d+)/i);
+  if (numberedChorus) {
+    counts.chorus = Number(numberedChorus[1]);
+    return `C${counts.chorus}`;
+  }
+  if (/verso|verse|estrofa/i.test(raw)) {
+    counts.verse += 1;
+    return `V${counts.verse}`;
+  }
+  if (/coro|chorus|estribillo|refrain/i.test(raw)) {
+    counts.chorus += 1;
+    return `C${counts.chorus}`;
+  }
+  if (/ponte|bridge|puente/i.test(raw)) {
+    counts.bridge += 1;
+    return `P${counts.bridge}`;
+  }
+  if (/intro/i.test(raw)) return "I";
+  if (/outro|final|coda/i.test(raw)) return "O";
+  return "";
 }
 
-function lyricGuideFor(pane) {
-  if (pane === el.songReadContent) return el.songLyricGuide;
-  if (pane === el.stageContent) return el.stageLyricGuide;
-  return null;
-}
-
-function sizeLyricGuide(pane, guide) {
-  if (!pane || !guide) return;
-  stampSyncLines(pane);
+function wrapLyricSlides(root) {
+  if (!root) return;
   const size = songBlockSize();
-  const lines = [...pane.querySelectorAll("[data-sync-line]")].slice(0, size);
-  let height = size * Math.max(36, lyricStepPx(pane));
-  if (lines.length) {
-    const measured = lines[lines.length - 1].getBoundingClientRect().bottom - lines[0].getBoundingClientRect().top;
-    if (measured > 8) height = Math.max(48, measured);
+  if (root.querySelector(":scope > .lyric-slide") && root.dataset.slideSize === String(size)) {
+    stampSyncLines(root);
+    return;
   }
-  guide.style.height = `${Math.round(height)}px`;
-  const room = Math.max(0, pane.clientHeight - height);
-  pane.style.paddingBottom = `${Math.round(Math.max(height + 32, room))}px`;
-}
-
-function syncLyricGuide() {
-  const show = !isTelaoDisplay() && Boolean(selectedSong());
-  [[el.songReadContent, el.songLyricGuide], [el.stageContent, el.stageLyricGuide]].forEach(([pane, guide]) => {
-    if (!guide) return;
-    const on = show && pane?.querySelector("[data-sync-line]");
-    guide.hidden = !on;
-    if (on) sizeLyricGuide(pane, guide);
+  root.querySelectorAll(":scope > .lyric-slide").forEach((slide) => {
+    const body = slide.querySelector(".lyric-slide-body");
+    while (body?.firstChild) root.insertBefore(body.firstChild, slide);
+    slide.remove();
   });
+  stampSyncLines(root);
+  const kids = [...root.children];
+  root.replaceChildren();
+  const counts = { verse: 0, chorus: 0, bridge: 0 };
+  let pendingLabel = "";
+  let bucket = [];
+  const syncCount = () => bucket.filter((node) => node.hasAttribute("data-sync-line")).length;
+  const flush = () => {
+    if (!bucket.length) return;
+    const firstSync = bucket.find((node) => node.hasAttribute("data-sync-line"));
+    if (!firstSync) return;
+    const slide = document.createElement("div");
+    slide.className = "lyric-slide";
+    slide.setAttribute("role", "button");
+    slide.tabIndex = 0;
+    slide.dataset.slideStart = firstSync.getAttribute("data-sync-line") || "0";
+    const tag = document.createElement("span");
+    tag.className = "lyric-slide-tag";
+    tag.textContent = pendingLabel;
+    pendingLabel = "";
+    const body = document.createElement("div");
+    body.className = "lyric-slide-body";
+    bucket.forEach((node) => body.appendChild(node));
+    slide.append(tag, body);
+    root.appendChild(slide);
+    bucket = [];
+  };
+  for (const node of kids) {
+    if (node.classList.contains("stage-section")) {
+      flush();
+      pendingLabel = slideSectionLabel(node.textContent, counts);
+      continue;
+    }
+    if (node.classList.contains("blank")) {
+      if (syncCount()) flush();
+      continue;
+    }
+    bucket.push(node);
+    if (syncCount() >= size) flush();
+  }
+  flush();
+  root.dataset.slideSize = String(size);
 }
 
-function firstLineInGuide(pane) {
-  const guide = lyricGuideFor(pane);
-  const lines = [...(pane?.querySelectorAll("[data-sync-line]") || [])];
-  if (!lines.length) return 0;
-  const band = guide && !guide.hidden
-    ? guide.getBoundingClientRect()
-    : (() => {
-      const box = pane.getBoundingClientRect();
-      return { top: box.top + 8, bottom: box.top + Math.min(160, box.height * 0.35) };
-    })();
-  for (const node of lines) {
-    if (node.getBoundingClientRect().bottom > band.top + 10) {
-      return Number(node.getAttribute("data-sync-line")) || 0;
-    }
-  }
-  return Number(lines.at(-1).getAttribute("data-sync-line")) || 0;
+function slideStarts(pane) {
+  return [...(pane?.querySelectorAll(".lyric-slide") || [])]
+    .map((slide) => Number(slide.dataset.slideStart))
+    .filter((start) => Number.isFinite(start));
 }
 
 function clampSyncLine(line, pane = el.songReadContent || el.stageContent) {
-  const size = songBlockSize();
-  const total = Math.max(1, syncLineCount(pane) || syncLineCount(el.stageContent) || syncLineCount(el.songReadContent) || 1);
-  const maxStart = Math.max(0, total - Math.min(size, total));
-  return Math.max(0, Math.min(maxStart, Math.floor(Number(line) || 0)));
+  const starts = [...new Set([
+    ...slideStarts(pane),
+    ...slideStarts(el.songReadContent),
+    ...slideStarts(el.stageContent),
+  ])].sort((a, b) => a - b);
+  if (!starts.length) return 0;
+  const want = Math.max(0, Number(line) || 0);
+  let best = starts[0];
+  for (const start of starts) {
+    if (start <= want) best = start;
+    else break;
+  }
+  return best;
 }
 
 function markBlockLines(root) {
   if (!root) return;
-  const size = songBlockSize();
-  const start = lastSyncLine;
-  const end = start + size;
   el.appShell?.classList.add("block-paging");
-  root.querySelectorAll(".stage-line, .stage-section").forEach((node) => {
-    node.classList.remove("in-block", "block-start", "block-end");
+  const start = lastSyncLine;
+  root.querySelectorAll(".lyric-slide").forEach((slide) => {
+    const at = Number(slide.dataset.slideStart);
+    const on = Number.isFinite(at) && at === start;
+    slide.classList.toggle("on", on);
+    slide.querySelectorAll("[data-sync-line]").forEach((node) => {
+      node.classList.toggle("in-block", on);
+    });
   });
-  const nodes = [...root.querySelectorAll("[data-sync-line]")];
-  const inBlock = nodes.filter((node) => {
-    const index = Number(node.getAttribute("data-sync-line")) || 0;
-    return index >= start && index < end;
-  });
-  inBlock.forEach((node, index) => {
-    node.classList.add("in-block");
-    if (index === 0) node.classList.add("block-start");
-    if (index === inBlock.length - 1) node.classList.add("block-end");
-  });
-  if (inBlock.length > 1) {
-    let node = inBlock[0].nextElementSibling;
-    const last = inBlock[inBlock.length - 1];
-    while (node && node !== last) {
-      if (node.classList.contains("stage-line") || node.classList.contains("stage-section")) {
-        node.classList.add("in-block");
-      }
-      node = node.nextElementSibling;
-    }
-  }
 }
 
 function ensureBlockVisible(pane) {
-  if (!pane) return;
-  const start = pane.querySelector("[data-sync-line].block-start");
-  const end = pane.querySelector("[data-sync-line].block-end") || start;
-  if (!start) return;
-  const box = pane.getBoundingClientRect();
-  const top = start.getBoundingClientRect();
-  const bottom = end.getBoundingClientRect();
-  if (top.top < box.top + 8) pane.scrollTop += top.top - box.top - 8;
-  else if (bottom.bottom > box.bottom - 8) pane.scrollTop += bottom.bottom - box.bottom + 8;
-}
-
-function applyBlockView() {
-  [el.songReadContent, el.stageContent].forEach((pane) => {
-    if (!pane) return;
-    stampSyncLines(pane);
-    markBlockLines(pane);
-  });
-  syncLyricGuide();
-  if (!isTelaoDisplay()) return;
+  const on = pane?.querySelector(".lyric-slide.on");
+  if (!on) return;
   applyingScrollSync = true;
-  scrollToSyncLine(el.stageContent, lastSyncLine);
+  on.scrollIntoView({ block: "nearest", behavior: "smooth" });
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { applyingScrollSync = false; });
   });
 }
 
+function applyBlockView() {
+  [el.songReadContent, el.stageContent].forEach((pane) => {
+    if (!pane) return;
+    wrapLyricSlides(pane);
+  });
+  lastSyncLine = clampSyncLine(lastSyncLine);
+  [el.songReadContent, el.stageContent].forEach((pane) => markBlockLines(pane));
+  ensureBlockVisible(followPane() || activeScrollPane());
+}
+
 function setLyricWindow(line) {
   const pane = el.songReadContent || el.stageContent;
-  if (pane) stampSyncLines(pane);
+  if (pane && !pane.querySelector(":scope > .lyric-slide")) wrapLyricSlides(pane);
   const next = clampSyncLine(line, pane);
-  if (next === lastSyncLine) return;
+  if (next === lastSyncLine) {
+    applyBlockView();
+    return;
+  }
   lastSyncLine = next;
   applyBlockView();
   if (syncLink.authorized && !applyingSync) {
@@ -3331,30 +3349,23 @@ function setLyricWindow(line) {
   }
 }
 
-function moveLyricBlock(delta, byBlock = false) {
-  const pane = el.songReadContent || el.stageContent;
-  if (pane) stampSyncLines(pane);
-  const step = byBlock ? songBlockSize() : 1;
-  setLyricWindow(lastSyncLine + delta * step);
+function moveLyricBlock(delta) {
+  const pane = followPane() || el.songReadContent || el.stageContent;
+  if (pane && !pane.querySelector(":scope > .lyric-slide")) wrapLyricSlides(pane);
+  const starts = slideStarts(pane);
+  if (!starts.length) return;
+  let index = starts.indexOf(lastSyncLine);
+  if (index < 0) index = starts.findIndex((start) => start >= lastSyncLine);
+  if (index < 0) index = 0;
+  const next = starts[Math.max(0, Math.min(starts.length - 1, index + delta))];
+  setLyricWindow(next);
 }
 
-function handleChartScroll() {
-  if (applyingScrollSync || applyingSync || isTelaoDisplay()) return;
-  const pane = activeScrollPane();
-  if (!pane) return;
-  clearTimeout(scrollSyncTimer);
-  scrollSyncTimer = setTimeout(() => {
-    if (applyingScrollSync || applyingSync || isTelaoDisplay()) return;
-    stampSyncLines(pane);
-    const next = clampSyncLine(firstLineInGuide(pane), pane);
-    if (next === lastSyncLine) return;
-    lastSyncLine = next;
-    markBlockLines(el.songReadContent);
-    markBlockLines(el.stageContent);
-    if (syncLink.authorized) {
-      sendSyncMessage({ type: "scroll", payload: { songId: selectedSongId, line: lastSyncLine } });
-    }
-  }, 30);
+function handleLyricSlideClick(event) {
+  const slide = event.target.closest(".lyric-slide");
+  if (!slide || isTelaoDisplay()) return false;
+  setLyricWindow(Number(slide.dataset.slideStart) || 0);
+  return true;
 }
 
 function toggleAutoScroll() {
@@ -3378,35 +3389,23 @@ function startAutoScroll() {
   isMobileSongMenuOpen = false;
   renderMobileSongMenu();
   stopAutoScroll();
-  requestAnimationFrame(() => {
-    const box = activeScrollPane();
-    if (!box) return;
-    const max = box.scrollHeight - box.clientHeight;
-    if (max <= 8) {
-      notify(t("stage.noScroll"));
-      updateScrollButtons();
+  const pane = activeScrollPane();
+  if (!pane || slideStarts(pane).length < 2) {
+    notify(t("stage.noScroll"));
+    updateScrollButtons();
+    return;
+  }
+  isAutoScrolling = true;
+  autoScrollGuardUntil = Date.now() + 500;
+  updateScrollButtons();
+  autoScrollTimer = setInterval(() => {
+    const starts = slideStarts(activeScrollPane());
+    if (!starts.length || lastSyncLine === starts[starts.length - 1]) {
+      stopAutoScroll();
       return;
     }
-    isAutoScrolling = true;
-    autoScrollGuardUntil = Date.now() + 500;
-    updateScrollButtons();
-    autoScrollTimer = setInterval(() => {
-      const pane = activeScrollPane();
-      if (!pane) return;
-      const end = pane.scrollHeight - pane.clientHeight;
-      if (end <= 1) {
-        stopAutoScroll();
-        return;
-      }
-      const next = pane.scrollTop + Math.max(1, scrollSpeed / 10);
-      if (next >= end - 0.5) {
-        pane.scrollTop = end;
-        stopAutoScroll();
-        return;
-      }
-      pane.scrollTop = next;
-    }, 100);
-  });
+    moveLyricBlock(1);
+  }, Math.max(1800, 9000 - scrollSpeed * 70));
 }
 
 function stopAutoScroll() {
@@ -4924,17 +4923,7 @@ function handleStageHotkeys(event) {
   if (!onChart) return;
   if (event.key === "PageDown" || event.key === "PageUp" || event.key === "ArrowDown" || event.key === "ArrowUp") {
     event.preventDefault();
-    if (!isTelaoDisplay()) {
-      const pane = activeScrollPane();
-      if (!pane) return;
-      const guide = lyricGuideFor(pane);
-      const step = event.key.startsWith("Page")
-        ? (guide?.offsetHeight || 120)
-        : lyricStepPx(pane);
-      pane.scrollTop += (event.key === "PageDown" || event.key === "ArrowDown") ? step : -step;
-      return;
-    }
-    moveLyricBlock((event.key === "PageDown" || event.key === "ArrowDown") ? 1 : -1, event.key.startsWith("Page"));
+    moveLyricBlock((event.key === "PageDown" || event.key === "ArrowDown") ? 1 : -1, true);
     return;
   }
   const goNext = event.key === "ArrowRight" || event.key === "MediaTrackNext";
@@ -7405,7 +7394,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=113").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=114").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

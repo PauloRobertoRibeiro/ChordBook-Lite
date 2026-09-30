@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png?v=104" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=104" />
-    <link rel="stylesheet" href="./styles.css?v=113" />
+    <link rel="stylesheet" href="./styles.css?v=114" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -109,12 +109,12 @@
                   <input id="cueInput" maxlength="80" placeholder="Ex.: entra no 2. verso" data-i18n-placeholder="editor.cuePh" />
                 </label>
                 <div class="block-size-field">
-                  <span data-i18n="editor.blockSize">Bloco no telão</span>
+                  <span data-i18n="editor.blockSize">Linhas por diapositiva</span>
                   <div class="more-inline lang-pills">
                     <button type="button" data-block-size="2" data-i18n="editor.block2">2 linhas</button>
                     <button type="button" data-block-size="4" class="active" data-i18n="editor.block4">4 linhas</button>
                   </div>
-                  <p class="more-hint" data-i18n="editor.blockHint">No telemóvel a faixa transparente fica quieta. Arraste a cifra: as linhas sobem ou descem por ela e o computador mostra o mesmo.</p>
+                  <p class="more-hint" data-i18n="editor.blockHint">A cifra vira diapositivas. Toque numa para a marcar; o computador mostra só essa.</p>
                 </div>
                 <label class="lyrics-field">
                   <span data-i18n="editor.lyrics">Letra e cifras</span>
@@ -184,7 +184,6 @@
                   </div>
                 </header>
                 <div class="chart-scroll" id="songChartScroll">
-                  <div class="lyric-guide" id="songLyricGuide" hidden></div>
                   <article id="songReadContent" class="song-read-content notranslate" translate="no"></article>
                 </div>
                 <p id="songCapoHint" class="song-capo-hint" hidden></p>
@@ -246,7 +245,6 @@
             <span id="stageCapoBadge" class="stage-capo-badge" hidden></span>
             <div id="mobileSongMenu" class="mobile-song-menu" hidden></div>
             <div class="chart-scroll" id="stageChartScroll">
-              <div class="lyric-guide" id="stageLyricGuide" hidden></div>
               <article id="stageContent" class="stage-content notranslate" translate="no"></article>
             </div>
             <button id="stagePrevBtn" class="stage-nav-btn" type="button" aria-label="Anterior" data-i18n-aria="stage.prev">‹</button>
@@ -444,7 +442,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.12</p>
+            <p id="appVersion" class="more-version">Versão 1.1.13</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
@@ -691,8 +689,8 @@
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./chart-core.js?v=113" defer></script>
-    <script src="./backup-merge.js?v=113" defer></script>
-    <script src="./app.js?v=113" defer></script>
+    <script src="./chart-core.js?v=114" defer></script>
+    <script src="./backup-merge.js?v=114" defer></script>
+    <script src="./app.js?v=114" defer></script>
   </body>
 </html>

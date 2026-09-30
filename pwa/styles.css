@@ -1319,40 +1319,63 @@ textarea {
   height: 100%;
 }
 
-.lyric-guide {
-  border-radius: 14px;
-  left: 10px;
-  pointer-events: none;
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  z-index: 4;
+.lyric-slide {
+  align-items: start;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 8px;
+  grid-template-columns: 2.1rem minmax(0, 1fr);
+  margin: 0;
+  padding: 8px 6px 10px 4px;
+  text-align: left;
+  width: 100%;
 }
 
-#songLyricGuide {
-  background: color-mix(in srgb, var(--chord) 14%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chord) 32%, transparent);
+.lyric-slide.on {
+  background: color-mix(in srgb, var(--chord) 16%, transparent);
 }
 
-#stageLyricGuide {
-  background: color-mix(in srgb, var(--stage-chord) 16%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stage-chord) 40%, transparent);
+.lyric-slide-tag {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding-top: 6px;
 }
 
-.lyric-guide[hidden] {
-  display: none !important;
+.lyric-slide-body {
+  min-width: 0;
 }
 
-.app-shell.telao-active .lyric-guide {
-  display: none !important;
+.app-shell.stage-active:not(.telao-active) .lyric-slide.on {
+  background: color-mix(in srgb, var(--stage-chord) 18%, transparent);
 }
 
-.app-shell.telao-active.block-paging .stage-content {
-  overflow-y: hidden;
-}
-
-.app-shell.telao-active.block-paging .stage-content [data-sync-line]:not(.in-block) {
+.app-shell.telao-active .lyric-slide:not(.on) {
   display: none;
+}
+
+.app-shell.telao-active .lyric-slide.on {
+  align-content: center;
+  background: transparent;
+  border: 0;
+  grid-template-columns: 1fr;
+  min-height: 100%;
+  padding: 8vh 4vw;
+}
+
+.app-shell.telao-active .lyric-slide-tag {
+  display: none;
+}
+
+.app-shell.telao-active .lyric-slide-body {
+  font-size: 1.25em;
+  text-align: center;
 }
 
 .app-shell.telao-active .stage-mode-title strong {
