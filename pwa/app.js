@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.20";
+const APP_VERSION = "1.1.21";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -1672,6 +1672,8 @@ const syncLink = {
   authorized: false,
   hostRetries: 0,
   pushTimer: 0,
+  watchTimer: 0,
+  lastHeard: 0,
   conns: [],
 };
 let applyingSync = false;
@@ -2704,7 +2706,7 @@ function renderSongs() {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      selectedSongId = button.dataset.playId;
+      adoptPlayingSong(button.dataset.playId);
       activeSetlistId = null;
       expandedSongId = null;
       markSongOpened(selectedSongId);
@@ -2724,7 +2726,7 @@ function renderSongs() {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      selectedSongId = button.dataset.songId;
+      adoptPlayingSong(button.dataset.songId);
       const action = button.dataset.previewAction;
       if (action === "edit") editSelectedSong();
       if (action === "stage") {
@@ -2894,6 +2896,7 @@ function renderSongView() {
   el.appShell.classList.toggle("tools-open", isSongToolsOpen);
   el.songReadContent.innerHTML = songChartHtml(song);
   wrapLyricSlides(el.songReadContent);
+  lastSyncLine = clampSyncLine(lastSyncLine, el.songReadContent);
   markBlockLines(el.songReadContent);
   ensureBlockVisible(el.songReadContent);
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
@@ -2962,6 +2965,7 @@ function renderStage() {
   }
   if (rebuilt) wrapLyricSlides(el.stageContent);
   else stampSyncLines(el.stageContent);
+  lastSyncLine = clampSyncLine(lastSyncLine, el.stageContent);
   markBlockLines(el.stageContent);
   if (rebuilt || applyingSync) ensureBlockVisible(el.stageContent);
 }
@@ -3301,7 +3305,11 @@ function wrapLyricSlides(root) {
   const flush = () => {
     if (!bucket.length) return;
     const firstSync = bucket.find((node) => node.hasAttribute("data-sync-line"));
-    if (!firstSync) return;
+    if (!firstSync) {
+      bucket.forEach((node) => root.appendChild(node));
+      bucket = [];
+      return;
+    }
     const slide = document.createElement("div");
     slide.className = "lyric-slide";
     slide.setAttribute("role", "button");
@@ -3341,14 +3349,10 @@ function slideStarts(pane) {
     .filter((start) => Number.isFinite(start));
 }
 
-function clampSyncLine(line, pane = el.songReadContent || el.stageContent) {
-  const starts = [...new Set([
-    ...slideStarts(pane),
-    ...slideStarts(el.songReadContent),
-    ...slideStarts(el.stageContent),
-  ])].sort((a, b) => a - b);
+function clampSyncLine(line, pane = followPane() || el.songReadContent || el.stageContent) {
+  const starts = [...new Set(slideStarts(pane))].sort((a, b) => a - b);
   const want = Math.max(0, Number(line) || 0);
-  if (!starts.length) return want;
+  if (!starts.length) return 0;
   let best = starts[0];
   for (const start of starts) {
     if (start <= want) best = start;
@@ -3360,8 +3364,14 @@ function clampSyncLine(line, pane = el.songReadContent || el.stageContent) {
 function markBlockLines(root) {
   if (!root) return;
   el.appShell?.classList.add("block-paging");
-  const start = lastSyncLine;
-  root.querySelectorAll(".lyric-slide").forEach((slide) => {
+  const slides = [...root.querySelectorAll(".lyric-slide")];
+  if (!slides.length) return;
+  let start = lastSyncLine;
+  if (!slides.some((slide) => Number(slide.dataset.slideStart) === start)) {
+    start = Number(slides[0].dataset.slideStart) || 0;
+    lastSyncLine = start;
+  }
+  slides.forEach((slide) => {
     const at = Number(slide.dataset.slideStart);
     const on = Number.isFinite(at) && at === start;
     slide.classList.toggle("on", on);
@@ -3700,7 +3710,7 @@ function stageMenuSongRow(song, order) {
 
 function jumpToStageSong(songId) {
   const setlist = activeSetlist();
-  selectedSongId = songId;
+  adoptPlayingSong(songId);
   if (!setlist || !setlist.songIds.includes(songId)) activeSetlistId = null;
   isMobileSongMenuOpen = false;
   stageMenuQuery = "";
@@ -4657,7 +4667,7 @@ function openSetlistSong(songId) {
   const setlist = selectedSetlist();
   if (!setlist || !state.songs.some((song) => song.id === songId)) return;
   activeSetlistId = setlist.id;
-  selectedSongId = songId;
+  adoptPlayingSong(songId);
   render();
   switchView("song");
   broadcastPlayhead();
@@ -4870,7 +4880,7 @@ function openSelectedSetlist(mode) {
   }
   setlist.lastOpenedAt = new Date().toISOString();
   activeSetlistId = setlist.id;
-  selectedSongId = firstSongId;
+  adoptPlayingSong(firstSongId);
   isSetlistPlaying = true;
   setlistPlayFinished = false;
   rememberSetlistPlayMode(playMode);
@@ -5787,6 +5797,12 @@ function setTelaoWanted(on) {
   }
 }
 
+function adoptPlayingSong(songId) {
+  if (!songId) return;
+  if (songId !== selectedSongId) lastSyncLine = 0;
+  selectedSongId = songId;
+}
+
 function playheadSnapshot() {
   const playing = activeView === "song" || activeView === "stage";
   return {
@@ -5811,12 +5827,13 @@ function librarySnapshot() {
 }
 
 function liveSyncConns() {
-  syncLink.conns = (syncLink.conns || []).filter((conn) => conn && conn.open !== false);
-  if (syncLink.conn && syncLink.conn.open !== false && !syncLink.conns.includes(syncLink.conn)) {
-    syncLink.conns.push(syncLink.conn);
-  }
-  syncLink.conn = syncLink.conns[0] || null;
-  return syncLink.conns;
+  const all = (syncLink.conns || []).filter(Boolean);
+  if (syncLink.conn && !all.includes(syncLink.conn)) all.push(syncLink.conn);
+  syncLink.conns = all;
+  const open = all.filter((conn) => conn.open !== false);
+  if (open[0]) syncLink.conn = open[0];
+  else if (!all.includes(syncLink.conn)) syncLink.conn = all[0] || null;
+  return open;
 }
 
 function sendToConn(conn, message) {
@@ -5839,6 +5856,10 @@ function sendSyncMessage(message) {
 
 function broadcastPlayhead() {
   if (applyingSync || !syncLink.authorized) return;
+  if (!liveSyncConns().length) {
+    stopSyncLink(true);
+    return;
+  }
   sendSyncMessage({ type: "playhead", payload: playheadSnapshot() });
 }
 
@@ -5856,24 +5877,19 @@ function applyPlayhead(payload, prevSongId) {
     if (typeof payload.isSetlistPlaying === "boolean") isSetlistPlaying = payload.isSetlistPlaying;
     if (typeof payload.setlistPlayFinished === "boolean") setlistPlayFinished = payload.setlistPlayFinished;
   }
-  if (payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId)) {
-    selectedSongId = payload.selectedSongId;
-  }
-  if (payload.playView === "idle") return;
-  if (!selectedSong()) return;
-  const playing = payload.playView === "song" || payload.playView === "stage";
-  const songChanged = Boolean(payload.selectedSongId && payload.selectedSongId !== beforeSongId);
-  const oldClientOpened = payload.playView == null && Boolean(payload.selectedSongId);
-  if (!playing && !songChanged && !oldClientOpened) return;
-  if (songChanged) lastSyncLine = typeof payload.line === "number" ? payload.line : 0;
+  const knownSong = Boolean(payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId));
+  if (knownSong) selectedSongId = payload.selectedSongId;
+  else if (payload.selectedSongId && syncLink.authorized) sendSyncMessage({ type: "need-state" });
+  const songChanged = Boolean(knownSong && payload.selectedSongId !== beforeSongId);
+  if (songChanged) lastSyncLine = 0;
   else if (typeof payload.line === "number") lastSyncLine = payload.line;
-  if (isTelaoDisplay()) {
-    switchView("stage");
-    applyBlockView();
-    return;
-  }
-  if (activeView !== "song" && activeView !== "stage") switchView("song");
-  applyBlockView();
+  const playing = payload.playView === "song" || payload.playView === "stage";
+  const oldClientOpened = payload.playView == null && Boolean(payload.selectedSongId);
+  if (!selectedSong()) return;
+  if (payload.playView === "idle" && !songChanged) return;
+  if (!playing && !songChanged && !oldClientOpened) return;
+  if (isTelaoDisplay()) switchView("stage");
+  else if (activeView !== "song" && activeView !== "stage") switchView("song");
 }
 
 function scheduleSyncPush() {
@@ -5932,6 +5948,16 @@ function handleSyncMessage(message) {
     try { message = JSON.parse(message); } catch { return; }
   }
   if (!message || typeof message !== "object") return;
+  syncLink.lastHeard = Date.now();
+  if (message.type === "ping") {
+    sendSyncMessage({ type: "pong" });
+    return;
+  }
+  if (message.type === "pong") return;
+  if (message.type === "need-state" && syncLink.authorized) {
+    sendSyncMessage({ type: "state", payload: librarySnapshot() });
+    return;
+  }
   if (message.type === "hello" && syncLink.role === "host") {
     if (syncLink.authorized) {
       sendSyncMessage({ type: "session", payload: librarySnapshot() });
@@ -5949,6 +5975,7 @@ function handleSyncMessage(message) {
       if (el.syncAuthSheet) el.syncAuthSheet.hidden = true;
       applySyncState(message.payload, "");
       setPairingStayAwake(true);
+      startSyncWatch();
       updateSyncUi();
       notify(t("sync.connected"));
     } finally {
@@ -5966,6 +5993,7 @@ function handleSyncMessage(message) {
     } finally {
       applyingSync = false;
     }
+    startSyncWatch();
     updateSyncUi();
     setPairingStayAwake(false);
     return;
@@ -5985,8 +6013,9 @@ function handleSyncMessage(message) {
       const prevSong = selectedSongId;
       const wasIdle = activeView !== "song" && activeView !== "stage";
       applyPlayhead(message.payload, prevSong);
-      const songChanged = Boolean(message.payload?.selectedSongId && message.payload.selectedSongId !== prevSong);
+      const songChanged = Boolean(message.payload?.selectedSongId && selectedSongId === message.payload.selectedSongId && message.payload.selectedSongId !== prevSong);
       if (songChanged || wasIdle) render();
+      applyBlockView();
     } finally {
       applyingSync = false;
     }
@@ -6046,8 +6075,23 @@ function destroySyncPeer() {
   syncLink.conns = [];
 }
 
+function startSyncWatch() {
+  clearInterval(syncLink.watchTimer);
+  syncLink.lastHeard = Date.now();
+  syncLink.watchTimer = setInterval(() => {
+    if (!syncLink.authorized) return;
+    if (!liveSyncConns().length) {
+      stopSyncLink(true);
+      return;
+    }
+    sendSyncMessage({ type: "ping" });
+  }, 8000);
+}
+
 function stopSyncLink(notifyStop) {
   clearTimeout(syncLink.pushTimer);
+  clearInterval(syncLink.watchTimer);
+  syncLink.watchTimer = 0;
   const wasActive = syncLink.status !== "idle";
   destroySyncPeer();
   syncLink.role = "";
@@ -6185,6 +6229,7 @@ function allowSyncComputer() {
   if (el.syncAuthSheet) el.syncAuthSheet.hidden = true;
   sendSyncMessage({ type: "auth-ok", payload: librarySnapshot() });
   setPairingStayAwake(true);
+  startSyncWatch();
   updateSyncUi();
   notify(t("sync.connected"));
 }
@@ -7475,7 +7520,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=121").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=122").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
