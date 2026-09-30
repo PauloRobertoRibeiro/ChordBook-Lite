@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png?v=104" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=104" />
-    <link rel="stylesheet" href="./styles.css?v=115" />
+    <link rel="stylesheet" href="./styles.css?v=116" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -98,28 +98,55 @@
                     <button id="closeEditorBtn" type="button" data-i18n="common.back">Voltar</button>
                   </div>
                 </div>
-                <div class="form-grid">
-                  <label><span data-i18n="editor.name">Nome da música</span> <input id="titleInput" required placeholder="Ex.: Esperança Viva" data-i18n-placeholder="editor.namePh" /></label>
-                  <label><span data-i18n="editor.artist">Autor / artista</span> <input id="artistInput" placeholder="Ex.: Ministério de louvor" data-i18n-placeholder="editor.artistPh" /></label>
-                  <label><span data-i18n="editor.category">Categoria</span> <input id="categoryInput" placeholder="Ex.: Louvor, Celebração" data-i18n-placeholder="editor.categoryPh" /></label>
-                  <label><span data-i18n="editor.capo">Capo</span> <input id="capoInput" type="number" min="0" max="12" value="0" /></label>
-                </div>
-                <label class="cue-field">
-                  <span data-i18n="editor.cue">Recado no palco</span>
-                  <input id="cueInput" maxlength="80" placeholder="Ex.: entra no 2. verso" data-i18n-placeholder="editor.cuePh" />
+                <label class="editor-name">
+                  <span data-i18n="editor.name">Nome da música</span>
+                  <input id="titleInput" required placeholder="Ex.: Esperança Viva" data-i18n-placeholder="editor.namePh" />
                 </label>
-                <div class="block-size-field">
-                  <span data-i18n="editor.blockSize">Linhas por diapositiva</span>
-                  <div class="more-inline lang-pills">
-                    <button type="button" data-block-size="2" data-i18n="editor.block2">2 linhas</button>
-                    <button type="button" data-block-size="4" class="active" data-i18n="editor.block4">4 linhas</button>
+                <details class="editor-meta">
+                  <summary data-i18n="editor.details">Mais dados</summary>
+                  <div class="form-grid">
+                    <label><span data-i18n="editor.artist">Autor / artista</span> <input id="artistInput" placeholder="Ex.: Ministério de louvor" data-i18n-placeholder="editor.artistPh" /></label>
+                    <label><span data-i18n="editor.category">Categoria</span> <input id="categoryInput" placeholder="Ex.: Louvor, Celebração" data-i18n-placeholder="editor.categoryPh" /></label>
+                    <label><span data-i18n="editor.capo">Capo</span> <input id="capoInput" type="number" min="0" max="12" value="0" /></label>
                   </div>
-                  <p class="more-hint" data-i18n="editor.blockHint">A cifra vira diapositivas. Toque numa para a marcar; o computador mostra só essa.</p>
+                  <label class="cue-field">
+                    <span data-i18n="editor.cue">Recado no palco</span>
+                    <input id="cueInput" maxlength="80" placeholder="Ex.: entra no 2. verso" data-i18n-placeholder="editor.cuePh" />
+                  </label>
+                  <div class="block-size-field">
+                    <span data-i18n="editor.blockSize">Linhas por diapositiva</span>
+                    <div class="more-inline lang-pills">
+                      <button type="button" data-block-size="2" data-i18n="editor.block2">2 linhas</button>
+                      <button type="button" data-block-size="4" class="active" data-i18n="editor.block4">4 linhas</button>
+                    </div>
+                    <p class="more-hint" data-i18n="editor.blockHint">A cifra vira diapositivas. Toque numa para a marcar; o computador mostra só essa.</p>
+                  </div>
+                </details>
+                <div class="lyrics-workspace">
+                  <div class="lyrics-toolbar">
+                    <span data-i18n="editor.lyrics">Letra e cifras</span>
+                    <button type="button" id="editorPreviewToggle">Ver telão</button>
+                  </div>
+                  <p class="editor-chord-help" data-i18n="editor.chordHelp">A cifra fica na linha de cima; a letra na de baixo. No telão só aparece a letra.</p>
+                  <div class="editor-chord-sample" aria-hidden="true">
+                    <span class="editor-chord-sample-chords">G          C</span>
+                    <span class="editor-chord-sample-lyric">Grande é o Senhor</span>
+                  </div>
+                  <p class="editor-chord-note" data-i18n="editor.chordNote">Ou na própria letra: [G]Grande é o Se[C]nhor</p>
+                  <div class="chord-insert" id="chordInsert">
+                    <button type="button" data-insert-chord="C">C</button>
+                    <button type="button" data-insert-chord="D">D</button>
+                    <button type="button" data-insert-chord="E">E</button>
+                    <button type="button" data-insert-chord="F">F</button>
+                    <button type="button" data-insert-chord="G">G</button>
+                    <button type="button" data-insert-chord="A">A</button>
+                    <button type="button" data-insert-chord="Am">Am</button>
+                    <button type="button" data-insert-chord="Em">Em</button>
+                    <button type="button" data-insert-chord="Dm">Dm</button>
+                    <button type="button" data-insert-chord="F#m">F#m</button>
+                  </div>
+                  <textarea id="linesInput" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-i18n-placeholder="editor.lyricsPh" placeholder="Verso 1:&#10;G          C&#10;Escreve a letra nesta linha"></textarea>
                 </div>
-                <label class="lyrics-field">
-                  <span data-i18n="editor.lyrics">Letra e cifras</span>
-                  <textarea id="linesInput" spellcheck="false" placeholder="{key: A}&#10;Intro:&#10;A | E | F#m | D&#10;&#10;Verso 1:&#10;A      E       F#m     D&#10;Aqui escrevo a primeira frase&#10;A      E       D&#10;Aqui continuo a letra"></textarea>
-                </label>
                 <div class="form-actions">
                   <button type="submit" class="primary-action" data-i18n="common.save">Salvar</button>
                   <button type="button" id="openStageFromEditorBtn" data-i18n="editor.viewChart">Ver cifra</button>
@@ -130,8 +157,14 @@
               </form>
               <aside id="editorPreview" class="editor-preview" aria-label="Pré-visualização">
                 <header class="editor-preview-head">
-                  <strong id="editorPreviewTitle"></strong>
-                  <span id="editorPreviewMeta"></span>
+                  <div>
+                    <strong id="editorPreviewTitle"></strong>
+                    <span id="editorPreviewMeta"></span>
+                  </div>
+                  <div class="lang-pills editor-preview-modes">
+                    <button type="button" data-preview-mode="chart" class="active" data-i18n="editor.previewChart">Cifra</button>
+                    <button type="button" data-preview-mode="telao" data-i18n="editor.previewTelao">Ver telão</button>
+                  </div>
                 </header>
                 <div id="editorPreviewBody" class="song-read-content notranslate" translate="no"></div>
               </aside>
@@ -442,7 +475,7 @@
             </div>
             <h2 id="moreAbout" class="more-heading" data-i18n="more.about">Sobre</h2>
             <p class="more-lead" data-i18n="more.aboutText">Cifras, setlists e modo palco neste aparelho. Sem conta. Pode ligar um computador com a sua autorização.</p>
-            <p id="appVersion" class="more-version">Versão 1.1.14</p>
+            <p id="appVersion" class="more-version">Versão 1.1.15</p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
             <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
@@ -689,8 +722,8 @@
     </div>
 
     <script src="./license-config.js"></script>
-    <script src="./chart-core.js?v=115" defer></script>
-    <script src="./backup-merge.js?v=115" defer></script>
-    <script src="./app.js?v=115" defer></script>
+    <script src="./chart-core.js?v=116" defer></script>
+    <script src="./backup-merge.js?v=116" defer></script>
+    <script src="./app.js?v=116" defer></script>
   </body>
 </html>

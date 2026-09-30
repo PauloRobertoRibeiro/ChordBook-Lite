@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.14";
+const APP_VERSION = "1.1.15";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -111,6 +111,13 @@ const I18N = {
     "preview.youtube": "YouTube",
     "editor.title": "Editar música",
     "editor.lead": "Preencha os dados e escreva a letra com os acordes.",
+    "editor.details": "Mais dados",
+    "editor.chordHelp": "A cifra fica na linha de cima; a letra na de baixo. No telão só aparece a letra.",
+    "editor.chordNote": "Ou na própria letra: [G]Grande é o Se[C]nhor",
+    "editor.lyricsPh": "Verso 1:\nG          C\nEscreve a letra nesta linha",
+    "editor.previewChart": "Cifra",
+    "editor.previewTelao": "Ver telão",
+    "editor.previewHide": "Esconder",
     "editor.name": "Nome da música",
     "editor.namePh": "Ex.: Esperança Viva",
     "editor.artist": "Autor / artista",
@@ -567,6 +574,13 @@ const I18N = {
     "preview.youtube": "YouTube",
     "editor.title": "Editar canción",
     "editor.lead": "Completa los datos y escribe la letra con los acordes.",
+    "editor.details": "Más datos",
+    "editor.chordHelp": "El acorde va en la línea de arriba; la letra en la de abajo. El telón muestra solo la letra.",
+    "editor.chordNote": "O en la propia letra: [G]Grande es el Se[C]ñor",
+    "editor.lyricsPh": "Estrofa 1:\nG          C\nEscribe la letra en esta línea",
+    "editor.previewChart": "Cifra",
+    "editor.previewTelao": "Ver telón",
+    "editor.previewHide": "Ocultar",
     "editor.name": "Nombre de la canción",
     "editor.namePh": "Ej.: Esperanza Viva",
     "editor.artist": "Autor / artista",
@@ -1023,6 +1037,13 @@ const I18N = {
     "preview.youtube": "YouTube",
     "editor.title": "Edit song",
     "editor.lead": "Fill in the details and write lyrics with chords.",
+    "editor.details": "More details",
+    "editor.chordHelp": "Put chords on the line above; lyrics on the line below. The projector shows lyrics only.",
+    "editor.chordNote": "Or write them in the lyric: [G]Great is the [C]Lord",
+    "editor.lyricsPh": "Verse 1:\nG          C\nWrite the lyric on this line",
+    "editor.previewChart": "Chart",
+    "editor.previewTelao": "See projector",
+    "editor.previewHide": "Hide",
     "editor.name": "Song name",
     "editor.namePh": "e.g. Living Hope",
     "editor.artist": "Author / artist",
@@ -1665,6 +1686,8 @@ try {
 } catch {
   /* private mode */
 }
+let editorPreviewTelao = false;
+let editorPreviewOpen = false;
 let autoScrollTimer = null;
 let autoScrollGuardUntil = 0;
 let stageMenuQuery = "";
@@ -1898,6 +1921,10 @@ const el = {
   editorPreviewTitle: document.querySelector("#editorPreviewTitle"),
   editorPreviewMeta: document.querySelector("#editorPreviewMeta"),
   editorPreviewBody: document.querySelector("#editorPreviewBody"),
+  editorPreview: document.querySelector("#editorPreview"),
+  editorPreviewToggle: document.querySelector("#editorPreviewToggle"),
+  previewModes: document.querySelectorAll("[data-preview-mode]"),
+  chordInsert: document.querySelector("#chordInsert"),
 };
 
 document.documentElement.classList.toggle("dark", effectiveTheme() === "dark");
@@ -1978,6 +2005,24 @@ function bindEvents() {
   el.syncAuthDeny?.addEventListener("click", denySyncComputer);
   [el.title, el.artist, el.category, el.capo, el.cue, el.lines].forEach((field) => {
     field?.addEventListener("input", updateEditorPreview);
+  });
+  el.editorPreviewToggle?.addEventListener("click", () => {
+    editorPreviewOpen = !editorPreviewOpen;
+    if (editorPreviewOpen) editorPreviewTelao = true;
+    syncEditorPreviewChrome();
+    updateEditorPreview();
+  });
+  el.previewModes?.forEach((button) => {
+    button.addEventListener("click", () => {
+      editorPreviewTelao = button.dataset.previewMode === "telao";
+      editorPreviewOpen = true;
+      syncEditorPreviewChrome();
+      updateEditorPreview();
+    });
+  });
+  el.chordInsert?.addEventListener("click", (event) => {
+    const chord = event.target.closest("[data-insert-chord]")?.dataset.insertChord;
+    if (chord) insertEditorChord(chord);
   });
   el.blockSize.forEach((button) => {
     button.addEventListener("click", () => {
@@ -2784,6 +2829,8 @@ function renderEditor() {
     if (field) field.disabled = disabled;
   });
   el.blockSize.forEach((button) => { button.disabled = disabled; });
+  el.chordInsert?.querySelectorAll("button").forEach((button) => { button.disabled = disabled; });
+  if (el.editorPreviewToggle) el.editorPreviewToggle.disabled = disabled;
   el.title.value = song?.title ?? "";
   el.artist.value = song?.artist ?? "";
   el.category.value = song?.category ?? "";
@@ -2794,6 +2841,7 @@ function renderEditor() {
   });
   el.lines.value = song ? foldStackedChords(song.lines).join("\n") : "";
   el.favorite.textContent = song?.isFavorite ? t("library.unfavorite") : t("library.favorite");
+  syncEditorPreviewChrome();
   updateEditorPreview();
 }
 
@@ -3893,17 +3941,7 @@ function createSong() {
     category: "Geral",
     capo: 0,
     blockSize: 4,
-    lines: [
-      "{key: A}",
-      "Intro:",
-      "A | E | F#m | D",
-      "",
-      "Verso 1:",
-      "A      E       F#m     D",
-      "Aqui escrevo a primeira frase",
-      "A      E       D",
-      "Aqui continuo a letra",
-    ],
+    lines: [],
   });
   state.songs.push(song);
   selectedSongId = song.id;
@@ -6152,6 +6190,27 @@ function denySyncComputer() {
   stopSyncLink(true);
 }
 
+function insertEditorChord(chord) {
+  const field = el.lines;
+  if (!field || field.disabled) return;
+  const start = field.selectionStart ?? field.value.length;
+  const end = field.selectionEnd ?? start;
+  field.setRangeText(`[${chord}]`, start, end, "end");
+  field.focus();
+  updateEditorPreview();
+}
+
+function syncEditorPreviewChrome() {
+  document.querySelector(".editor-panel")?.classList.toggle("preview-open", editorPreviewOpen);
+  if (el.editorPreviewToggle) {
+    el.editorPreviewToggle.textContent = editorPreviewOpen ? t("editor.previewHide") : t("editor.previewTelao");
+  }
+  el.previewModes?.forEach((button) => {
+    button.classList.toggle("active", (button.dataset.previewMode === "telao") === editorPreviewTelao);
+  });
+  el.editorPreview?.classList.toggle("hide-chords", editorPreviewTelao);
+}
+
 function updateEditorPreview() {
   if (!el.editorPreviewBody) return;
   const song = selectedSong();
@@ -6169,6 +6228,7 @@ function updateEditorPreview() {
   if (el.editorPreviewMeta) {
     el.editorPreviewMeta.textContent = [artist, capo ? t("capo.short", { capo }) : ""].filter(Boolean).join(" · ");
   }
+  el.editorPreview?.classList.toggle("hide-chords", editorPreviewTelao);
   el.editorPreviewBody.innerHTML = songChartHtml(draft);
 }
 
@@ -7409,7 +7469,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=115").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=116").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
