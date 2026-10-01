@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.27";
+const APP_VERSION = "1.1.28";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -258,6 +258,9 @@ const I18N = {
     "service.communionPh": "Ex.: Pastor João",
     "service.send": "Enviar programa",
     "service.whatsapp": "WhatsApp",
+    "service.whatsAppHint": "Toque no link para abrir as letras (sem cifras).",
+    "service.whatsAppNeedSongs": "Acrescenta músicas ao setlist para enviar a letra.",
+    "service.whatsAppFail": "Este setlist é grande demais para o WhatsApp. Tira uma música e tenta de novo.",
     "service.copied": "Programa copiado. Cole no WhatsApp ou no grupo.",
     "service.shared": "Programa enviado.",
     "service.copyFail": "Não consegui copiar. Use o botão WhatsApp para enviar.",
@@ -727,6 +730,9 @@ const I18N = {
     "service.communionPh": "Ej.: Pastor Juan",
     "service.send": "Enviar programa",
     "service.whatsapp": "WhatsApp",
+    "service.whatsAppHint": "Toque el enlace para abrir las letras (sin acordes).",
+    "service.whatsAppNeedSongs": "Añada canciones al setlist para enviar la letra.",
+    "service.whatsAppFail": "Este setlist es demasiado grande para WhatsApp. Quite una canción e inténtelo de nuevo.",
     "service.copied": "Programa copiado. Péguelo en WhatsApp o en el grupo.",
     "service.shared": "Programa enviado.",
     "service.copyFail": "No pude copiar. Use el botón WhatsApp para enviar.",
@@ -1196,6 +1202,9 @@ const I18N = {
     "service.communionPh": "Ex.: Pastor John",
     "service.send": "Send program",
     "service.whatsapp": "WhatsApp",
+    "service.whatsAppHint": "Tap the link to open the lyrics (no chords).",
+    "service.whatsAppNeedSongs": "Add songs to the setlist to send the lyrics.",
+    "service.whatsAppFail": "This setlist is too large for WhatsApp. Remove a song and try again.",
     "service.copied": "Program copied. Paste it into WhatsApp or the group.",
     "service.shared": "Program sent.",
     "service.copyFail": "Could not copy. Use the WhatsApp button to send it.",
@@ -7657,12 +7666,34 @@ async function shareServiceProgram() {
   notify(t("service.copyFail"));
 }
 
-function shareServiceWhatsApp() {
+function formatWhatsAppLyricsInvite(setlist, songs, url) {
+  const list = songs.map((song) => `• ${song.title}`).join("\n");
+  return `${setlist.title || t("service.defaultTitle")}\n${t("service.whatsAppHint")}\n\n${list}\n\n${url}`;
+}
+
+async function shareServiceWhatsApp() {
   const setlist = selectedSetlist();
   if (!setlist) return;
   saveSetlist(true);
-  const text = formatServiceProgram(selectedSetlist());
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  const current = selectedSetlist();
+  const songs = setlistSongs(current);
+  if (!songs.length) {
+    notify(t("service.whatsAppNeedSongs"));
+    return;
+  }
+  try {
+    const pack = buildSharePack(current.title, songs);
+    const encoded = await encodeSharePayload(pack);
+    const url = shareLyricsUrl(encoded);
+    if (url.length > 7500) {
+      notify(t("service.whatsAppFail"));
+      return;
+    }
+    const text = formatWhatsAppLyricsInvite(current, songs, url);
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  } catch {
+    notify(t("service.whatsAppFail"));
+  }
 }
 
 function downloadJson(fileName, data) {
@@ -7742,7 +7773,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=128").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=129").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

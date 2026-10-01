@@ -4,6 +4,7 @@ const path = require("path");
 const LOGIC = [
   "chart-regression.js",
   "fold-save.js",
+  "share-lyrics.js",
   "transpose-12.js",
   "import-merge.js",
   "backup-roundtrip.js",
