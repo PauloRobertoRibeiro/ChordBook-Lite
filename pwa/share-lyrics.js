@@ -109,11 +109,61 @@
     return pack;
   }
 
+  const SHORTENER = "https://spoo.me/";
+  const SLUG_RE = /^[A-Za-z0-9_-]{3,32}$/;
+
+  function shareOrigin(origin) {
+    return origin || (typeof location !== "undefined" ? location.href : "https://chordbook.jogaraprender.com/");
+  }
+
   function shareLyricsUrl(encoded, origin) {
-    const base = origin || (typeof location !== "undefined" ? location.href : "https://chordbook.jogaraprender.com/");
-    const url = new URL("cantar.html", base);
+    const url = new URL("cantar.html", shareOrigin(origin));
     url.hash = `c=${encoded}`;
     return url.toString();
+  }
+
+  function formatLyricsInvite(title, url) {
+    return `${String(title || "").trim() || "Setlist"}\n${url}`;
+  }
+
+  function slugFromShortUrl(shortUrl) {
+    try {
+      const parsed = new URL(String(shortUrl || "").replace(/^http:\/\//i, "https://"));
+      if (!/(^|\.)spoo\.me$/i.test(parsed.hostname)) return "";
+      const slug = parsed.pathname.replace(/^\//, "").split("/")[0];
+      return SLUG_RE.test(slug) ? slug : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function publicShareUrl(slug, origin) {
+    const url = new URL("cantar.html", shareOrigin(origin));
+    url.searchParams.set("s", slug);
+    return url.toString();
+  }
+
+  async function shortenShareUrl(longUrl) {
+    const ctrl = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
+    try {
+      const res = await fetch(SHORTENER, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: "url=" + encodeURIComponent(longUrl),
+        signal: ctrl ? ctrl.signal : undefined,
+      });
+      if (!res.ok) throw new Error("short");
+      const data = await res.json();
+      const slug = slugFromShortUrl(String(data.short_url || ""));
+      if (!slug) throw new Error("slug");
+      return slug;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
   const api = {
@@ -122,6 +172,10 @@
     encodeSharePayload,
     decodeSharePayload,
     shareLyricsUrl,
+    formatLyricsInvite,
+    slugFromShortUrl,
+    publicShareUrl,
+    shortenShareUrl,
   };
   Object.keys(api).forEach((key) => {
     root[key] = api[key];

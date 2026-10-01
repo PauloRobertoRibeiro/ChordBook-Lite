@@ -32,6 +32,16 @@ assert.ok(!/^G\s+C$/m.test(lyrics), "linhas só de cifra não vão no WhatsApp")
   assert.strictEqual(back.s[1].l, "Amazing grace");
   const url = share.shareLyricsUrl(encoded, "https://chordbook.jogaraprender.com/");
   assert.ok(url.includes("cantar.html#c="));
+  const invite = share.formatLyricsInvite("Culto Domingo", "https://chordbook.jogaraprender.com/cantar.html?s=hEhcJK");
+  assert.strictEqual(invite, "Culto Domingo\nhttps://chordbook.jogaraprender.com/cantar.html?s=hEhcJK");
+  assert.ok(!invite.includes("•"));
+  assert.ok(!invite.includes("sin acordes"));
+  assert.ok(!invite.includes("#c="));
+  assert.strictEqual(share.slugFromShortUrl("http://spoo.me/hEhcJK"), "hEhcJK");
+  assert.strictEqual(share.slugFromShortUrl("https://evil.example/hEhcJK"), "");
+  const short = share.publicShareUrl("hEhcJK", "https://chordbook.jogaraprender.com/");
+  assert.strictEqual(short, "https://chordbook.jogaraprender.com/cantar.html?s=hEhcJK");
+  assert.ok(short.length < 80);
   console.log("share-lyrics: ok");
 })().catch((error) => {
   console.error(error);
