@@ -6517,6 +6517,51 @@ body.cb-gated .app-shell { visibility: hidden; }
   white-space: pre;
 }
 
+.lyric-slide.bare,
+.lyric-slide:has(.lyric-slide-tag:empty) {
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.lyric-slide-tag:empty,
+.lyric-slide.bare .lyric-slide-tag {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .app-shell.song-active .lyric-slide,
+  .app-shell.stage-active:not(.telao-active) .lyric-slide {
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 0 10px;
+  }
+
+  .app-shell.song-active .lyric-slide-tag,
+  .app-shell.stage-active:not(.telao-active) .lyric-slide-tag {
+    display: none;
+  }
+
+  .song-read-content {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .song-read-content .stage-line,
+  .song-read-content .chord-only,
+  .app-shell.stage-active:not(.telao-active) .stage-content .stage-line,
+  .app-shell.stage-active:not(.telao-active) .stage-content .chord-only {
+    max-width: none;
+    width: max-content;
+  }
+
+  .app-shell.stage-active:not(.telao-active) .stage-content {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
 
 
 

@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.30";
+const APP_VERSION = "1.1.31";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -2246,6 +2246,7 @@ function bindEvents() {
     updateSyncUi();
     syncSongOverflow();
     scheduleFitTelaoSlide();
+    scheduleFitChartWidth();
   });
   window.addEventListener("keydown", handleStageHotkeys);
   window.addEventListener("keydown", handleEditorSaveHotkey);
@@ -3080,6 +3081,7 @@ function renderSongView() {
   lastSyncLine = clampSyncLine(lastSyncLine, el.songReadContent);
   markBlockLines(el.songReadContent);
   ensureBlockVisible(el.songReadContent);
+  scheduleFitChartWidth();
   if (el.songKeyValue) el.songKeyValue.textContent = String(song.transposeValue || 0);
   if (el.songCapoValue) el.songCapoValue.textContent = t("song.stepperCapo", { capo: song.capo || 0 });
   if (el.songFontValue) el.songFontValue.textContent = fontPercentLabel(stageFont);
@@ -3150,6 +3152,7 @@ function renderStage() {
   markBlockLines(el.stageContent);
   if (rebuilt || applyingSync) ensureBlockVisible(el.stageContent);
   scheduleFitTelaoSlide();
+  scheduleFitChartWidth();
 }
 
 function beginChartTouch(event) {
@@ -3499,8 +3502,13 @@ function wrapLyricSlides(root) {
     slide.dataset.slideStart = firstSync.getAttribute("data-sync-line") || "0";
     const tag = document.createElement("span");
     tag.className = "lyric-slide-tag";
-    tag.textContent = pendingLabel;
+    const label = pendingLabel;
     pendingLabel = "";
+    tag.textContent = label;
+    if (!label) {
+      tag.hidden = true;
+      slide.classList.add("bare");
+    }
     const body = document.createElement("div");
     body.className = "lyric-slide-body";
     bucket.forEach((node) => body.appendChild(node));
@@ -3606,6 +3614,39 @@ function scheduleFitTelaoSlide() {
   });
 }
 
+function fitChartToWidth(pane) {
+  if (!pane) return;
+  pane.style.fontSize = "";
+  if (el.appShell?.classList.contains("telao-active")) return;
+  if (window.matchMedia("(min-width: 768px)").matches) return;
+  const avail = Math.max(80, pane.clientWidth - 4);
+  const widest = () => Math.max(0, ...[...pane.querySelectorAll(".stage-line")].map((node) => node.scrollWidth));
+  const start = parseFloat(getComputedStyle(pane).fontSize) || 18;
+  if (widest() <= avail) return;
+  let lo = 9;
+  let hi = start;
+  let best = lo;
+  for (let step = 0; step < 12; step += 1) {
+    const mid = (lo + hi) / 2;
+    pane.style.fontSize = `${mid}px`;
+    if (widest() > avail + 1) hi = mid;
+    else {
+      best = mid;
+      lo = mid;
+    }
+  }
+  pane.style.fontSize = `${best}px`;
+}
+
+function scheduleFitChartWidth() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fitChartToWidth(el.songReadContent);
+      if (el.appShell?.classList.contains("stage-active")) fitChartToWidth(el.stageContent);
+    });
+  });
+}
+
 function applyBlockView() {
   [el.songReadContent, el.stageContent].forEach((pane) => {
     if (!pane) return;
@@ -3618,6 +3659,7 @@ function applyBlockView() {
     : (followPane() || activeScrollPane());
   ensureBlockVisible(visible);
   scheduleFitTelaoSlide();
+  scheduleFitChartWidth();
 }
 
 function setLyricWindow(line) {
@@ -7770,7 +7812,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=131").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=132").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
