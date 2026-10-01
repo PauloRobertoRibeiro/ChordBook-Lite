@@ -96,4 +96,10 @@ assert.ok(opened[1].indexOf("D/F#") >= opened[2].indexOf("lembro"), "D/F# deve c
 const savedAgain = chart.foldStackedChords(opened);
 assert.ok(savedAgain.some((line) => /\[G\]Quando/.test(line) && /\[D\/F#\]lembro/.test(line)));
 
+const stackedView = chart.unfoldChordProLine("[D/F#]Oh [G]despertad, [Bm7]arpa [G]y [A]salterio entonad");
+assert.strictEqual(stackedView[1], "Oh despertad, arpa y salterio entonad");
+assert.ok(!/\s{2,}/.test(stackedView[1]), "a vista da cifra não pode abrir espaços na letra");
+assert.ok(stackedView[0].includes("D/F#") && stackedView[0].includes("Bm7"));
+assert.ok(stackedView[0].indexOf("Bm7") >= stackedView[1].indexOf("arpa"));
+
 console.log("chart-regression: ok");

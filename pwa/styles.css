@@ -6500,6 +6500,23 @@ body.cb-gated .app-shell { visibility: hidden; }
   color: rgba(248, 244, 236, 0.72);
 }
 
+.song-read-content,
+.app-shell.stage-active:not(.telao-active) .stage-content {
+  font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+}
+
+.song-read-content .stage-line,
+.song-read-content .chord-only,
+.song-read-content .chord-only .chord,
+.song-read-content .lyric-row,
+.app-shell.stage-active:not(.telao-active) .stage-content .stage-line,
+.app-shell.stage-active:not(.telao-active) .stage-content .chord-only,
+.app-shell.stage-active:not(.telao-active) .stage-content .chord-only .chord,
+.app-shell.stage-active:not(.telao-active) .stage-content .lyric-row {
+  font-family: inherit;
+  white-space: pre;
+}
+
 
 
 

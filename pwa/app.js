@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.29";
+const APP_VERSION = "1.1.30";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -3030,7 +3030,8 @@ function renderEditor() {
 }
 
 function songChartHtml(song, options = {}) {
-  return renderChartLines(song.lines, song.transposeValue || 0, options);
+  const lines = unfoldStackedChords(song.lines);
+  return renderChartLines(lines, song.transposeValue || 0, { ...options, mirror: true });
 }
 
 function renderSongView() {
@@ -3139,7 +3140,7 @@ function renderStage() {
   let rebuilt = false;
   if (el.stageContent.dataset.sig !== signature) {
     el.stageContent.dataset.sig = signature;
-    el.stageContent.innerHTML = renderChartLines(song.lines, song.transposeValue || 0);
+    el.stageContent.innerHTML = songChartHtml(song);
     el.stageContent.scrollTop = 0;
     rebuilt = true;
   }
@@ -4371,7 +4372,7 @@ function saveSong(event) {
     capo: Number(el.capo.value || 0),
     cue: String(el.cue?.value || "").trim().slice(0, 80),
     blockSize: songBlockSizeFromUi(),
-    lines: foldStackedChords(String(el.lines.value || "").replace(/\r/g, "").split("\n")),
+    lines: String(el.lines.value || "").replace(/\r/g, "").split("\n"),
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
   });
@@ -7769,7 +7770,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=130").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=131").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
