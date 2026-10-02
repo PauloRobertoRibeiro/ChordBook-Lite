@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.31";
+const APP_VERSION = "1.1.33";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -230,6 +230,7 @@ const I18N = {
     "setlists.noSongs": "Nenhuma música neste setlist.",
     "setlists.addSong": "Adicionar",
     "setlists.remove": "Apagar",
+    "setlists.reorder": "Arrastar para ordenar",
     "setlists.details": "Dados do evento",
     "setlists.addTitle": "Acrescentar música",
     "setlists.allAdded": "Todas as músicas já foram adicionadas.",
@@ -702,6 +703,7 @@ const I18N = {
     "setlists.noSongs": "Ninguna canción en este setlist.",
     "setlists.addSong": "Añadir",
     "setlists.remove": "Borrar",
+    "setlists.reorder": "Arrastrar para ordenar",
     "setlists.details": "Datos del evento",
     "setlists.addTitle": "Añadir canción",
     "setlists.allAdded": "Todas las canciones ya fueron añadidas.",
@@ -1174,6 +1176,7 @@ const I18N = {
     "setlists.noSongs": "No songs in this setlist.",
     "setlists.addSong": "Add",
     "setlists.remove": "Remove",
+    "setlists.reorder": "Drag to reorder",
     "setlists.details": "Event details",
     "setlists.addTitle": "Add a song",
     "setlists.allAdded": "Every song is already added.",
@@ -4110,10 +4113,13 @@ function orderedSetlistSongRow(song, index, slot) {
   const key = songWrittenKey(song);
   const isFinal = slot === "final";
   return `
-    <div class="setlist-swipe">
+    <div class="setlist-swipe" data-song-id="${escapeHtml(song.id)}">
       <button type="button" class="setlist-swipe-delete" data-setlist-action="remove" data-song-id="${escapeHtml(song.id)}">${t("setlists.remove")}</button>
       <div class="setlist-swipe-main">
-        <span class="setlist-num">${index + 1}</span>
+        <span class="setlist-drag" data-drag-handle title="${escapeHtml(t("setlists.reorder"))}" aria-label="${escapeHtml(t("setlists.reorder"))}">
+          <span class="setlist-drag-bars" aria-hidden="true"></span>
+          <span class="setlist-num">${index + 1}</span>
+        </span>
         <button type="button" class="setlist-song-open" data-open-song-id="${escapeHtml(song.id)}">
           <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
           ${song.artist ? `<small>${escapeHtml(song.artist)}</small>` : ""}
@@ -4134,44 +4140,168 @@ function bindSetlistSwipe(root) {
     let startX = 0;
     let startY = 0;
     let dx = 0;
+    let pointerId = 0;
     let tracking = false;
     let axis = "";
+    let mode = "";
+    let holdTimer = 0;
+    let suppressClick = false;
     const max = 96;
     const closeOthers = () => {
       root.querySelectorAll(".setlist-swipe-main").forEach((item) => {
         if (item !== main) item.style.transform = "";
       });
     };
-    row.addEventListener("touchstart", (event) => {
-      if (event.touches.length !== 1) return;
-      const touch = event.touches[0];
-      startX = touch.clientX;
-      startY = touch.clientY;
+    const clearHold = () => {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = 0;
+      }
+    };
+    const refreshNumbers = () => {
+      const section = row.parentElement;
+      if (!section) return;
+      section.querySelectorAll(".setlist-swipe .setlist-num").forEach((num, index) => {
+        num.textContent = String(index + 1);
+      });
+    };
+    const moveRow = (clientY) => {
+      const section = row.parentElement;
+      if (!section) return;
+      const others = [...section.querySelectorAll(".setlist-swipe")].filter((item) => item !== row);
+      let before = null;
+      for (const item of others) {
+        const rect = item.getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) {
+          before = item;
+          break;
+        }
+      }
+      if (before) {
+        if (row.nextElementSibling !== before) section.insertBefore(row, before);
+      } else if (others.length) {
+        const last = others[others.length - 1];
+        if (last.nextElementSibling !== row) section.appendChild(row);
+      }
+      refreshNumbers();
+    };
+    const commitOrder = () => {
+      const setlist = selectedSetlist();
+      const section = row.parentElement;
+      const slot = section?.dataset.slot;
+      if (!setlist || !slot) return;
+      const ids = [...section.querySelectorAll(".setlist-swipe")].map((item) => item.dataset.songId).filter(Boolean);
+      const parts = partitionSetlistSongs(setlist);
+      const previous = slot === "final" ? parts.finale : parts.praise;
+      if (!ids.length || ids.join() === previous.join()) return;
+      if (slot === "final") writePartitionedSongs(setlist, parts.praise, ids);
+      else writePartitionedSongs(setlist, ids, parts.finale);
+      setlist.updatedAt = new Date().toISOString();
+      persist();
+    };
+    const endGesture = (event) => {
+      if (!tracking || event.pointerId !== pointerId) return;
+      tracking = false;
+      clearHold();
+      try {
+        row.releasePointerCapture(pointerId);
+      } catch {
+        /* already released */
+      }
+      row.classList.remove("is-dragging");
+      main.style.transition = "";
+      if (mode === "drag") {
+        commitOrder();
+        suppressClick = true;
+      } else if (mode === "swipe") {
+        closeOthers();
+        main.style.transform = dx < -max / 2 ? `translateX(${-max}px)` : "";
+      }
+      mode = "";
+      axis = "";
+    };
+    row.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (event.target.closest("[data-setlist-action]")) return;
+      startX = event.clientX;
+      startY = event.clientY;
       dx = 0;
       tracking = true;
       axis = "";
-    }, { passive: true });
-    row.addEventListener("touchmove", (event) => {
-      if (!tracking) return;
-      const touch = event.touches[0];
-      const x = touch.clientX - startX;
-      const y = touch.clientY - startY;
+      mode = "";
+      pointerId = event.pointerId;
+      suppressClick = false;
+      const handle = event.target.closest("[data-drag-handle]");
+      if (handle) {
+        event.preventDefault();
+        mode = "drag";
+        suppressClick = true;
+        row.classList.add("is-dragging");
+        main.style.transition = "none";
+        try {
+          row.setPointerCapture(pointerId);
+        } catch {
+          /* capture optional */
+        }
+        return;
+      }
+      holdTimer = window.setTimeout(() => {
+        if (!tracking || mode) return;
+        mode = "drag";
+        suppressClick = true;
+        row.classList.add("is-dragging");
+        main.style.transition = "none";
+        try {
+          row.setPointerCapture(pointerId);
+        } catch {
+          /* capture optional */
+        }
+        if (navigator.vibrate) navigator.vibrate(10);
+      }, 200);
+    });
+    row.addEventListener("pointermove", (event) => {
+      if (!tracking || event.pointerId !== pointerId) return;
+      const x = event.clientX - startX;
+      const y = event.clientY - startY;
       if (!axis) {
         if (Math.abs(x) < 10 && Math.abs(y) < 10) return;
         axis = Math.abs(x) > Math.abs(y) * 1.15 ? "x" : "y";
+        if (mode !== "drag") {
+          if (axis === "x") {
+            clearHold();
+            mode = "swipe";
+            try {
+              row.setPointerCapture(pointerId);
+            } catch {
+              /* capture optional */
+            }
+          } else {
+            clearHold();
+            mode = "scroll";
+            tracking = false;
+            return;
+          }
+        }
       }
-      if (axis !== "x") return;
-      event.preventDefault();
-      dx = Math.min(0, Math.max(-max, x));
-      main.style.transform = `translateX(${dx}px)`;
+      if (mode === "swipe") {
+        event.preventDefault();
+        dx = Math.min(0, Math.max(-max, x));
+        main.style.transform = `translateX(${dx}px)`;
+        return;
+      }
+      if (mode === "drag") {
+        event.preventDefault();
+        moveRow(event.clientY);
+      }
     }, { passive: false });
-    row.addEventListener("touchend", () => {
-      if (!tracking) return;
-      tracking = false;
-      if (axis !== "x") return;
-      closeOthers();
-      main.style.transform = dx < -max / 2 ? `translateX(${-max}px)` : "";
-    });
+    row.addEventListener("pointerup", endGesture);
+    row.addEventListener("pointercancel", endGesture);
+    row.addEventListener("click", (event) => {
+      if (!suppressClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClick = false;
+    }, true);
   });
 }
 
@@ -6941,7 +7071,7 @@ function renderEventOrderHtml(setlist) {
   return blocks.map((block) => {
     if (block.type === "songs") {
       return `
-        <section class="order-block">
+        <section class="order-block" data-slot="${escapeHtml(block.slot || "praise")}">
           ${block.title ? `<h3>${escapeHtml(block.title)}</h3>` : ""}
           ${block.songs.map((song, index) => orderedSetlistSongRow(song, index, block.slot)).join("")}
         </section>
@@ -7812,7 +7942,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=132").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=134").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
