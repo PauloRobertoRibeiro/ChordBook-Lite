@@ -5797,6 +5797,12 @@ textarea {
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
+  min-width: 1.2em;
+  transition: color 0.18s ease;
+}
+
+.setlist-swipe.is-floating .setlist-num {
+  color: var(--accent);
 }
 
 .setlist-song-open {

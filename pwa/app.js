@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.36";
+const APP_VERSION = "1.1.37";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -4163,7 +4163,28 @@ function bindSetlistSwipe(root) {
       });
     };
     const sectionOf = () => row.closest(".order-block") || row.parentElement;
-    const otherSongs = () => [...(sectionOf()?.querySelectorAll(".setlist-swipe") || [])].filter((item) => item !== row);
+    const sectionSongs = () => [...(sectionOf()?.querySelectorAll(".setlist-swipe") || [])];
+    const otherSongs = () => sectionSongs().filter((item) => item !== row);
+    const setRowNumber = (item, value) => {
+      const num = item?.querySelector(".setlist-num");
+      if (num) num.textContent = String(value);
+    };
+    const liveInsertAt = () => {
+      const others = otherSongs();
+      if (!gap?.parentElement) return originIndex;
+      return others.filter((item) => Boolean(item.compareDocumentPosition(gap) & Node.DOCUMENT_POSITION_FOLLOWING)).length;
+    };
+    const refreshLiveNumbers = () => {
+      const songs = sectionSongs();
+      if (row.classList.contains("is-floating")) {
+        const others = otherSongs();
+        const insertAt = liveInsertAt();
+        others.forEach((item, index) => setRowNumber(item, index < insertAt ? index + 1 : index + 2));
+        setRowNumber(row, insertAt + 1);
+        return;
+      }
+      songs.forEach((item, index) => setRowNumber(item, index + 1));
+    };
     const pinFloat = (clientY) => {
       row.style.top = `${Math.round(clientY - grabOffset)}px`;
     };
@@ -4181,6 +4202,7 @@ function bindSetlistSwipe(root) {
       }
       if (insertAt === originIndex) {
         if (gap?.parentElement) gap.remove();
+        refreshLiveNumbers();
         return;
       }
       if (!gap) {
@@ -4194,13 +4216,13 @@ function bindSetlistSwipe(root) {
       } else if (gap.parentElement !== section || others[others.length - 1]?.nextElementSibling !== gap) {
         section.appendChild(gap);
       }
+      refreshLiveNumbers();
     };
     const startFloat = (clientY) => {
       const rect = row.getBoundingClientRect();
-      const section = sectionOf();
       rowHeight = rect.height;
       grabOffset = clientY - rect.top;
-      originIndex = [...(section?.querySelectorAll(".setlist-swipe") || [])].indexOf(row);
+      originIndex = sectionSongs().indexOf(row);
       row.classList.add("is-floating");
       row.style.position = "fixed";
       row.style.left = `${Math.round(rect.left)}px`;
@@ -4211,6 +4233,7 @@ function bindSetlistSwipe(root) {
       row.style.overflow = "visible";
       row.style.margin = "0";
       pinFloat(clientY);
+      refreshLiveNumbers();
       if (navigator.vibrate) navigator.vibrate(12);
     };
     const endFloat = () => {
@@ -4227,6 +4250,7 @@ function bindSetlistSwipe(root) {
       row.style.zIndex = "";
       row.style.overflow = "";
       row.style.margin = "";
+      refreshLiveNumbers();
     };
     const commitOrder = () => {
       const setlist = selectedSetlist();
@@ -8023,7 +8047,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=137").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=138").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
