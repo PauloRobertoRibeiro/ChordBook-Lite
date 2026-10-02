@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.37";
+const APP_VERSION = "1.1.38";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -4255,14 +4255,11 @@ function bindSetlistSwipe(root) {
     const commitOrder = () => {
       const setlist = selectedSetlist();
       const section = sectionOf();
-      const slot = section?.dataset.slot;
-      if (!setlist || !slot) return;
+      if (!setlist || !section?.dataset.slot) return;
       const ids = [...section.querySelectorAll(".setlist-swipe")].map((item) => item.dataset.songId).filter(Boolean);
-      const parts = partitionSetlistSongs(setlist);
-      const previous = slot === "final" ? parts.finale : parts.praise;
-      if (!ids.length || ids.join() === previous.join()) return;
-      if (slot === "final") writePartitionedSongs(setlist, parts.praise, ids);
-      else writePartitionedSongs(setlist, ids, parts.finale);
+      if (!ids.length || ids.join() === (setlist.songIds || []).join()) return;
+      setlist.songIds = ids;
+      setlist.finalSongIds = (setlist.finalSongIds || []).filter((id) => ids.includes(id));
       setlist.updatedAt = new Date().toISOString();
       persist();
     };
@@ -5143,17 +5140,10 @@ function toggleSongInSetlist(songId, checked) {
     setlist.notes = el.setlistNotes?.value.trim() || setlist.notes;
   }
   const has = setlist.songIds.includes(songId);
-  const parts = partitionSetlistSongs(setlist);
-  if (checked && !has) {
-    parts.praise.push(songId);
-    writePartitionedSongs(setlist, parts.praise, parts.finale);
-  }
+  if (checked && !has) setlist.songIds.push(songId);
   if (!checked && has) {
-    writePartitionedSongs(
-      setlist,
-      parts.praise.filter((id) => id !== songId),
-      parts.finale.filter((id) => id !== songId),
-    );
+    setlist.songIds = setlist.songIds.filter((id) => id !== songId);
+    setlist.finalSongIds = (setlist.finalSongIds || []).filter((id) => id !== songId);
   }
   setlist.updatedAt = new Date().toISOString();
   persist();
@@ -5239,20 +5229,14 @@ function refreshSetlistSongUi(options = {}) {
 function updateSetlistSongOrder(songId, action) {
   const setlist = selectedSetlist();
   if (!setlist) return;
-  const parts = partitionSetlistSongs(setlist);
-
   if (action === "remove") {
-    writePartitionedSongs(
-      setlist,
-      parts.praise.filter((id) => id !== songId),
-      parts.finale.filter((id) => id !== songId),
-    );
+    setlist.songIds = setlist.songIds.filter((id) => id !== songId);
+    setlist.finalSongIds = (setlist.finalSongIds || []).filter((id) => id !== songId);
   } else if (action === "slot") {
-    if (parts.finale.includes(songId)) {
-      writePartitionedSongs(setlist, [...parts.praise, songId], parts.finale.filter((id) => id !== songId));
-    } else {
-      writePartitionedSongs(setlist, parts.praise.filter((id) => id !== songId), [...parts.finale, songId]);
-    }
+    const marked = new Set((setlist.finalSongIds || []).map(String));
+    if (marked.has(String(songId))) marked.delete(String(songId));
+    else marked.add(String(songId));
+    setlist.finalSongIds = [...marked].filter((id) => setlist.songIds.includes(id));
   } else {
     const index = setlist.songIds.indexOf(songId);
     if (index < 0) return;
@@ -7170,17 +7154,29 @@ function renderEventRoster(setlist) {
   `).join("");
 }
 
+function setlistBoardSongsHtml(setlist, title) {
+  const songs = songsByIds(setlist?.songIds || []);
+  const finaleSet = new Set((setlist?.finalSongIds || []).map(String));
+  if (!songs.length) return "";
+  return `
+    <section class="order-block" data-slot="songs">
+      ${title ? `<h3>${escapeHtml(title)}</h3>` : ""}
+      ${songs.map((song, index) => orderedSetlistSongRow(song, index, finaleSet.has(String(song.id)) ? "final" : "praise")).join("")}
+    </section>
+  `;
+}
+
 function renderEventOrderHtml(setlist) {
   const { blocks } = eventOrderModel(setlist);
-  if (!blocks.length) return `<p class="empty compact">${t("setlists.noSongs")}</p>`;
-  return blocks.map((block) => {
+  const allSongs = songsByIds(setlist?.songIds || []);
+  if (!blocks.length && !allSongs.length) return `<p class="empty compact">${t("setlists.noSongs")}</p>`;
+  const songTitle = blocks.some((block) => block.type !== "songs") ? t("agenda.order.praise") : "";
+  let songsDone = false;
+  const html = blocks.map((block) => {
     if (block.type === "songs") {
-      return `
-        <section class="order-block" data-slot="${escapeHtml(block.slot || "praise")}">
-          ${block.title ? `<h3>${escapeHtml(block.title)}</h3>` : ""}
-          ${block.songs.map((song, index) => orderedSetlistSongRow(song, index, block.slot)).join("")}
-        </section>
-      `;
+      if (songsDone) return "";
+      songsDone = true;
+      return setlistBoardSongsHtml(setlist, songTitle || block.title || "");
     }
     if (block.type === "reading") {
       return `
@@ -7215,6 +7211,10 @@ function renderEventOrderHtml(setlist) {
       </section>
     `;
   }).join("");
+  if (!songsDone) {
+    return setlistBoardSongsHtml(setlist, songTitle) || html || `<p class="empty compact">${t("setlists.noSongs")}</p>`;
+  }
+  return html || `<p class="empty compact">${t("setlists.noSongs")}</p>`;
 }
 
 function enabledAgendaFields() {
@@ -7784,15 +7784,7 @@ function writeServiceToForm(service) {
   const sections = state.agenda.sections || defaultAgendaSections();
   el.eventFields.innerHTML = sections.map((section) => {
     const fields = enabledAgendaFields().filter((field) => field.section === section.id);
-    if (section.id === "songs") {
-      return `
-        <section class="event-section">
-          <h3>${escapeHtml(agendaSectionTitle(section))}</h3>
-          <input id="eventSongSearch" type="search" placeholder="${escapeHtml(t("agenda.searchSongs"))}" value="${escapeHtml(setlistAddQuery)}" />
-          <div id="eventSongList" class="check-list event-song-list">${songCheckListHtml(selectedSetlist())}</div>
-        </section>
-      `;
-    }
+    if (section.id === "songs") return "";
     if (!fields.length) return "";
     const hint = section.id === "order" || section.id === "stream"
       ? `<p class="event-section-hint">${escapeHtml(t("agenda.orderHint"))}</p>`
@@ -8047,7 +8039,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=138").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=139").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
