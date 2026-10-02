@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.33";
+const APP_VERSION = "1.1.34";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -4116,10 +4116,7 @@ function orderedSetlistSongRow(song, index, slot) {
     <div class="setlist-swipe" data-song-id="${escapeHtml(song.id)}">
       <button type="button" class="setlist-swipe-delete" data-setlist-action="remove" data-song-id="${escapeHtml(song.id)}">${t("setlists.remove")}</button>
       <div class="setlist-swipe-main">
-        <span class="setlist-drag" data-drag-handle title="${escapeHtml(t("setlists.reorder"))}" aria-label="${escapeHtml(t("setlists.reorder"))}">
-          <span class="setlist-drag-bars" aria-hidden="true"></span>
-          <span class="setlist-num">${index + 1}</span>
-        </span>
+        <span class="setlist-num">${index + 1}</span>
         <button type="button" class="setlist-song-open" data-open-song-id="${escapeHtml(song.id)}">
           <strong>${escapeHtml(song.title || t("song.noTitle"))}</strong>
           ${song.artist ? `<small>${escapeHtml(song.artist)}</small>` : ""}
@@ -4144,7 +4141,6 @@ function bindSetlistSwipe(root) {
     let tracking = false;
     let axis = "";
     let mode = "";
-    let holdTimer = 0;
     let suppressClick = false;
     const max = 96;
     const closeOthers = () => {
@@ -4152,11 +4148,9 @@ function bindSetlistSwipe(root) {
         if (item !== main) item.style.transform = "";
       });
     };
-    const clearHold = () => {
-      if (holdTimer) {
-        clearTimeout(holdTimer);
-        holdTimer = 0;
-      }
+    const lift = () => {
+      row.classList.add("is-dragging");
+      main.style.transition = "none";
     };
     const refreshNumbers = () => {
       const section = row.parentElement;
@@ -4202,7 +4196,6 @@ function bindSetlistSwipe(root) {
     const endGesture = (event) => {
       if (!tracking || event.pointerId !== pointerId) return;
       tracking = false;
-      clearHold();
       try {
         row.releasePointerCapture(pointerId);
       } catch {
@@ -4231,56 +4224,29 @@ function bindSetlistSwipe(root) {
       mode = "";
       pointerId = event.pointerId;
       suppressClick = false;
-      const handle = event.target.closest("[data-drag-handle]");
-      if (handle) {
-        event.preventDefault();
-        mode = "drag";
-        suppressClick = true;
-        row.classList.add("is-dragging");
-        main.style.transition = "none";
-        try {
-          row.setPointerCapture(pointerId);
-        } catch {
-          /* capture optional */
-        }
-        return;
+      lift();
+      try {
+        row.setPointerCapture(pointerId);
+      } catch {
+        /* capture optional */
       }
-      holdTimer = window.setTimeout(() => {
-        if (!tracking || mode) return;
-        mode = "drag";
-        suppressClick = true;
-        row.classList.add("is-dragging");
-        main.style.transition = "none";
-        try {
-          row.setPointerCapture(pointerId);
-        } catch {
-          /* capture optional */
-        }
-        if (navigator.vibrate) navigator.vibrate(10);
-      }, 200);
     });
     row.addEventListener("pointermove", (event) => {
       if (!tracking || event.pointerId !== pointerId) return;
       const x = event.clientX - startX;
       const y = event.clientY - startY;
       if (!axis) {
-        if (Math.abs(x) < 10 && Math.abs(y) < 10) return;
+        if (Math.abs(x) < 8 && Math.abs(y) < 8) return;
         axis = Math.abs(x) > Math.abs(y) * 1.15 ? "x" : "y";
-        if (mode !== "drag") {
-          if (axis === "x") {
-            clearHold();
-            mode = "swipe";
-            try {
-              row.setPointerCapture(pointerId);
-            } catch {
-              /* capture optional */
-            }
-          } else {
-            clearHold();
-            mode = "scroll";
-            tracking = false;
-            return;
-          }
+        if (axis === "x") {
+          row.classList.remove("is-dragging");
+          mode = "swipe";
+        } else {
+          mode = "drag";
+          suppressClick = true;
+          lift();
+          event.preventDefault();
+          if (navigator.vibrate) navigator.vibrate(8);
         }
       }
       if (mode === "swipe") {
@@ -7942,7 +7908,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=134").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=135").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

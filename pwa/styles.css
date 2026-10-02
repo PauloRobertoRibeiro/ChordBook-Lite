@@ -5750,41 +5750,21 @@ textarea {
   align-items: center;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
+  cursor: grab;
   display: grid;
   gap: 10px;
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto auto auto;
   min-height: 72px;
   padding: 12px 16px;
   position: relative;
-  transition: transform 0.18s ease;
+  touch-action: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   width: 100%;
   z-index: 1;
 }
 
-.setlist-drag {
-  align-items: center;
-  color: var(--muted);
-  cursor: grab;
-  display: flex;
-  gap: 6px;
-  min-height: 44px;
-  min-width: 36px;
-  touch-action: none;
-  user-select: none;
-}
-
-.setlist-swipe.is-dragging .setlist-drag {
+.setlist-swipe.is-dragging .setlist-swipe-main {
   cursor: grabbing;
-}
-
-.setlist-drag-bars {
-  background: repeating-linear-gradient(to bottom, currentColor 0 2px, transparent 2px 4px);
-  border-radius: 1px;
-  display: block;
-  flex: 0 0 auto;
-  height: 12px;
-  opacity: 0.45;
-  width: 10px;
 }
 
 .setlist-num {
