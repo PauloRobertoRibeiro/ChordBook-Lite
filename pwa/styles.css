@@ -1524,6 +1524,18 @@ textarea {
   height: 100%;
 }
 
+.song-read-content,
+.stage-content,
+.song-sheet-title,
+.stage-mode-title {
+  transition: opacity 0.32s ease;
+}
+
+.chart-swap-out {
+  opacity: 0;
+  will-change: opacity;
+}
+
 .lyric-slide {
   align-items: start;
   background: transparent;
@@ -1538,6 +1550,7 @@ textarea {
   margin: 0;
   padding: 8px 6px 10px 4px;
   text-align: left;
+  transition: background-color 0.28s ease;
   width: 100%;
 }
 
@@ -2440,6 +2453,7 @@ textarea {
   min-height: 48px;
   padding: 8px 12px;
   text-align: left;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .stage-cue-num {
@@ -2633,6 +2647,7 @@ textarea {
   overflow: hidden;
   padding: 7px 10px;
   text-overflow: ellipsis;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
   white-space: nowrap;
 }
 
@@ -5721,14 +5736,28 @@ textarea {
   user-select: none;
 }
 
-.setlist-swipe.is-dragging {
-  z-index: 2;
+.setlist-swipe.is-floating {
+  overflow: visible;
+  z-index: 80;
 }
 
-.setlist-swipe.is-dragging .setlist-swipe-main {
-  background: var(--panel);
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(16, 24, 20, 0.16);
+.setlist-swipe.is-floating .setlist-swipe-delete,
+.setlist-swipe.is-floating .setlist-slot,
+.setlist-swipe.is-floating .setlist-row-remove {
+  display: none;
+}
+
+.setlist-swipe.is-floating .setlist-swipe-main {
+  background: #fff;
+  border-bottom: 0;
+  border-radius: 2px;
+  box-shadow: 0 12px 28px rgba(16, 24, 20, 0.28);
+  cursor: grabbing;
+}
+
+.setlist-drop-gap {
+  background: #eef1ef;
+  pointer-events: none;
 }
 
 .setlist-swipe-delete {
@@ -5761,10 +5790,6 @@ textarea {
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   width: 100%;
   z-index: 1;
-}
-
-.setlist-swipe.is-dragging .setlist-swipe-main {
-  cursor: grabbing;
 }
 
 .setlist-num {
@@ -5862,6 +5887,7 @@ textarea {
 
 .check-row {
   align-items: center;
+  background: transparent;
   border-bottom: 1px solid var(--line);
   cursor: pointer;
   display: grid;
@@ -5870,6 +5896,13 @@ textarea {
   min-height: 52px;
   padding: 8px 4px;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.22s ease;
+}
+
+.check-row:has(input:checked),
+.check-row.on {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .check-row input {
@@ -5883,9 +5916,24 @@ textarea {
   border: 2px solid #94a3b8;
   border-radius: 6px;
   display: inline-block;
+  flex-shrink: 0;
   height: 24px;
   position: relative;
+  transition: background-color 0.22s ease, border-color 0.22s ease;
   width: 24px;
+}
+
+.check-mark::after {
+  color: #fff;
+  content: "✕";
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 20px;
+  opacity: 0;
+  text-align: center;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .check-row input:checked + .check-mark,
@@ -5896,13 +5944,8 @@ textarea {
 
 .check-row input:checked + .check-mark::after,
 .people-check.on .check-mark::after {
-  color: #fff;
-  content: "✕";
-  display: block;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 20px;
-  text-align: center;
+  opacity: 1;
+  transform: scale(1);
 }
 
 .check-copy strong,
@@ -6584,6 +6627,22 @@ body.cb-gated .app-shell { visibility: hidden; }
   .app-shell.stage-active:not(.telao-active) .stage-content .lyric-row,
   .app-shell.stage-active:not(.telao-active) .stage-content .chord-lyric .lyric {
     font-weight: 700;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .song-read-content,
+  .stage-content,
+  .song-sheet-title,
+  .stage-mode-title,
+  .lyric-slide,
+  .check-row,
+  .check-mark,
+  .check-mark::after,
+  .mobile-song-menu-list button,
+  .stage-set-row,
+  .stage-setlist-songs button {
+    transition: none;
   }
 }
 

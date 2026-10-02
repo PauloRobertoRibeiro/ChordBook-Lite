@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.34";
+const APP_VERSION = "1.1.36";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -1876,6 +1876,8 @@ let autoScrollGuardUntil = 0;
 let stageMenuQuery = "";
 let stageTouchStart = null;
 let stageTouchUsed = false;
+let chartFadeTimer = 0;
+let chartFadePending = null;
 let chartPinch = null;
 const savedScrollSpeed = Number(localStorage.getItem("chordbook.scrollSpeed") || 30);
 let scrollSpeed = Math.min(100, Math.max(10, savedScrollSpeed || 30));
@@ -3576,9 +3578,12 @@ function markBlockLines(root) {
 
 function ensureBlockVisible(pane) {
   const on = pane?.querySelector(".lyric-slide.on");
-  if (!on) return;
+  if (!on || !pane) return;
+  const host = pane.getBoundingClientRect();
+  const box = on.getBoundingClientRect();
+  if (box.top >= host.top - 2 && box.bottom <= host.bottom + 2) return;
   applyingScrollSync = true;
-  on.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  on.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { applyingScrollSync = false; });
   });
@@ -3973,15 +3978,20 @@ function stageMenuSongRow(song, order) {
 
 function jumpToStageSong(songId) {
   const setlist = activeSetlist();
+  const same = songId === selectedSongId;
   adoptPlayingSong(songId);
   if (!setlist || !setlist.songIds.includes(songId)) activeSetlistId = null;
   isMobileSongMenuOpen = false;
   stageMenuQuery = "";
   markSongOpened(songId);
   persist();
-  render();
-  switchView("stage");
   broadcastPlayhead();
+  const finish = () => {
+    render();
+    switchView("stage");
+  };
+  if (same) finish();
+  else fadePlayingChart(finish);
 }
 
 function activeSetlistPosition() {
@@ -4142,46 +4152,85 @@ function bindSetlistSwipe(root) {
     let axis = "";
     let mode = "";
     let suppressClick = false;
+    let grabOffset = 0;
+    let originIndex = 0;
+    let rowHeight = 72;
+    let gap = null;
     const max = 96;
     const closeOthers = () => {
       root.querySelectorAll(".setlist-swipe-main").forEach((item) => {
         if (item !== main) item.style.transform = "";
       });
     };
-    const lift = () => {
-      row.classList.add("is-dragging");
-      main.style.transition = "none";
+    const sectionOf = () => row.closest(".order-block") || row.parentElement;
+    const otherSongs = () => [...(sectionOf()?.querySelectorAll(".setlist-swipe") || [])].filter((item) => item !== row);
+    const pinFloat = (clientY) => {
+      row.style.top = `${Math.round(clientY - grabOffset)}px`;
     };
-    const refreshNumbers = () => {
-      const section = row.parentElement;
+    const placeGap = (clientY) => {
+      const section = sectionOf();
       if (!section) return;
-      section.querySelectorAll(".setlist-swipe .setlist-num").forEach((num, index) => {
-        num.textContent = String(index + 1);
-      });
-    };
-    const moveRow = (clientY) => {
-      const section = row.parentElement;
-      if (!section) return;
-      const others = [...section.querySelectorAll(".setlist-swipe")].filter((item) => item !== row);
-      let before = null;
-      for (const item of others) {
-        const rect = item.getBoundingClientRect();
+      const others = otherSongs();
+      let insertAt = others.length;
+      for (let index = 0; index < others.length; index += 1) {
+        const rect = others[index].getBoundingClientRect();
         if (clientY < rect.top + rect.height / 2) {
-          before = item;
+          insertAt = index;
           break;
         }
       }
-      if (before) {
-        if (row.nextElementSibling !== before) section.insertBefore(row, before);
-      } else if (others.length) {
-        const last = others[others.length - 1];
-        if (last.nextElementSibling !== row) section.appendChild(row);
+      if (insertAt === originIndex) {
+        if (gap?.parentElement) gap.remove();
+        return;
       }
-      refreshNumbers();
+      if (!gap) {
+        gap = document.createElement("div");
+        gap.className = "setlist-drop-gap";
+        gap.style.height = `${rowHeight}px`;
+      }
+      const before = others[insertAt];
+      if (before) {
+        if (gap.nextElementSibling !== before) section.insertBefore(gap, before);
+      } else if (gap.parentElement !== section || others[others.length - 1]?.nextElementSibling !== gap) {
+        section.appendChild(gap);
+      }
+    };
+    const startFloat = (clientY) => {
+      const rect = row.getBoundingClientRect();
+      const section = sectionOf();
+      rowHeight = rect.height;
+      grabOffset = clientY - rect.top;
+      originIndex = [...(section?.querySelectorAll(".setlist-swipe") || [])].indexOf(row);
+      row.classList.add("is-floating");
+      row.style.position = "fixed";
+      row.style.left = `${Math.round(rect.left)}px`;
+      row.style.width = `${Math.round(rect.width)}px`;
+      row.style.height = `${Math.round(rect.height)}px`;
+      row.style.top = `${Math.round(rect.top)}px`;
+      row.style.zIndex = "80";
+      row.style.overflow = "visible";
+      row.style.margin = "0";
+      pinFloat(clientY);
+      if (navigator.vibrate) navigator.vibrate(12);
+    };
+    const endFloat = () => {
+      const section = sectionOf();
+      if (gap?.parentElement && section) section.insertBefore(row, gap);
+      gap?.remove();
+      gap = null;
+      row.classList.remove("is-floating");
+      row.style.position = "";
+      row.style.left = "";
+      row.style.width = "";
+      row.style.height = "";
+      row.style.top = "";
+      row.style.zIndex = "";
+      row.style.overflow = "";
+      row.style.margin = "";
     };
     const commitOrder = () => {
       const setlist = selectedSetlist();
-      const section = row.parentElement;
+      const section = sectionOf();
       const slot = section?.dataset.slot;
       if (!setlist || !slot) return;
       const ids = [...section.querySelectorAll(".setlist-swipe")].map((item) => item.dataset.songId).filter(Boolean);
@@ -4201,15 +4250,16 @@ function bindSetlistSwipe(root) {
       } catch {
         /* already released */
       }
-      row.classList.remove("is-dragging");
-      main.style.transition = "";
       if (mode === "drag") {
+        endFloat();
         commitOrder();
         suppressClick = true;
       } else if (mode === "swipe") {
         closeOthers();
         main.style.transform = dx < -max / 2 ? `translateX(${-max}px)` : "";
       }
+      row.classList.remove("is-floating");
+      main.style.transition = "";
       mode = "";
       axis = "";
     };
@@ -4224,7 +4274,6 @@ function bindSetlistSwipe(root) {
       mode = "";
       pointerId = event.pointerId;
       suppressClick = false;
-      lift();
       try {
         row.setPointerCapture(pointerId);
       } catch {
@@ -4239,14 +4288,12 @@ function bindSetlistSwipe(root) {
         if (Math.abs(x) < 8 && Math.abs(y) < 8) return;
         axis = Math.abs(x) > Math.abs(y) * 1.15 ? "x" : "y";
         if (axis === "x") {
-          row.classList.remove("is-dragging");
           mode = "swipe";
         } else {
           mode = "drag";
           suppressClick = true;
-          lift();
+          startFloat(event.clientY);
           event.preventDefault();
-          if (navigator.vibrate) navigator.vibrate(8);
         }
       }
       if (mode === "swipe") {
@@ -4257,7 +4304,8 @@ function bindSetlistSwipe(root) {
       }
       if (mode === "drag") {
         event.preventDefault();
-        moveRow(event.clientY);
+        pinFloat(event.clientY);
+        placeGap(event.clientY);
       }
     }, { passive: false });
     row.addEventListener("pointerup", endGesture);
@@ -5085,7 +5133,7 @@ function toggleSongInSetlist(songId, checked) {
   }
   setlist.updatedAt = new Date().toISOString();
   persist();
-  refreshSetlistSongUi();
+  refreshSetlistSongUi({ keepChecks: true });
 }
 
 function songCheckListHtml(setlist) {
@@ -5101,7 +5149,7 @@ function songCheckListHtml(setlist) {
   return songs.map((song) => {
     const key = songWrittenKey(song);
     return `
-      <label class="check-row">
+      <label class="check-row${selected.has(song.id) ? " on" : ""}">
         <input type="checkbox" data-toggle-song="${escapeHtml(song.id)}" ${selected.has(song.id) ? "checked" : ""}>
         <span class="check-mark" aria-hidden="true"></span>
         <span class="check-copy">
@@ -5116,24 +5164,37 @@ function songCheckListHtml(setlist) {
 function bindSongCheckLists(root) {
   if (!root) return;
   root.querySelectorAll("[data-toggle-song]").forEach((input) => {
-    input.addEventListener("change", () => toggleSongInSetlist(input.dataset.toggleSong, input.checked));
+    input.addEventListener("change", () => {
+      input.closest(".check-row")?.classList.toggle("on", input.checked);
+      toggleSongInSetlist(input.dataset.toggleSong, input.checked);
+    });
   });
+}
+
+function fillSongCheckList(node, html) {
+  if (!node) return;
+  const top = node.scrollTop;
+  node.innerHTML = html;
+  bindSongCheckLists(node);
+  node.scrollTop = top;
 }
 
 function renderSongCheckLists() {
   const html = songCheckListHtml(selectedSetlist());
-  if (el.setlistAddList) {
-    el.setlistAddList.innerHTML = html;
-    bindSongCheckLists(el.setlistAddList);
-  }
-  const eventList = document.querySelector("#eventSongList");
-  if (eventList) {
-    eventList.innerHTML = html;
-    bindSongCheckLists(eventList);
-  }
+  fillSongCheckList(el.setlistAddList, html);
+  fillSongCheckList(document.querySelector("#eventSongList"), html);
 }
 
-function refreshSetlistSongUi() {
+function syncSongCheckMarks() {
+  const selected = new Set(selectedSetlist()?.songIds || []);
+  document.querySelectorAll("[data-toggle-song]").forEach((input) => {
+    const on = selected.has(input.dataset.toggleSong);
+    if (input.checked !== on) input.checked = on;
+    input.closest(".check-row")?.classList.toggle("on", on);
+  });
+}
+
+function refreshSetlistSongUi(options = {}) {
   const setlist = selectedSetlist();
   if (el.setlistPicker) {
     el.setlistPicker.innerHTML = setlist
@@ -5147,7 +5208,8 @@ function refreshSetlistSongUi() {
       button.addEventListener("click", () => openSetlistSong(button.dataset.openSongId));
     });
   }
-  renderSongCheckLists();
+  if (options.keepChecks) syncSongCheckMarks();
+  else renderSongCheckLists();
 }
 
 function updateSetlistSongOrder(songId, action) {
@@ -5289,6 +5351,53 @@ function stageSongPosition() {
   return { index, total: songs.length, songs };
 }
 
+function prefersReducedMotion() {
+  return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+}
+
+function playingSwapTargets() {
+  const nodes = [];
+  if (el.appShell?.classList.contains("stage-active")) {
+    if (el.stageContent) nodes.push(el.stageContent);
+    const title = el.stageSongTitle?.closest(".stage-mode-title");
+    if (title) nodes.push(title);
+  } else if (el.appShell?.classList.contains("song-active")) {
+    if (el.songReadContent) nodes.push(el.songReadContent);
+    const title = el.songReadTitle?.closest(".song-sheet-title");
+    if (title) nodes.push(title);
+  }
+  return nodes.filter(Boolean);
+}
+
+function fadePlayingChart(apply) {
+  chartFadePending = apply;
+  const targets = playingSwapTargets();
+  if (!targets.length || prefersReducedMotion()) {
+    window.clearTimeout(chartFadeTimer);
+    chartFadeTimer = 0;
+    const fn = chartFadePending;
+    chartFadePending = null;
+    if (fn) fn();
+    return;
+  }
+  const alreadyOut = targets.every((node) => node.classList.contains("chart-swap-out"));
+  targets.forEach((node) => node.classList.add("chart-swap-out"));
+  window.clearTimeout(chartFadeTimer);
+  chartFadeTimer = window.setTimeout(() => {
+    const fn = chartFadePending;
+    chartFadePending = null;
+    chartFadeTimer = 0;
+    if (fn) fn();
+    const next = playingSwapTargets();
+    next.forEach((node) => node.classList.add("chart-swap-out"));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        playingSwapTargets().forEach((node) => node.classList.remove("chart-swap-out"));
+      });
+    });
+  }, alreadyOut ? 40 : 240);
+}
+
 function moveSetlistStage(delta) {
   const song = selectedSong();
   if (!song) return;
@@ -5311,11 +5420,13 @@ function moveSetlistStage(delta) {
   lastSyncLine = 0;
   const keepScroll = isAutoScrolling;
   stopAutoScroll();
-  el.stageContent.scrollTop = 0;
-  if (el.songReadContent) el.songReadContent.scrollTop = 0;
-  render();
-  if (keepScroll) startAutoScroll();
   broadcastPlayhead();
+  fadePlayingChart(() => {
+    if (el.stageContent) el.stageContent.scrollTop = 0;
+    if (el.songReadContent) el.songReadContent.scrollTop = 0;
+    render();
+    if (keepScroll) startAutoScroll();
+  });
 }
 
 function applyStageStep(delta) {
@@ -6371,8 +6482,12 @@ function handleSyncMessage(message) {
       const wasIdle = activeView !== "song" && activeView !== "stage";
       applyPlayhead(message.payload, prevSong);
       const songChanged = Boolean(message.payload?.selectedSongId && selectedSongId === message.payload.selectedSongId && message.payload.selectedSongId !== prevSong);
-      if (songChanged || wasIdle) render();
-      applyBlockView();
+      const finish = () => {
+        if (songChanged || wasIdle) render();
+        applyBlockView();
+      };
+      if (songChanged) fadePlayingChart(finish);
+      else finish();
     } finally {
       applyingSync = false;
     }
@@ -7908,7 +8023,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=135").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=137").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
