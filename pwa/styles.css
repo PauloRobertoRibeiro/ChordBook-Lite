@@ -1645,6 +1645,27 @@ textarea {
   white-space: normal;
 }
 
+.app-shell.telao-active .chordpro-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 0.22em;
+  row-gap: 0;
+}
+
+.app-shell.telao-active .chord-lyric {
+  display: inline;
+  margin-right: 0;
+}
+
+.app-shell.telao-active .chord-lyric .lyric,
+.app-shell.telao-active .chordpro-line > .lyric {
+  font-weight: 700;
+  overflow-wrap: break-word;
+  white-space: normal;
+  word-break: normal;
+}
+
 .app-shell.chart-focus .song-tools-panel,
 .app-shell.chart-focus .song-read-shortcuts #songFavBtn,
 .app-shell.chart-focus .song-read-shortcuts #songEditBtn,

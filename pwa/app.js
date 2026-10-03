@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.39";
+const APP_VERSION = "1.1.40";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -3604,15 +3604,17 @@ function fitTelaoSlide() {
   const padY = (parseFloat(pad.paddingTop) || 0) + (parseFloat(pad.paddingBottom) || 0);
   const maxH = Math.max(80, host.clientHeight - padY - 8);
   const maxW = Math.max(80, host.clientWidth - padX - 8);
+  if (host.clientHeight < 120) return;
   const body = slide.querySelector(".lyric-slide-body") || slide;
   const overflowed = () => {
-    if (body.scrollHeight > maxH + 2) return true;
-    return [...slide.querySelectorAll(".stage-line, .lyric-row")].some(
-      (node) => node.scrollWidth > node.clientWidth + 2,
-    );
+    if (body.scrollHeight > maxH + 4) return true;
+    return [...slide.querySelectorAll(".lyric-row, .chord-lyric .lyric")].some((node) => {
+      const width = node.scrollWidth;
+      return width > maxW + 4 && width > (node.clientWidth || 0) + 24;
+    });
   };
-  let lo = 32;
-  let hi = Math.min(168, Math.floor(Math.min(maxW / 8, maxH / 3.1)));
+  let lo = 42;
+  let hi = Math.min(168, Math.floor(Math.min(maxW / 6, maxH / 2.8)));
   if (hi < lo) hi = lo;
   let best = lo;
   for (let step = 0; step < 16; step += 1) {
@@ -3635,8 +3637,8 @@ function scheduleFitTelaoSlide() {
 
 function fitChartToWidth(pane) {
   if (!pane) return;
-  pane.style.fontSize = "";
   if (el.appShell?.classList.contains("telao-active")) return;
+  pane.style.fontSize = "";
   if (window.matchMedia("(min-width: 768px)").matches) return;
   const avail = Math.max(80, pane.clientWidth - 4);
   const widest = () => Math.max(0, ...[...pane.querySelectorAll(".stage-line")].map((node) => node.scrollWidth));
@@ -5397,6 +5399,7 @@ function fadePlayingChart(apply) {
     const fn = chartFadePending;
     chartFadePending = null;
     if (fn) fn();
+    fitTelaoSlide();
     return;
   }
   const alreadyOut = targets.every((node) => node.classList.contains("chart-swap-out"));
@@ -5411,7 +5414,10 @@ function fadePlayingChart(apply) {
     next.forEach((node) => node.classList.add("chart-swap-out"));
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        playingSwapTargets().forEach((node) => node.classList.remove("chart-swap-out"));
+        fitTelaoSlide();
+        requestAnimationFrame(() => {
+          playingSwapTargets().forEach((node) => node.classList.remove("chart-swap-out"));
+        });
       });
     });
   }, alreadyOut ? 40 : 240);
@@ -8050,7 +8056,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=140").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=141").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
