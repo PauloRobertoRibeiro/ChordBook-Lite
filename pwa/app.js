@@ -1,6 +1,6 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.38";
+const APP_VERSION = "1.1.39";
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -3599,15 +3599,26 @@ function fitTelaoSlide() {
   const slide = el.stageContent.querySelector(".lyric-slide.on");
   const host = document.querySelector("#stageChartScroll") || el.stageContent;
   if (!slide || !host) return;
-  const maxH = Math.max(80, host.clientHeight - 12);
-  const maxW = Math.max(80, host.clientWidth - 12);
-  let lo = 16;
-  let hi = Math.min(88, Math.floor(Math.min(maxW / 7, maxH / 2.4)));
+  const pad = getComputedStyle(el.stageContent);
+  const padX = (parseFloat(pad.paddingLeft) || 0) + (parseFloat(pad.paddingRight) || 0);
+  const padY = (parseFloat(pad.paddingTop) || 0) + (parseFloat(pad.paddingBottom) || 0);
+  const maxH = Math.max(80, host.clientHeight - padY - 8);
+  const maxW = Math.max(80, host.clientWidth - padX - 8);
+  const body = slide.querySelector(".lyric-slide-body") || slide;
+  const overflowed = () => {
+    if (body.scrollHeight > maxH + 2) return true;
+    return [...slide.querySelectorAll(".stage-line, .lyric-row")].some(
+      (node) => node.scrollWidth > node.clientWidth + 2,
+    );
+  };
+  let lo = 32;
+  let hi = Math.min(168, Math.floor(Math.min(maxW / 8, maxH / 3.1)));
+  if (hi < lo) hi = lo;
   let best = lo;
-  for (let step = 0; step < 14; step += 1) {
+  for (let step = 0; step < 16; step += 1) {
     const mid = (lo + hi) / 2;
     el.stageContent.style.fontSize = `${mid}px`;
-    if (slide.scrollHeight > maxH + 2 || slide.scrollWidth > maxW + 2) hi = mid;
+    if (overflowed()) hi = mid;
     else {
       best = mid;
       lo = mid;
@@ -8039,7 +8050,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=139").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=140").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }

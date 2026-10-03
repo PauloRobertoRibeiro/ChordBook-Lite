@@ -46,6 +46,68 @@ test.describe("9. Repertório no modo palco", () => {
   });
 });
 
+test.describe("11. Telão para o público", () => {
+  test("letras grandes e centradas no ecrã", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await openApp(page, sampleRepertoire());
+    await openSetlists(page);
+    await expect(page.locator(".setlist-row").first()).toBeVisible();
+    await page.locator('[data-open-stage-id="fix-culto"]').click();
+    await expect(page.locator("#setlistPlaySheet")).toBeVisible();
+    await page.locator('[data-play-mode="stage"]').click();
+    await expect(page.locator(".app-shell")).toHaveClass(/stage-active/);
+    await expect(page.locator("#stageContent .lyric-slide.on")).toBeVisible();
+
+    await page.evaluate(() => {
+      const shell = document.querySelector(".app-shell");
+      const orig = DOMTokenList.prototype.toggle;
+      DOMTokenList.prototype.toggle = function toggleLocked(token, force) {
+        if (this === shell.classList && (token === "telao-active" || token === "hide-chords")) {
+          return orig.call(this, token, true);
+        }
+        return orig.call(this, token, force);
+      };
+      shell.classList.add("telao-active", "hide-chords");
+      window.dispatchEvent(new Event("resize"));
+    });
+    await page.waitForFunction(() => {
+      const shell = document.querySelector(".app-shell.telao-active");
+      const host = document.querySelector("#stageChartScroll");
+      const slide = document.querySelector("#stageContent .lyric-slide.on");
+      if (!shell || !host || !slide) return false;
+      const font = parseFloat(getComputedStyle(document.querySelector("#stageContent")).fontSize);
+      return host.getBoundingClientRect().height > 600 && font >= 48;
+    });
+
+    const geom = await page.evaluate(() => {
+      const slide = document.querySelector("#stageContent .lyric-slide.on");
+      const host = document.querySelector("#stageChartScroll");
+      const bar = document.querySelector(".stage-mode-bar");
+      const shell = document.querySelector(".app-shell");
+      const s = slide.getBoundingClientRect();
+      const h = host.getBoundingClientRect();
+      return {
+        slideMid: s.top + s.height / 2,
+        viewMid: window.innerHeight / 2,
+        hostHeight: h.height,
+        hostWidth: h.width,
+        viewHeight: window.innerHeight,
+        viewWidth: window.innerWidth,
+        font: parseFloat(getComputedStyle(document.querySelector("#stageContent")).fontSize),
+        titleHidden: getComputedStyle(bar).display === "none",
+        shellWidth: shell.getBoundingClientRect().width,
+      };
+    });
+
+    expect(geom.hostHeight).toBeGreaterThan(geom.viewHeight * 0.85);
+    expect(geom.hostWidth).toBeGreaterThan(geom.viewWidth * 0.9);
+    expect(Math.abs(geom.slideMid - geom.viewMid)).toBeLessThan(140);
+    expect(geom.font).toBeGreaterThanOrEqual(48);
+    expect(geom.titleHidden).toBe(true);
+    expect(geom.shellWidth).toBeGreaterThan(1200);
+  });
+});
+
 test.describe("10. Layout computador e telemóvel (emulação de ecrã)", () => {
   test("computador 1280×800 mostra navegação lateral e esconde a barra inferior", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });

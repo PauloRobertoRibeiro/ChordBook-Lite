@@ -41,6 +41,10 @@ body {
   color: var(--text);
 }
 
+body:has(.app-shell.telao-active) {
+  background: #000;
+}
+
 button, input, textarea, select { font: inherit; }
 
 button, .file-button {
@@ -1455,18 +1459,41 @@ textarea {
 .app-shell.telao-active .sync-banner,
 .app-shell.telao-active .stage-chrome,
 .app-shell.telao-active .stage-capo-badge,
-.app-shell.telao-active .stage-footer-tools {
+.app-shell.telao-active .stage-footer-tools,
+.app-shell.telao-active .stage-mode-bar,
+.app-shell.telao-active .stage-cue-note,
+.app-shell.telao-active #stagePosition {
   display: none !important;
 }
 
+.app-shell.telao-active {
+  background: #000;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100%;
+}
+
+.app-shell.telao-active .workspace {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+}
+
+.app-shell.telao-active #stageView,
+.app-shell.telao-active .stage-shell,
+.app-shell.telao-active #stageChartScroll {
+  height: 100%;
+  min-height: 0;
+}
+
 .app-shell.telao-active .stage-shell {
-  grid-template-rows: auto auto minmax(0, 1fr) 0;
+  grid-template-rows: 0 0 minmax(0, 1fr) 0;
 }
 
 .app-shell.telao-active .stage-mode-footer {
-  bottom: 14px;
+  bottom: 16px;
   left: 0;
-  opacity: 0.72;
+  opacity: 0.62;
   pointer-events: none;
   position: absolute;
   right: 0;
@@ -1480,16 +1507,20 @@ textarea {
 .app-shell.telao-active .stage-content {
   align-items: center;
   display: flex;
-  font-size: 42px;
+  font-size: 56px;
+  font-weight: 700;
   height: 100%;
   justify-content: center;
-  line-height: 1.28;
+  line-height: 1.22;
+  min-height: 0;
   overflow: hidden;
-  padding: 2vh 5vw 7vh;
+  padding: 8vh 7vw 12vh;
 }
 
-.app-shell.telao-active .stage-nav-btn {
-  opacity: 0.85;
+.app-shell.telao-active .stage-nav-btn,
+.app-shell.telao-active #stagePrevBtn,
+.app-shell.telao-active #stageNextBtn {
+  display: none !important;
 }
 
 .block-size-field {
@@ -1580,13 +1611,14 @@ textarea {
 
 .app-shell.telao-active .lyric-slide.on {
   align-content: center;
+  align-items: center;
   background: transparent;
   border: 0;
   grid-template-columns: 1fr;
   max-height: 100%;
   min-height: 0;
   overflow: hidden;
-  padding: 0 1vw;
+  padding: 0;
   width: 100%;
 }
 
@@ -1596,21 +1628,21 @@ textarea {
 
 .app-shell.telao-active .lyric-slide-body {
   font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   text-align: center;
   width: 100%;
 }
 
 .app-shell.telao-active .stage-line {
-  margin: 0 0 0.22em;
+  margin: 0 0 0.18em;
 }
 
-.app-shell.telao-active .lyric-row {
+.app-shell.telao-active .stage-content .lyric-row {
   display: block;
+  font-weight: 700;
+  overflow-wrap: break-word;
   white-space: normal;
-}
-
-.app-shell.telao-active .stage-mode-title strong {
-  font-size: 1.1rem;
 }
 
 .app-shell.chart-focus .song-tools-panel,
@@ -2210,6 +2242,12 @@ textarea {
 .app-shell.song-active .workspace {
   min-height: 0;
   overflow: hidden;
+}
+
+.app-shell.stage-active .workspace {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
 }
 
 .app-shell.stage-active #stageView,
@@ -4749,6 +4787,12 @@ textarea {
     grid-template-columns: 248px minmax(0, 1fr);
     margin: 0 auto;
     max-width: 1360px;
+  }
+
+  .app-shell.telao-active {
+    margin: 0;
+    max-width: none;
+    width: 100%;
   }
 
   .app-shell.library-active .brand,
