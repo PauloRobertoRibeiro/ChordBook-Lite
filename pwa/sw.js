@@ -1,4 +1,4 @@
-const CACHE_NAME = "chordbook-lite-v141";
+const CACHE_NAME = "chordbook-lite-v143-editor-amplo-1";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,8 +9,8 @@ const ASSETS = [
   "./backup-merge.js",
   "./cantar.html",
   "./cantar.js",
-  "./styles.css?v=141",
-  "./app.js?v=141",
+  "./styles.css?v=editor-amplo-1",
+  "./app.js?v=143",
   "./chart-core.js?v=141",
   "./share-lyrics.js?v=141",
   "./backup-merge.js?v=141",

@@ -10,7 +10,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icons/favicon.png?v=104" />
     <link rel="apple-touch-icon" href="./icons/Icon-192.png?v=104" />
-    <link rel="stylesheet" href="./styles.css?v=141" />
+    <link rel="stylesheet" href="./styles.css?v=editor-amplo-1" />
   </head>
   <body class="notranslate cb-gated" translate="no">
     <div id="cbGate" class="cb-gate" data-art="stage" role="dialog" aria-modal="true" aria-labelledby="cbGateName">
@@ -39,7 +39,7 @@
             <span data-i18n="brand.tagline">Suas músicas sempre com você</span>
           </div>
         </div>
-        <nav id="libraryRail" class="library-rail" aria-label="Filtro da biblioteca"></nav>
+        <nav id="libraryRail" class="library-rail" aria-label="Filtro da biblioteca" data-i18n-aria="library.filter"></nav>
         <nav class="nav-tabs" aria-label="Seções" data-i18n-aria="aria.sections">
           <button class="nav-tab active" data-view="library" data-i18n="nav.songs">Músicas</button>
           <button class="nav-tab" data-view="setlists" data-i18n="nav.setlists">Setlists</button>
@@ -354,10 +354,10 @@
               <header class="setlist-day-bar">
                 <button id="closeSetlistBtn" type="button" aria-label="Voltar" data-i18n-aria="common.back">‹</button>
                 <div class="setlist-day-actions">
-                  <button id="setlistEditDetailsBtn" type="button" title="Dados do evento" data-i18n-title="setlists.details" aria-label="Editar">✎</button>
-                  <button id="setlistAddBtn" type="button" title="Acrescentar música" data-i18n-title="setlists.addSong" aria-label="Adicionar">+</button>
-                  <button id="openSetlistBtn" type="button" title="Tocar" data-i18n-title="setlists.openStage" aria-label="Tocar">▶</button>
-                  <button id="setlistMoreBtn" type="button" title="Mais" data-i18n-title="nav.more" aria-label="Mais">⋯</button>
+                  <button id="setlistEditDetailsBtn" type="button" title="Dados do evento" data-i18n-title="setlists.details" data-i18n-aria="setlists.details" aria-label="Editar">✎</button>
+                  <button id="setlistAddBtn" type="button" title="Acrescentar música" data-i18n-title="setlists.addSong" data-i18n-aria="setlists.addSong" aria-label="Adicionar">+</button>
+                  <button id="openSetlistBtn" type="button" title="Tocar" data-i18n-title="setlists.openStage" data-i18n-aria="setlists.openStage" aria-label="Tocar">▶</button>
+                  <button id="setlistMoreBtn" type="button" title="Mais" data-i18n-title="nav.more" data-i18n-aria="nav.more" aria-label="Mais">⋯</button>
                 </div>
               </header>
               <div id="setlistDayMenu" class="setlist-day-menu" hidden></div>
@@ -498,7 +498,7 @@
             <p id="appVersion" class="more-version">Versão 1.1.40</p>
             <p id="trialHint" class="more-trial" hidden></p>
             <p class="more-legal" data-i18n="more.aboutLegal">Os dados ficam neste celular. Um computador só entra com o código e a sua permissão. Exporte um backup antes de desinstalar.</p>
-            <p class="more-privacy"><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
+            <p class="more-privacy" hidden><a href="./comprar.html" data-i18n="more.buy">App Android</a></p>
             <p class="more-privacy"><a href="./instalar.html" data-i18n="more.install">Instalar e partilhar</a></p>
             <p class="more-privacy"><a href="./privacy.html" data-i18n="more.privacy">Política de privacidade</a></p>
             <pre id="fileLog" class="file-log">Pronto.</pre>
@@ -753,6 +753,6 @@
     <script src="./chart-core.js?v=141" defer></script>
     <script src="./share-lyrics.js?v=141" defer></script>
     <script src="./backup-merge.js?v=141" defer></script>
-    <script src="./app.js?v=141" defer></script>
+    <script src="./app.js?v=143" defer></script>
   </body>
 </html>
