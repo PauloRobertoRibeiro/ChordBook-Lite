@@ -6764,3 +6764,102 @@ body.cb-gated .app-shell { visibility: hidden; }
   .app-shell.editing-song .form-actions { gap: 6px; padding-top: 2px; }
   .app-shell.editing-song .form-actions button { min-height: 36px; padding: 6px 12px; }
 }
+
+/* ChordBook comfortable chart reading v1: keep chords with their words. */
+.song-read-content:not(.editor-preview .song-read-content),
+.app-shell.stage-active:not(.telao-active) .stage-content {
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.45;
+  letter-spacing: normal;
+}
+#songReadContent .stage-line,
+.app-shell.stage-active:not(.telao-active) #stageContent .stage-line {
+  width: 100%; max-width: 100%; min-width: 0;
+  white-space: normal; margin-bottom: .55em;
+}
+#songReadContent .stage-line.chordpro-line,
+.app-shell.stage-active:not(.telao-active) #stageContent .stage-line.chordpro-line {
+  display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 0; row-gap: .16em;
+}
+#songReadContent .chord-lyric,
+.app-shell.stage-active:not(.telao-active) #stageContent .chord-lyric {
+  flex: 0 1 auto; max-width: 100%; min-width: 0; margin-right: 0;
+}
+#songReadContent .lyric-row,
+#songReadContent .chord-lyric .lyric,
+.app-shell.stage-active:not(.telao-active) #stageContent .lyric-row,
+.app-shell.stage-active:not(.telao-active) #stageContent .chord-lyric .lyric {
+  font-family: inherit; font-weight: 500; line-height: 1.35;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+#songReadContent .chord,
+.app-shell.stage-active:not(.telao-active) #stageContent .chord {
+  font-family: inherit; font-weight: 750; font-size: .82em;
+  line-height: 1.2; min-height: 1.2em;
+}
+#songReadContent .chord-only .chord,
+.app-shell.stage-active:not(.telao-active) #stageContent .chord-only .chord {
+  white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0;
+}
+@media (max-width: 1023px) {
+  .app-shell.song-active .song-read-layout,
+  .app-shell.song-active .song-sheet { min-width: 0; max-width: 100%; }
+  #songReadContent,
+  .app-shell.stage-active:not(.telao-active) #stageContent {
+    padding: 12px clamp(12px, 3.5vw, 24px) 32px;
+    font-size: max(20px, var(--stage-font, 22px));
+    overflow-x: hidden;
+  }
+  #songReadContent .lyric-slide,
+  .app-shell.stage-active:not(.telao-active) #stageContent .lyric-slide {
+    min-width: 0; max-width: 100%; padding: 10px 0 14px;
+  }
+  .app-shell.song-active .song-sheet-title strong {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(20px, 5.5vw, 28px); line-height: 1.15;
+    overflow-wrap: anywhere; letter-spacing: -.015em;
+  }
+}
+
+/* Subtle selection leaves the chart easy to read on a light background. */
+.app-shell.song-active #songReadContent .lyric-slide.on {
+  background: transparent;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+
+/* ChordBook worship history v1 */
+.worship-history { box-sizing:border-box; width:min(920px,96vw); max-width:96vw; max-height:92vh; max-height:92dvh; padding:24px; border:1px solid var(--line,#b7c5cd); border-radius:20px; background:var(--bg,#f7f9fb); color:var(--text,#152b3c); font:inherit; overflow-y:auto; }
+.worship-history::backdrop { background:rgba(0,0,0,.6); }
+.worship-history *, .worship-history *::before,.worship-history *::after { box-sizing:border-box; min-width:0; }
+.worship-history header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.worship-history h2 { margin:0; font-size:clamp(22px,4vw,30px); }
+.worship-history p { margin:8px 0; overflow-wrap:anywhere; }
+.worship-history label { display:flex; flex-direction:column; gap:6px; font-weight:600; }
+.worship-history input,.worship-history select { width:100%; max-width:100%; min-height:46px; padding:10px; font:inherit; border:1px solid var(--line,#b7c5cd); border-radius:9px; background:var(--panel,#fff); color:inherit; }
+.worship-history button { min-height:44px; padding:8px 14px; border-radius:10px; font:inherit; cursor:pointer; }
+.worship-history details { margin:20px 0; border:1px solid var(--line,#b7c5cd); border-radius:12px; padding:14px; }
+.worship-history summary { cursor:pointer; font-weight:700; }
+.worship-history form { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding-top:18px; }
+.worship-history [hidden] { display:none !important; }
+.worship-history .history-last,.worship-history .history-actions { grid-column:1/-1; }
+.worship-history .history-last { padding:10px; border-inline-start:3px solid var(--accent,#2b8b91); }
+.worship-history .history-last:empty { display:none; }
+.worship-history .history-actions { display:flex; gap:10px; }
+.worship-history .history-filters { display:grid; grid-template-columns:2fr 1fr auto; gap:12px; align-items:start; }
+.worship-history .history-filters button { margin-top:24px; }
+.worship-history .history-day { margin:20px 0; }
+.worship-history .history-day h3 { font-size:18px; border-bottom:2px solid var(--accent,#2b8b91); padding-bottom:8px; }
+.worship-history article { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line,#b7c5cd); }
+.worship-history .history-row-actions { display:flex; gap:8px; flex-shrink:0; }
+.worship-history .history-note { font-size:13px; opacity:.8; margin-top:26px; }
+.worship-history .history-empty { padding:24px 0; }
+.worship-history #historyStatus { font-weight:600; }
+@media(max-width:600px) {
+ .worship-history { padding:16px; border-radius:14px; }
+ .worship-history form,.worship-history .history-filters { grid-template-columns:1fr; }
+ .worship-history .history-filters button { margin-top:0; justify-self:start; }
+ .worship-history article { align-items:flex-start; flex-direction:column; }
+ .worship-history header button { padding:8px; }
+}
+/* End ChordBook worship history v1 */

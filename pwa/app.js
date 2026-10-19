@@ -1,6 +1,9 @@
 const STORAGE_KEY = "chordbook.pwa.v1";
 const GATE_KEY = "chordbook-lite-in";
-const APP_VERSION = "1.1.40";
+const APP_VERSION = "1.1.42";
+// Teste fechado da Play: a app abre por completo, sem preço, prova nem ecrã de compra.
+// Passar a false só quando o preço for definido, depois deste período.
+const PLAY_TESTING = true;
 const LOOK_KEY = "chordbook.look.v1";
 const SETLIST_PLAY_KEY = "chordbook.setlistPlay.v1";
 const TELAO_KEY = "chordbook.telao.v1";
@@ -285,6 +288,7 @@ const I18N = {
     "agenda.field.speaker": "Quem predica",
     "agenda.field.host": "Preside",
     "agenda.field.theme": "Tema da mensagem",
+    "agenda.themePh": "Escreva aqui...",
     "agenda.field.scripture": "Referência bíblica",
     "agenda.field.musicLead": "Dirigente Alabanza",
     "agenda.field.voices": "Vozes",
@@ -758,6 +762,7 @@ const I18N = {
     "agenda.field.speaker": "Quién predica",
     "agenda.field.host": "Preside",
     "agenda.field.theme": "Tema del mensaje",
+    "agenda.themePh": "Escribe aquí...",
     "agenda.field.scripture": "Referencia bíblica",
     "agenda.field.musicLead": "Dirigente Alabanza",
     "agenda.field.voices": "Voces",
@@ -1231,6 +1236,7 @@ const I18N = {
     "agenda.field.speaker": "Speaker",
     "agenda.field.host": "Host",
     "agenda.field.theme": "Message theme",
+    "agenda.themePh": "Write here...",
     "agenda.field.scripture": "Scripture",
     "agenda.field.musicLead": "Music leader",
     "agenda.field.voices": "Vocals",
@@ -1508,6 +1514,7 @@ function applyI18n() {
 function setLanguage(language) {
   if (!I18N[language] || state.language === language) return;
   state.language = language;
+  applyDemoLanguage(state);
   persist();
   render();
 }
@@ -1549,8 +1556,17 @@ function androidLicenseOn() {
 let licenseUnlocked = false;
 
 function trialAppliesHere() {
-  if (licenseUnlocked) return false;
+  if (PLAY_TESTING || licenseUnlocked) return false;
   return true;
+}
+
+function hideShopLinks() {
+  document.querySelectorAll('a[href="./comprar.html"]').forEach((link) => {
+    const line = link.closest("p");
+    if (line && line.querySelectorAll("a").length === 1) line.hidden = true;
+    else link.hidden = true;
+  });
+  if (PLAY_TESTING) document.getElementById("licenseSheet")?.remove();
 }
 
 function phoneCompanionOpen() {
@@ -1674,6 +1690,12 @@ function showLicenseGate() {
 }
 
 function refreshTrialGate() {
+  if (PLAY_TESTING) {
+    hideLicenseGate();
+    syncTrialHints(null);
+    hideShopLinks();
+    return;
+  }
   if (licenseUnlocked) {
     hideLicenseGate();
     syncTrialHints(null);
@@ -1746,6 +1768,12 @@ function showLicenseError(code) {
 }
 
 async function bootLicense() {
+  if (PLAY_TESTING) {
+    hideLicenseGate();
+    syncTrialHints(null);
+    hideShopLinks();
+    return;
+  }
   licenseUnlocked = false;
   if (androidLicenseOn()) {
     let stored = {};
@@ -1805,6 +1833,112 @@ document.getElementById("licenseActivate")?.addEventListener("click", () => {
 document.getElementById("licenseSyncBtn")?.addEventListener("click", () => {
   startComputerHost({ openSheet: false });
 });
+
+function guessLanguage() {
+  const nav = String(navigator.language || "pt").toLowerCase();
+  if (nav.startsWith("es")) return "es";
+  if (nav.startsWith("en")) return "en";
+  return "pt";
+}
+
+function demoPhrase(pack, language) {
+  const lang = I18N[language] ? language : "pt";
+  return pack[lang] || pack.pt;
+}
+
+const DEMO_SONG_TEXT = {
+  "demo-abrigo": {
+    title: { pt: "Meu Abrigo", es: "Mi refugio", en: "My shelter" },
+    artist: { pt: "Exemplo", es: "Ejemplo", en: "Example" },
+    category: { pt: "Louvor", es: "Alabanza", en: "Praise" },
+  },
+  "demo-caminho": {
+    title: { pt: "Caminho de Paz", es: "Camino de paz", en: "Path of peace" },
+    artist: { pt: "Exemplo", es: "Ejemplo", en: "Example" },
+    category: { pt: "Adoração", es: "Adoración", en: "Worship" },
+  },
+  "demo-graca": {
+    artist: { pt: "Tradicional", es: "Tradicional", en: "Traditional" },
+    category: { pt: "Hinos", es: "Himnos", en: "Hymns" },
+  },
+  "demo-esperanca": {
+    title: { pt: "Esperança Viva", es: "Esperanza viva", en: "Living hope" },
+    artist: { pt: "Exemplo", es: "Ejemplo", en: "Example" },
+    category: { pt: "Celebração", es: "Celebración", en: "Celebration" },
+  },
+  "demo-acustico": {
+    title: { pt: "Ensaio Acústico", es: "Ensayo acústico", en: "Acoustic rehearsal" },
+    artist: { pt: "Exemplo", es: "Ejemplo", en: "Example" },
+    category: { pt: "Ensaio", es: "Ensayo", en: "Rehearsal" },
+    cue: { pt: "Conta quatro e entra", es: "Cuenta cuatro y entra", en: "Count four, then enter" },
+  },
+};
+
+const DEMO_SETLIST_TEXT = {
+  "demo-setlist-domingo": {
+    title: { pt: "Culto Domingo", es: "Culto del domingo", en: "Sunday service" },
+    notes: { pt: "Chegar 20 min antes", es: "Llegar 20 min antes", en: "Arrive 20 min early" },
+    service: {
+      leader: { pt: "Irmão", es: "Hermano", en: "Brother", former: ["Irmão Paulo", "Hermano Pablo", "Brother Paul"] },
+      announcements: { pt: "Irmã", es: "Hermana", en: "Sister", former: ["Irmã Maria", "Hermana María", "Sister Mary"] },
+      worshipTeam: { pt: "Ministério de louvor", es: "Ministerio de alabanza", en: "Worship team" },
+      preacher: { pt: "Pastor João", es: "Pastor Juan", en: "Pastor John" },
+      communion: { pt: "Pastor João", es: "Pastor Juan", en: "Pastor John" },
+    },
+  },
+  "demo-setlist-ensaio": {
+    title: { pt: "Ensaio da Semana", es: "Ensayo de la semana", en: "Weekly rehearsal" },
+    notes: { pt: "Checar tons, capo e entradas", es: "Revisar tonos, cejilla y entradas", en: "Check keys, capo and entries" },
+  },
+};
+
+function demoTextMatches(texts, current) {
+  if (!texts) return false;
+  const known = Object.entries(texts).flatMap(([key, value]) => (key === "former" ? value : [value]));
+  return known.includes(current);
+}
+
+function applyDemoLanguage(library) {
+  const lang = I18N[library?.language] ? library.language : "pt";
+  const rewrite = (item, spec) => {
+    if (!item || !spec) return;
+    Object.entries(spec).forEach(([field, texts]) => {
+      const next = texts[lang];
+      if (!next || typeof next !== "string") return;
+      const current = String(item[field] || "");
+      if (!current || demoTextMatches(texts, current)) item[field] = next;
+    });
+  };
+  (library.songs || []).forEach((song) => rewrite(song, DEMO_SONG_TEXT[song.id]));
+  (library.setlists || []).forEach((setlist) => {
+    const spec = DEMO_SETLIST_TEXT[setlist.id];
+    if (!spec) return;
+    const { service, ...fields } = spec;
+    rewrite(setlist, fields);
+    if (service) {
+      rewrite(setlist.service, service);
+      const values = setlist.service?.values;
+      if (values && typeof values === "object") {
+        [
+          ["musicLead", service.leader],
+          ["voices", service.worshipTeam],
+          ["speaker", service.preacher],
+          ["communion", service.communion],
+        ].forEach(([key, texts]) => {
+          const raw = values[key];
+          if (typeof raw === "string") {
+            const next = texts?.[lang];
+            if (typeof next === "string" && (!raw || demoTextMatches(texts, raw))) values[key] = next;
+          } else if (raw && typeof raw.extra === "string") {
+            const next = texts?.[lang];
+            if (typeof next === "string" && (!raw.extra || demoTextMatches(texts, raw.extra))) raw.extra = next;
+          }
+        });
+      }
+    }
+  });
+  return library;
+}
 
 const state = loadState();
 let activeView = "library";
@@ -3037,7 +3171,7 @@ function renderEditor() {
 
 function songChartHtml(song, options = {}) {
   const lines = unfoldStackedChords(song.lines);
-  return renderChartLines(lines, song.transposeValue || 0, { ...options, mirror: true });
+  return renderChartLines(lines, song.transposeValue || 0, { ...options, mirror: options.mirror ?? false });
 }
 
 function renderSongView() {
@@ -3636,29 +3770,10 @@ function scheduleFitTelaoSlide() {
 }
 
 function fitChartToWidth(pane) {
-  if (!pane) return;
-  if (el.appShell?.classList.contains("telao-active")) return;
+  if (!pane || el.appShell?.classList.contains("telao-active")) return;
+  // Wrap chord/word groups rather than shrink the whole song.
   pane.style.fontSize = "";
-  if (window.matchMedia("(min-width: 768px)").matches) return;
-  const avail = Math.max(80, pane.clientWidth - 4);
-  const widest = () => Math.max(0, ...[...pane.querySelectorAll(".stage-line")].map((node) => node.scrollWidth));
-  const start = parseFloat(getComputedStyle(pane).fontSize) || 18;
-  if (widest() <= avail) return;
-  let lo = 9;
-  let hi = start;
-  let best = lo;
-  for (let step = 0; step < 12; step += 1) {
-    const mid = (lo + hi) / 2;
-    pane.style.fontSize = `${mid}px`;
-    if (widest() > avail + 1) hi = mid;
-    else {
-      best = mid;
-      lo = mid;
-    }
-  }
-  pane.style.fontSize = `${best}px`;
 }
-
 function scheduleFitChartWidth() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -4592,7 +4707,7 @@ function saveSong(event) {
     capo: Number(el.capo.value || 0),
     cue: String(el.cue?.value || "").trim().slice(0, 80),
     blockSize: songBlockSizeFromUi(),
-    lines: String(el.lines.value || "").replace(/\r/g, "").split("\n"),
+    lines: foldStackedChords(String(el.lines.value || "").replace(/\r/g, "").split("\n")),
     updatedAt: new Date().toISOString(),
     revision: Number(song.revision || 1) + 1,
   });
@@ -5488,7 +5603,7 @@ function handleStageHotkeys(event) {
 }
 
 function addSample() {
-  const demo = demoLibrary();
+  const demo = demoLibrary(state.language);
   const songIds = new Set(state.songs.map((song) => song.id));
   const setlistIds = new Set(state.setlists.map((setlist) => setlist.id));
   const songs = demo.songs.filter((song) => !songIds.has(song.id));
@@ -5511,6 +5626,7 @@ function toggleTheme() {
 }
 
 function renderMore() {
+  renderWorshipHistoryShortcut();
   applyTheme();
   if (el.fileLog && el.fileLog.textContent === "Pronto.") el.fileLog.textContent = t("more.ready");
   renderLookStudio();
@@ -5564,6 +5680,7 @@ function repertoireBackupPayload() {
     setlists: state.setlists,
     team: state.team,
     agenda: state.agenda,
+    worshipHistory: normalizeWorshipHistory(state.worshipHistory),
     settings: exportableSettings(),
   };
 }
@@ -5662,6 +5779,7 @@ async function importFile(event) {
     const data = JSON.parse(await file.text());
     const prepared = prepareImport(data);
     const plan = ChordBookBackup.planImport(state, prepared);
+    plan.worshipHistory = normalizeWorshipHistory(data.worshipHistory);
     plan.resultLabel = prepared.resultLabel;
     plan.selectedSongId = prepared.selectedSongId;
     if (ChordBookBackup.hasConflicts(plan)) {
@@ -5728,6 +5846,7 @@ function commitImportPlan(plan, decision) {
   if (!state.setlists.some((setlist) => setlist.id === selectedSetlistId)) {
     selectedSetlistId = state.setlists[0]?.id ?? null;
   }
+  state.worshipHistory = mergeWorshipHistory(state.worshipHistory, plan.worshipHistory, decision);
   const saved = persist();
   closeImportConflictSheet();
   pendingImport = null;
@@ -6058,9 +6177,9 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     if (!Array.isArray(saved.songs)) {
-      return demoLibrary();
+      return demoLibrary(guessLanguage());
     }
-    return {
+    const loaded = {
       songs: uniqueById((saved.songs || []).map(normalizeSong)),
       setlists: uniqueById((saved.setlists || []).map(normalizeSetlist)),
       theme: saved.theme === "dark" || saved.theme === "auto" ? saved.theme : "light",
@@ -6071,20 +6190,26 @@ function loadState() {
       preferAutoScroll: Boolean(saved.preferAutoScroll),
       team: normalizeTeam(saved.team),
       agenda: normalizeAgenda(saved.agenda),
+      worshipHistory: normalizeWorshipHistory(saved.worshipHistory),
     };
+    applyDemoLanguage(loaded);
+    return loaded;
   } catch {
-    return demoLibrary();
+    return demoLibrary(guessLanguage());
   }
 }
 
-function demoLibrary() {
+function demoLibrary(language) {
+  const lang = I18N[language] ? language : guessLanguage();
+  const text = (id, field) => demoPhrase((DEMO_SONG_TEXT[id] || {})[field] || { pt: "" }, lang);
+  const listText = (id, field) => demoPhrase((DEMO_SETLIST_TEXT[id] || {})[field] || { pt: "" }, lang);
   const now = new Date().toISOString();
   const songs = [
     normalizeSong({
       id: "demo-abrigo",
-      title: "Meu Abrigo",
-      artist: "Exemplo",
-      category: "Louvor",
+      title: text("demo-abrigo", "title"),
+      artist: text("demo-abrigo", "artist"),
+      category: text("demo-abrigo", "category"),
       isFavorite: true,
       lines: [
         "{key: G}",
@@ -6101,9 +6226,9 @@ function demoLibrary() {
     }),
     normalizeSong({
       id: "demo-caminho",
-      title: "Caminho de Paz",
-      artist: "Exemplo",
-      category: "Adoração",
+      title: text("demo-caminho", "title"),
+      artist: text("demo-caminho", "artist"),
+      category: text("demo-caminho", "category"),
       lines: [
         "{key: D}",
         "[D]Leva meus passos ao teu [A]rio",
@@ -6120,8 +6245,8 @@ function demoLibrary() {
     normalizeSong({
       id: "demo-graca",
       title: "Amazing Grace",
-      artist: "Tradicional",
-      category: "Hinos",
+      artist: text("demo-graca", "artist"),
+      category: text("demo-graca", "category"),
       capo: 0,
       lines: [
         "{key: C}",
@@ -6133,9 +6258,9 @@ function demoLibrary() {
     }),
     normalizeSong({
       id: "demo-esperanca",
-      title: "Esperança Viva",
-      artist: "Exemplo",
-      category: "Celebração",
+      title: text("demo-esperanca", "title"),
+      artist: text("demo-esperanca", "artist"),
+      category: text("demo-esperanca", "category"),
       isFavorite: true,
       lines: [
         "{key: A}",
@@ -6152,11 +6277,11 @@ function demoLibrary() {
     }),
     normalizeSong({
       id: "demo-acustico",
-      title: "Ensaio Acústico",
-      artist: "Exemplo",
-      category: "Ensaio",
+      title: text("demo-acustico", "title"),
+      artist: text("demo-acustico", "artist"),
+      category: text("demo-acustico", "category"),
       capo: 2,
-      cue: "Conta quatro e entra",
+      cue: text("demo-acustico", "cue"),
       lines: [
         "{key: E}",
         "[E]Conta quatro, respira e [B/D#]vai",
@@ -6173,31 +6298,31 @@ function demoLibrary() {
   const setlists = [
     normalizeSetlist({
       id: "demo-setlist-domingo",
-      title: "Culto Domingo",
+      title: listText("demo-setlist-domingo", "title"),
       songIds: ["demo-abrigo", "demo-esperanca", "demo-graca"],
-      notes: "Chegar 20 min antes",
+      notes: listText("demo-setlist-domingo", "notes"),
       createdAt: now,
       service: {
         date: nextSundayIso(),
         opening: "Piano — Ana",
-        leader: "Irmão Paulo",
-        announcements: "Irmã Maria",
-        worshipTeam: "Ministério de louvor",
-        preacher: "Pastor João",
+        leader: demoPhrase(DEMO_SETLIST_TEXT["demo-setlist-domingo"].service.leader, lang),
+        announcements: demoPhrase(DEMO_SETLIST_TEXT["demo-setlist-domingo"].service.announcements, lang),
+        worshipTeam: demoPhrase(DEMO_SETLIST_TEXT["demo-setlist-domingo"].service.worshipTeam, lang),
+        preacher: demoPhrase(DEMO_SETLIST_TEXT["demo-setlist-domingo"].service.preacher, lang),
         preacherRole: "pastor",
-        communion: "Pastor João",
+        communion: demoPhrase(DEMO_SETLIST_TEXT["demo-setlist-domingo"].service.communion, lang),
       },
     }),
     normalizeSetlist({
       id: "demo-setlist-ensaio",
-      title: "Ensaio da Semana",
+      title: listText("demo-setlist-ensaio", "title"),
       songIds: ["demo-acustico", "demo-caminho", "demo-abrigo"],
-      notes: "Checar tons, capo e entradas",
+      notes: listText("demo-setlist-ensaio", "notes"),
       createdAt: now,
     }),
   ];
 
-  return { songs, setlists, theme: "light", language: "pt", showChords: true, showLyrics: true, focusChart: false, preferAutoScroll: false, team: normalizeTeam(), agenda: normalizeAgenda() };
+  return { songs, setlists, theme: "light", language: lang, showChords: true, showLyrics: true, focusChart: false, preferAutoScroll: false, team: normalizeTeam(), agenda: normalizeAgenda() };
 }
 
 function persist(options = {}) {
@@ -6315,6 +6440,7 @@ function librarySnapshot() {
     setlists: state.setlists,
     team: state.team,
     agenda: state.agenda,
+    worshipHistory: normalizeWorshipHistory(state.worshipHistory),
     ...playheadSnapshot(),
   };
 }
@@ -6415,6 +6541,7 @@ function applySyncState(payload, notifyKey, options = {}) {
     if (payload.team) state.team = normalizeTeam(payload.team);
     if (payload.agenda) state.agenda = normalizeAgenda(payload.agenda);
   }
+  state.worshipHistory = mergeWorshipHistory(state.worshipHistory, payload.worshipHistory);
   const prevSongId = selectedSongId;
   if (payload.selectedSongId && state.songs.some((song) => song.id === payload.selectedSongId)) {
     selectedSongId = payload.selectedSongId;
@@ -7208,7 +7335,8 @@ function renderEventOrderHtml(setlist) {
         <section class="order-block">
           <h3>${escapeHtml(block.title)}</h3>
           ${block.speaker ? `<p class="order-line"><span>${escapeHtml(block.speakerLabel)}:</span> <strong>${escapeHtml(block.speaker)}</strong></p>` : ""}
-          ${block.theme || block.scripture ? `<p class="order-line"><span>${escapeHtml(block.themeLabel)}:</span> ${[block.theme ? `“${escapeHtml(block.theme)}”` : "", escapeHtml(block.scripture || "")].filter(Boolean).join(" ")}</p>` : ""}
+          <p class="order-line"><span>${escapeHtml(block.themeLabel)}:</span> ${block.theme ? `“${escapeHtml(block.theme)}”` : `<span class="order-placeholder">${escapeHtml(t("agenda.themePh"))}</span>`}</p>
+          ${block.scripture ? `<p class="order-line"><span>${escapeHtml(t("agenda.field.scripture"))}:</span> ${escapeHtml(block.scripture)}</p>` : ""}
         </section>
       `;
     }
@@ -7706,7 +7834,8 @@ function renderEventFieldControl(field, value) {
   if (field.kind === "textarea") {
     return `<textarea data-field-id="${escapeHtml(field.id)}" data-kind="textarea">${escapeHtml(String(value || ""))}</textarea>`;
   }
-  return `<input data-field-id="${escapeHtml(field.id)}" data-kind="text" value="${escapeHtml(String(value || ""))}" />`;
+  const placeholder = field.id === "theme" ? ` placeholder="${escapeHtml(t("agenda.themePh"))}"` : "";
+  return `<input data-field-id="${escapeHtml(field.id)}" data-kind="text" value="${escapeHtml(String(value || ""))}"${placeholder} />`;
 }
 
 function normalizeSetlist(setlist) {
@@ -7741,7 +7870,12 @@ function normalizeService(service) {
   });
   if (!values.opening && src.opening) values.opening = src.opening;
   if (!values.notes && src.notes) values.notes = src.notes;
-  if (!values.scripture && src.announcements) values.scripture = src.announcements;
+  const announcementNames = DEMO_SETLIST_TEXT["demo-setlist-domingo"]?.service?.announcements;
+  if (demoTextMatches(announcementNames, values.scripture)) values.scripture = "";
+  if (demoTextMatches(announcementNames, values.theme)) values.theme = "";
+  if (!values.scripture && src.announcements && !demoTextMatches(announcementNames, src.announcements)) {
+    values.scripture = src.announcements;
+  }
   if (!values.communion && src.communion) values.communion = src.communion;
   if (!values.speaker && src.preacher) values.speaker = src.preacher;
   if (!values.musicLead && src.leader) values.musicLead = src.leader;
@@ -7904,9 +8038,8 @@ function formatServiceProgram(setlist) {
     if (block.type === "preach") {
       lines.push(block.title);
       if (block.speaker) lines.push(`  ${block.speakerLabel}: ${block.speaker}`);
-      if (block.theme || block.scripture) {
-        lines.push(`  ${block.themeLabel}: ${[block.theme ? `“${block.theme}”` : "", block.scripture].filter(Boolean).join(" ")}`);
-      }
+      if (block.theme) lines.push(`  ${block.themeLabel}: “${block.theme}”`);
+      if (block.scripture) lines.push(`  ${t("agenda.field.scripture")}: ${block.scripture}`);
       lines.push("");
       return;
     }
@@ -7979,7 +8112,22 @@ async function shareServiceWhatsApp() {
   }
 }
 
+window.ChordBookFileResult = function (status, name) {
+  const lang = state.language;
+  const copy = {
+    pt: { saved: "Arquivo guardado: ", error: "Nao foi possivel guardar o arquivo.", cancelled: "Gravacao cancelada.", busy: "Conclua a gravacao que ja esta aberta." },
+    es: { saved: "Archivo guardado: ", error: "No se pudo guardar el archivo.", cancelled: "Guardado cancelado.", busy: "Termine el guardado que ya esta abierto." },
+    en: { saved: "File saved: ", error: "Could not save the file.", cancelled: "Save cancelled.", busy: "Finish the save dialog already open." },
+  }[lang] || { saved: "File saved: ", error: "Could not save the file.", cancelled: "Save cancelled.", busy: "Finish the save dialog already open." };
+  notify(status === "saved" ? copy.saved + name : copy[status] || copy.error);
+};
+
 function downloadJson(fileName, data) {
+  if (typeof window.ChordBookAndroid?.saveTextFile === "function") {
+    try { window.ChordBookAndroid.saveTextFile(fileName, JSON.stringify(data, null, 2)); }
+    catch { window.ChordBookFileResult("error", fileName); }
+    return;
+  }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -8056,7 +8204,7 @@ function registerServiceWorker() {
     sessionStorage.setItem("cb-sw-reloaded", "1");
     location.reload();
   });
-  navigator.serviceWorker.register("./sw.js?v=141").then((reg) => {
+  navigator.serviceWorker.register("./sw.js?v=143").then((reg) => {
     reg.update().catch(() => {});
   }).catch(() => {});
 }
@@ -8089,3 +8237,150 @@ async function releaseStageWakeLock() {
   }
   stageWakeLock = null;
 }
+
+
+/* ChordBook worship history v1 — manual records, separate from practice. */
+function normalizeWorshipHistory(raw) {
+  if (!Array.isArray(raw)) return [];
+  const byId = new Map();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const text = (v, n) => typeof v === 'string' ? v.trim().slice(0, n) : '';
+    const id = text(item.id, 150), date = text(item.date, 10), title = text(item.title, 300), singer = text(item.singer, 300);
+    const parsed = new Date(date + 'T12:00:00');
+    if (!id || !title || !singer || !/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(parsed) || historyLocalDate(parsed) !== date) continue;
+    const next = { id, date, title, singer, songId: text(item.songId, 150), deleted: item.deleted === true,
+      updatedAt: Number.isFinite(Date.parse(item.updatedAt)) ? item.updatedAt : '1970-01-01T00:00:00.000Z' };
+    const old = byId.get(id);
+    if (!old || Date.parse(next.updatedAt) > Date.parse(old.updatedAt)) byId.set(id, next);
+  }
+  return [...byId.values()];
+}
+function mergeWorshipHistory(local, incoming, decision = 'auto') {
+  const byId = new Map(normalizeWorshipHistory(local).map(r => [r.id, r]));
+  for (const next of normalizeWorshipHistory(incoming)) {
+    const old = byId.get(next.id);
+    if (!old || (decision !== 'keep' && Date.parse(next.updatedAt) > Date.parse(old.updatedAt))) byId.set(next.id, next);
+  }
+  return [...byId.values()];
+}
+function historyLocalDate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function historyWords(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+function historyText(key) {
+  const copy = {
+    pt: { title:'Histórico de louvores', lead:'Consulte o que já foi cantado e quem escolheu/cantou.', add:'Registrar música cantada', date:'Data em que foi cantada', singer:'Quem escolheu / cantou', singerHint:'Ex.: Ana, Paulo ou Grupo de louvor', song:'Música', choose:'Selecione na biblioteca', other:'Outra música (digitar título)', manual:'Título da música', save:'Salvar registro', cancel:'Cancelar', close:'Fechar', search:'Buscar música ou cantor', month:'Mês e ano', all:'Todos os meses', empty:'Nenhum registro encontrado.', start:'Registre as músicas já cantadas para consultar aqui.', never:'Nenhum registro anterior desta música.', last:'Última vez', times:'vez(es) registrada(s)', edit:'Editar', remove:'Excluir', confirm:'Excluir este registro do histórico?', saved:'Registro salvo.', duplicate:'Este registro já existe para esta data, música e cantor.', invalid:'Informe uma data até hoje, uma música e quem escolheu/cantou.', count:'registro(s)', error:'Não foi possível salvar. O registro anterior foi mantido.', note:'Só registros confirmados por você. Ensaiar ou abrir uma música não cria registros. Incluído no backup do repertório.', clear:'Limpar filtros', editing:'Editar registro' },
+    es: { title:'Historial de alabanzas', lead:'Consulta qué se cantó y quién eligió/cantó.', add:'Registrar canción cantada', date:'Fecha en que se cantó', singer:'Quién eligió / cantó', singerHint:'Ej.: Ana, Paulo o Grupo de alabanza', song:'Canción', choose:'Selecciona de la biblioteca', other:'Otra canción (escribir título)', manual:'Título de la canción', save:'Guardar registro', cancel:'Cancelar', close:'Cerrar', search:'Buscar canción o cantante', month:'Mes y año', all:'Todos los meses', empty:'No hay registros.', start:'Registra las canciones cantadas para consultarlas aquí.', never:'Sin registros anteriores de esta canción.', last:'Última vez', times:'vez/veces registrada(s)', edit:'Editar', remove:'Eliminar', confirm:'¿Eliminar este registro del historial?', saved:'Registro guardado.', duplicate:'Ya existe este registro para esta fecha, canción y cantante.', invalid:'Indica una fecha hasta hoy, una canción y quién eligió/cantó.', count:'registro(s)', error:'No se pudo guardar. Se conservó el registro anterior.', note:'Solo registros confirmados por ti. Ensayar o abrir una canción no crea registros. Incluido en la copia del repertorio.', clear:'Limpiar filtros', editing:'Editar registro' },
+    en: { title:'Worship history', lead:'See what was sung and who chose/sang it.', add:'Record a sung song', date:'Date sung', singer:'Who chose / sang', singerHint:'E.g. Ana, Paulo or Worship team', song:'Song', choose:'Choose from library', other:'Other song (type title)', manual:'Song title', save:'Save record', cancel:'Cancel', close:'Close', search:'Search song or singer', month:'Month and year', all:'All months', empty:'No matching records.', start:'Record songs already sung to consult them here.', never:'No previous records for this song.', last:'Last sung', times:'recorded time(s)', edit:'Edit', remove:'Delete', confirm:'Delete this history record?', saved:'Record saved.', duplicate:'This date, song and singer are already recorded.', invalid:'Enter a date up to today, a song and who chose/sang it.', count:'record(s)', error:'Could not save. The previous record was kept.', note:'Only records confirmed by you. Practice or opening a song creates no records. Included in repertoire backups.', clear:'Clear filters', editing:'Edit record' }
+  };
+  return (copy[state.language] || copy.pt)[key] || key;
+}
+function openWorshipHistory() {
+  const h = escapeHtml, txt = k => h(historyText(k));
+  document.getElementById('worshipHistoryDialog')?.remove();
+  const dialog = document.createElement('dialog');
+  dialog.id = 'worshipHistoryDialog';
+  dialog.className = 'worship-history';
+  dialog.setAttribute('aria-labelledby', 'historyTitle');
+  dialog.innerHTML = `<header><div><h2 id="historyTitle">${txt('title')}</h2><p>${txt('lead')}</p></div><button type="button" id="historyClose">${txt('close')}</button></header>
+    <details id="historyEntry"><summary>${txt('add')}</summary><form id="historyForm">
+    <label>${txt('date')}<input id="historyDate" type="date" required max="${historyLocalDate()}" value="${historyLocalDate()}"></label>
+    <label>${txt('singer')}<input id="historySinger" maxlength="300" required placeholder="${txt('singerHint')}" list="historySingers"></label><datalist id="historySingers"></datalist>
+    <label>${txt('song')}<select id="historySong" required><option value="">${txt('choose')}</option>${[...state.songs].sort((a,b)=>a.title.localeCompare(b.title)).map(s=>`<option value="${h(s.id)}">${h(s.title)}</option>`).join('')}<option value="__manual__">${txt('other')}</option></select></label>
+    <label id="historyManualLabel" hidden>${txt('manual')}<input id="historyManual" maxlength="300"></label>
+    <p id="historyLast" class="history-last" aria-live="polite"></p>
+    <div class="history-actions"><button type="submit" class="primary-action">${txt('save')}</button><button type="button" id="historyCancel">${txt('cancel')}</button></div>
+    </form></details>
+    <div class="history-filters"><label>${txt('search')}<input id="historySearch" type="search" placeholder="${txt('search')}"></label><label>${txt('month')}<input id="historyMonth" type="month" aria-describedby="historyMonthHint"><small id="historyMonthHint">${txt('all')}</small></label><button type="button" id="historyClear">${txt('clear')}</button></div>
+    <p id="historyStatus" role="status"></p><div id="historyResults"></div><p class="history-note">${txt('note')}</p>`;
+  document.body.append(dialog);
+  const get = id => dialog.querySelector('#' + id);
+  let editingId = '';
+  const records = () => normalizeWorshipHistory(state.worshipHistory).filter(r=>!r.deleted);
+  const dateText = value => new Date(value+'T12:00:00').toLocaleDateString({pt:'pt-PT',es:'es-ES',en:'en-GB'}[state.language] || 'pt-PT');
+  function songValue() {
+    const song = state.songs.find(s=>s.id === get('historySong').value);
+    return { songId: song?.id || '', title: song?.title || get('historyManual').value.trim() };
+  }
+  function showLast() {
+    const song = songValue();
+    const matches = records().filter(r=>r.id!==editingId && r.date<=historyLocalDate() && ((song.songId && r.songId===song.songId) || historyWords(r.title)===historyWords(song.title))).sort((a,b)=>b.date.localeCompare(a.date));
+    get('historyLast').textContent = !song.title ? '' : matches.length ? `${historyText('last')}: ${dateText(matches[0].date)} · ${matches[0].singer} · ${matches.length} ${historyText('times')}` : historyText('never');
+  }
+  function draw() {
+    const query = historyWords(get('historySearch').value), month = get('historyMonth').value;
+    const matches = records().filter(r=>(!month || r.date.startsWith(month)) && (!query || historyWords(`${r.title} ${r.singer}`).includes(query))).sort((a,b)=>b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+    const groups = new Map();
+    matches.forEach(r=>{ if(!groups.has(r.date)) groups.set(r.date,[]); groups.get(r.date).push(r); });
+    get('historyResults').innerHTML = `<p>${matches.length} ${txt('count')}</p>` + (matches.length ? [...groups].map(([date,rows])=>`<section class="history-day"><h3>${h(dateText(date))}</h3>${rows.map(r=>`<article><div><strong>${h(r.title)}</strong><p>${h(r.singer)}</p></div><div class="history-row-actions"><button type="button" data-history-edit="${h(r.id)}" aria-label="${txt('edit')} — ${h(r.title)}">${txt('edit')}</button><button type="button" data-history-delete="${h(r.id)}" aria-label="${txt('remove')} — ${h(r.title)}">${txt('remove')}</button></div></article>`).join('')}</section>`).join('') : `<p class="history-empty">${txt('empty')} ${records().length ? '' : txt('start')}</p>`);
+    get('historySingers').innerHTML = [...new Set(records().map(r=>r.singer))].sort().map(s=>`<option value="${h(s)}"></option>`).join('');
+  }
+  function saveRecords(next) {
+    const old = state.worshipHistory;
+    state.worshipHistory = next;
+    if (persist()) return true;
+    state.worshipHistory = old;
+    get('historyStatus').textContent = historyText('error');
+    return false;
+  }
+  function reset() {
+    editingId = '';
+    get('historyForm').reset();
+    get('historyDate').value = historyLocalDate();
+    get('historyManualLabel').hidden = true;
+    get('historyManual').required = false;
+    get('historyEntry').querySelector('summary').textContent = historyText('add');
+    get('historyLast').textContent = '';
+  }
+  get('historyClose').onclick = ()=>dialog.close();
+  dialog.addEventListener('close', ()=>dialog.remove());
+  get('historyCancel').onclick = ()=>{reset();get('historyEntry').open=false;};
+  get('historySong').onchange = ()=>{const manual=get('historySong').value==='__manual__';get('historyManualLabel').hidden=!manual;get('historyManual').required=manual;showLast();};
+  get('historyManual').oninput = showLast;
+  get('historySearch').oninput = draw;
+  get('historyMonth').oninput = draw;
+  get('historyClear').onclick = ()=>{get('historySearch').value='';get('historyMonth').value='';draw();};
+  get('historyForm').onsubmit = event => {
+    event.preventDefault();
+    const song = songValue(), date=get('historyDate').value, singer=get('historySinger').value.trim();
+    if (!date || date>historyLocalDate() || !song.title || !singer) {get('historyStatus').textContent=historyText('invalid');return;}
+    if(records().some(r=>r.id!==editingId && r.date===date && historyWords(r.title)===historyWords(song.title) && historyWords(r.singer)===historyWords(singer))) {get('historyStatus').textContent=historyText('duplicate');return;}
+    const record = {...song,date,singer,id:editingId||makeId(),updatedAt:new Date().toISOString(),deleted:false};
+    const next = normalizeWorshipHistory(state.worshipHistory).filter(r=>r.id!==record.id).concat(record);
+    if(!saveRecords(next))return;
+    editingId='';get('historyEntry').querySelector('summary').textContent=historyText('add');
+    get('historyStatus').textContent=historyText('saved');
+    get('historySong').value='';get('historyManual').value='';get('historyManualLabel').hidden=true;get('historyManual').required=false;
+    draw();showLast();get('historySong').focus();
+  };
+  get('historyResults').onclick = event => {
+    const edit = event.target.closest('[data-history-edit]'), remove=event.target.closest('[data-history-delete]');
+    if(edit) {
+      const row=records().find(r=>r.id===edit.dataset.historyEdit);if(!row)return;
+      editingId=row.id;get('historyDate').value=row.date;get('historySinger').value=row.singer;
+      const linked=state.songs.some(s=>s.id===row.songId);
+      get('historySong').value=linked?row.songId:'__manual__';get('historyManual').value=row.title;
+      get('historyManualLabel').hidden=linked;get('historyManual').required=!linked;
+      get('historyEntry').open=true;get('historyEntry').querySelector('summary').textContent=historyText('editing');
+      showLast();get('historyEntry').scrollIntoView({block:'start'});get('historySinger').focus();
+    }
+    if(remove && confirm(historyText('confirm'))) {
+      const next=normalizeWorshipHistory(state.worshipHistory).map(r=>r.id===remove.dataset.historyDelete?{...r,deleted:true,updatedAt:new Date().toISOString()}:r);
+      if(saveRecords(next)){if(editingId===remove.dataset.historyDelete)reset();draw();showLast();}
+    }
+  };
+  draw();dialog.showModal();
+}
+function renderWorshipHistoryShortcut() {
+  const button=document.getElementById('worshipHistoryBtn');
+  if(button)button.textContent=historyText('title');
+}
+(function initWorshipHistory() {
+  const shortcuts=document.querySelector('.more-shortcuts');
+  if(!shortcuts)return;
+  const button=document.createElement('button');
+  button.id='worshipHistoryBtn';button.type='button';button.onclick=openWorshipHistory;
+  shortcuts.append(button);renderWorshipHistoryShortcut();
+})();
+/* End ChordBook worship history v1 */
