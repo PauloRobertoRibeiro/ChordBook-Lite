@@ -6179,16 +6179,17 @@ function loadState() {
     if (!Array.isArray(saved.songs)) {
       return demoLibrary(guessLanguage());
     }
+    const savedTeam = normalizeTeam(saved.team);
     const loaded = {
       songs: uniqueById((saved.songs || []).map(normalizeSong)),
-      setlists: uniqueById((saved.setlists || []).map(normalizeSetlist)),
+      setlists: uniqueById((saved.setlists || []).map(item => normalizeSetlist(item, savedTeam))),
       theme: saved.theme === "dark" || saved.theme === "auto" ? saved.theme : "light",
       language: I18N[saved.language] ? saved.language : "pt",
       showChords: saved.showChords !== false,
       showLyrics: saved.showLyrics !== false,
       focusChart: Boolean(saved.focusChart),
       preferAutoScroll: Boolean(saved.preferAutoScroll),
-      team: normalizeTeam(saved.team),
+      team: savedTeam,
       agenda: normalizeAgenda(saved.agenda),
       worshipHistory: normalizeWorshipHistory(saved.worshipHistory),
     };
@@ -7838,7 +7839,7 @@ function renderEventFieldControl(field, value) {
   return `<input data-field-id="${escapeHtml(field.id)}" data-kind="text" value="${escapeHtml(String(value || ""))}"${placeholder} />`;
 }
 
-function normalizeSetlist(setlist) {
+function normalizeSetlist(setlist, team) {
   const songIds = Array.isArray(setlist.songIds) ? setlist.songIds.map(cleanId).filter(Boolean) : [];
   const finale = Array.isArray(setlist.finalSongIds)
     ? setlist.finalSongIds.map(cleanId).filter((id) => id && songIds.includes(id))
@@ -7849,14 +7850,20 @@ function normalizeSetlist(setlist) {
     songIds,
     finalSongIds: finale,
     notes: String(setlist.notes || ""),
-    service: normalizeService(setlist.service),
+    service: normalizeService(setlist.service, team),
     createdAt: setlist.createdAt || new Date().toISOString(),
     updatedAt: setlist.updatedAt || setlist.createdAt || new Date().toISOString(),
     lastOpenedAt: setlist.lastOpenedAt || "",
   };
 }
 
-function normalizeService(service) {
+function normalizeService(service, team) {
+  // Resolve saved member IDs during load without accessing state before initialization.
+  const displayPeople = value => {
+    if (!Array.isArray(team?.members)) return peopleDisplay(value);
+    const data = normalizePeopleValue(value);
+    return [...data.ids.map(id => team.members.find(member => member.id === id)?.name).filter(Boolean), data.extra].filter(Boolean).join(", ");
+  };
   const src = service && typeof service === "object" ? service : {};
   const values = src.values && typeof src.values === "object" ? { ...src.values } : {};
   Object.keys(values).forEach((key) => {
@@ -7884,10 +7891,10 @@ function normalizeService(service) {
     date: String(src.date || ""),
     time: String(src.time || ""),
     opening: String(src.opening || values.opening || ""),
-    leader: String(src.leader || peopleDisplay(values.musicLead) || ""),
+    leader: String(src.leader || displayPeople(values.musicLead) || ""),
     announcements: String(src.announcements || values.scripture || ""),
-    worshipTeam: String(src.worshipTeam || peopleDisplay(values.voices) || ""),
-    preacher: String(src.preacher || peopleDisplay(values.speaker) || ""),
+    worshipTeam: String(src.worshipTeam || displayPeople(values.voices) || ""),
+    preacher: String(src.preacher || displayPeople(values.speaker) || ""),
     preacherRole: src.preacherRole === "convidado" ? "convidado" : "pastor",
     communion: String(src.communion || values.communion || ""),
     values,
@@ -8239,7 +8246,7 @@ async function releaseStageWakeLock() {
 }
 
 
-/* ChordBook worship history v1 — manual records, separate from practice. */
+/* ChordBook worship history v2 — manual records and reviewed setlists. */
 function normalizeWorshipHistory(raw) {
   if (!Array.isArray(raw)) return [];
   const byId = new Map();
@@ -8274,6 +8281,9 @@ function historyText(key) {
     es: { title:'Historial de alabanzas', lead:'Consulta qué se cantó y quién eligió/cantó.', add:'Registrar canción cantada', date:'Fecha en que se cantó', singer:'Quién eligió / cantó', singerHint:'Ej.: Ana, Paulo o Grupo de alabanza', song:'Canción', choose:'Selecciona de la biblioteca', other:'Otra canción (escribir título)', manual:'Título de la canción', save:'Guardar registro', cancel:'Cancelar', close:'Cerrar', search:'Buscar canción o cantante', month:'Mes y año', all:'Todos los meses', empty:'No hay registros.', start:'Registra las canciones cantadas para consultarlas aquí.', never:'Sin registros anteriores de esta canción.', last:'Última vez', times:'vez/veces registrada(s)', edit:'Editar', remove:'Eliminar', confirm:'¿Eliminar este registro del historial?', saved:'Registro guardado.', duplicate:'Ya existe este registro para esta fecha, canción y cantante.', invalid:'Indica una fecha hasta hoy, una canción y quién eligió/cantó.', count:'registro(s)', error:'No se pudo guardar. Se conservó el registro anterior.', note:'Solo registros confirmados por ti. Ensayar o abrir una canción no crea registros. Incluido en la copia del repertorio.', clear:'Limpiar filtros', editing:'Editar registro' },
     en: { title:'Worship history', lead:'See what was sung and who chose/sang it.', add:'Record a sung song', date:'Date sung', singer:'Who chose / sang', singerHint:'E.g. Ana, Paulo or Worship team', song:'Song', choose:'Choose from library', other:'Other song (type title)', manual:'Song title', save:'Save record', cancel:'Cancel', close:'Close', search:'Search song or singer', month:'Month and year', all:'All months', empty:'No matching records.', start:'Record songs already sung to consult them here.', never:'No previous records for this song.', last:'Last sung', times:'recorded time(s)', edit:'Edit', remove:'Delete', confirm:'Delete this history record?', saved:'Record saved.', duplicate:'This date, song and singer are already recorded.', invalid:'Enter a date up to today, a song and who chose/sang it.', count:'record(s)', error:'Could not save. The previous record was kept.', note:'Only records confirmed by you. Practice or opening a song creates no records. Included in repertoire backups.', clear:'Clear filters', editing:'Edit record' }
   };
+  Object.assign(copy.pt, {"fromSetlist": "Trazer do setlist", "reviewHint": "Escolha o setlist pela data e nome. Confirme a data, os cantores e marque apenas as músicas realmente cantadas.", "setlistFilter": "Filtrar pela data do setlist (opcional)", "allDates": "Todas as datas", "setlist": "Setlist da agenda", "chooseSetlist": "Escolha pela data e nome", "undated": "Sem data", "noSetlists": "Nenhum setlist nesta data. Escolha outra data ou use Todas as datas.", "commonSinger": "Cantor(es) para aplicar a todas", "applySinger": "Aplicar cantor(es) a todas", "confirmSetlist": "Confirmar músicas cantadas", "alreadyRecorded": "Já registrada nesta data", "emptySetlist": "Este setlist não tem músicas disponíveis.", "missingSongs": "música(s) indisponível(is) na biblioteca. Não serão registradas.", "futureSetlist": "Setlist futuro: consulte agora e confirme após o dia em que as músicas forem cantadas.", "selectSongs": "Marque pelo menos uma música ainda não registrada nesta data.", "changedSetlist": "O setlist mudou. Selecione-o novamente para conferir.", "missingSinger": "Preencha quem escolheu/cantou para cada música marcada. Nenhum registro foi salvo.", "savedSetlist": "música(s) registrada(s)."});
+  Object.assign(copy.es, {"fromSetlist": "Traer del setlist", "reviewHint": "Elige el setlist por fecha y nombre. Confirma la fecha, los cantantes y marca solo las canciones realmente cantadas.", "setlistFilter": "Filtrar por fecha del setlist (opcional)", "allDates": "Todas las fechas", "setlist": "Setlist de la agenda", "chooseSetlist": "Elige por fecha y nombre", "undated": "Sin fecha", "noSetlists": "No hay setlists en esta fecha. Elige otra fecha o Todas las fechas.", "commonSinger": "Cantante(s) para aplicar a todas", "applySinger": "Aplicar cantante(s) a todas", "confirmSetlist": "Confirmar canciones cantadas", "alreadyRecorded": "Ya registrada en esta fecha", "emptySetlist": "Este setlist no tiene canciones disponibles.", "missingSongs": "canción/canciones no disponibles en la biblioteca. No se registrarán.", "futureSetlist": "Setlist futuro: consulta ahora y confirma después del día en que se canten.", "selectSongs": "Marca al menos una canción aún no registrada en esta fecha.", "changedSetlist": "El setlist cambió. Vuelve a seleccionarlo para revisar.", "missingSinger": "Indica quién eligió/cantó cada canción marcada. No se guardó ningún registro.", "savedSetlist": "canción/canciones registrada(s)."});
+  Object.assign(copy.en, {"fromSetlist": "Bring from setlist", "reviewHint": "Choose the setlist by date and name. Confirm the date and singers, and check only the songs actually sung.", "setlistFilter": "Filter by setlist date (optional)", "allDates": "All dates", "setlist": "Agenda setlist", "chooseSetlist": "Choose by date and name", "undated": "Undated", "noSetlists": "No setlists for this date. Choose another date or All dates.", "commonSinger": "Singer(s) to apply to all", "applySinger": "Apply singer(s) to all", "confirmSetlist": "Confirm songs sung", "alreadyRecorded": "Already recorded on this date", "emptySetlist": "This setlist has no available songs.", "missingSongs": "song(s) unavailable in the library. They will not be recorded.", "futureSetlist": "Future setlist: review now and confirm after the day the songs are sung.", "selectSongs": "Check at least one song not already recorded on this date.", "changedSetlist": "The setlist changed. Select it again to review.", "missingSinger": "Enter who chose/sang each checked song. No records were saved.", "savedSetlist": "song(s) recorded."});
   return (copy[state.language] || copy.pt)[key] || key;
 }
 function openWorshipHistory() {
@@ -8284,6 +8294,19 @@ function openWorshipHistory() {
   dialog.className = 'worship-history';
   dialog.setAttribute('aria-labelledby', 'historyTitle');
   dialog.innerHTML = `<header><div><h2 id="historyTitle">${txt('title')}</h2><p>${txt('lead')}</p></div><button type="button" id="historyClose">${txt('close')}</button></header>
+    <details id="historyFromSetlist"><summary>${txt('fromSetlist')}</summary>
+    <p>${txt('reviewHint')}</p>
+    <form id="historySetlistForm">
+      <label>${txt('setlistFilter')}<input id="historySetlistFilter" type="date"></label>
+      <button id="historyAllSetlistDates" type="button">${txt('allDates')}</button>
+      <label class="history-span">${txt('setlist')}<select id="historySetlist" required></select></label>
+      <label>${txt('date')}<input id="historySetlistDate" type="date" required max="${historyLocalDate()}" value="${historyLocalDate()}"></label>
+      <label>${txt('commonSinger')}<input id="historySetlistSinger" maxlength="300" list="historySingers" placeholder="${txt('singerHint')}"></label>
+      <div class="history-actions"><button id="historyApplySinger" type="button">${txt('applySinger')}</button></div>
+      <div id="historySetlistSongs" class="history-span"></div>
+      <p id="historySetlistStatus" class="history-span" role="status"></p>
+      <div class="history-actions"><button id="historySetlistConfirm" type="submit" class="primary-action" disabled>${txt('confirmSetlist')}</button><button id="historySetlistCancel" type="button">${txt('cancel')}</button></div>
+    </form></details>
     <details id="historyEntry"><summary>${txt('add')}</summary><form id="historyForm">
     <label>${txt('date')}<input id="historyDate" type="date" required max="${historyLocalDate()}" value="${historyLocalDate()}"></label>
     <label>${txt('singer')}<input id="historySinger" maxlength="300" required placeholder="${txt('singerHint')}" list="historySingers"></label><datalist id="historySingers"></datalist>
@@ -8370,6 +8393,90 @@ function openWorshipHistory() {
       if(saveRecords(next)){if(editingId===remove.dataset.historyDelete)reset();draw();showLast();}
     }
   };
+  function currentHistorySetlist() { return state.setlists.find(s=>s.id===get('historySetlist').value) || null; }
+  function sameRecordedSong(row, song) {
+    return row.songId && row.songId===song.id || historyWords(row.title)===historyWords(song.title);
+  }
+  function historySingerSuggestion(setlist) {
+    const service=normalizeService(setlist?.service);
+    return (peopleDisplay(service.values.voices) || service.worshipTeam || peopleDisplay(service.values.musicLead) || service.leader || '').trim().slice(0,300);
+  }
+  function drawSetlistOptions() {
+    const filter=get('historySetlistFilter').value, selected=get('historySetlist').value;
+    const lists=[...state.setlists].filter(s=>!filter || s.service?.date===filter).sort((a,b)=>(b.service?.date || '').localeCompare(a.service?.date || '') || a.title.localeCompare(b.title));
+    get('historySetlist').innerHTML=`<option value="">${txt('chooseSetlist')}</option>`+lists.map(s=>`<option value="${h(s.id)}">${h(s.service?.date && /^\d{4}-\d{2}-\d{2}$/.test(s.service.date) ? dateText(s.service.date) : historyText('undated'))} — ${h(s.title)}</option>`).join('');
+    if(lists.some(s=>s.id===selected))get('historySetlist').value=selected;
+    else {get('historySetlistSongs').innerHTML='';get('historySetlistSinger').value='';get('historySetlistDate').value=historyLocalDate();}
+    get('historySetlistConfirm').disabled=!currentHistorySetlist();
+    get('historySetlistStatus').textContent=lists.length ? '' : historyText('noSetlists');
+  }
+  function drawSetlistSongs(preserveNames=false) {
+    const draft=new Map([...get('historySetlistSongs').querySelectorAll('[data-history-song-row]')].map(row=>[row.dataset.historySongRow,row.querySelector('[data-history-row-singer]').value]));
+    const setlist=currentHistorySetlist(), date=get('historySetlistDate').value;
+    const ids=[...new Set(setlist?.songIds || [])];
+    const songs=ids.map(id=>state.songs.find(s=>s.id===id)).filter(Boolean);
+    get('historySetlistSongs').innerHTML=songs.map(song=>{
+      const existing=records().find(r=>r.date===date && sameRecordedSong(r,song));
+      const past=records().filter(r=>r.date<=historyLocalDate() && sameRecordedSong(r,song)).sort((a,b)=>b.date.localeCompare(a.date));
+      const singer=preserveNames && draft.has(song.id) ? draft.get(song.id) : historySingerSuggestion(setlist);
+      return `<div class="history-import-song" data-history-song-row="${h(song.id)}">
+        <label class="history-import-check"><input type="checkbox" data-history-row-check ${existing?'disabled':'checked'}><span><strong>${h(song.title)}</strong>${existing?`<small>${txt('alreadyRecorded')}: ${h(existing.singer)}</small>`:past.length?`<small>${txt('last')}: ${h(dateText(past[0].date))}</small>`:`<small>${txt('never')}</small>`}</span></label>
+        <label>${txt('singer')} — ${h(song.title)}<input data-history-row-singer maxlength="300" list="historySingers" value="${h(existing?.singer || singer)}" ${existing?'disabled':''}></label>
+      </div>`;
+    }).join('');
+    const missing=ids.length-songs.length;
+    get('historySetlistConfirm').disabled=!songs.length;
+    get('historySetlistStatus').textContent=!setlist?'':!songs.length?historyText('emptySetlist'):missing?`${missing} ${historyText('missingSongs')}`:date>historyLocalDate()?historyText('futureSetlist'):'';
+  }
+  get('historySetlistFilter').oninput=drawSetlistOptions;
+  get('historyAllSetlistDates').onclick=()=>{get('historySetlistFilter').value='';drawSetlistOptions();};
+  get('historySetlist').onchange=()=>{
+    const setlist=currentHistorySetlist();
+    get('historySetlistDate').value=/^\d{4}-\d{2}-\d{2}$/.test(setlist?.service?.date || '')?setlist.service.date:historyLocalDate();
+    get('historySetlistSinger').value=historySingerSuggestion(setlist);
+    drawSetlistSongs();
+  };
+  get('historySetlistDate').onchange=()=>drawSetlistSongs(true);
+  get('historyApplySinger').onclick=()=>{
+    const singer=get('historySetlistSinger').value.trim();
+    get('historySetlistSongs').querySelectorAll('[data-history-row-singer]:not(:disabled)').forEach(input=>{input.value=singer;});
+  };
+  get('historyFromSetlist').addEventListener('toggle',()=>{
+    if(get('historyFromSetlist').open) {
+      if(!editingId)get('historyEntry').open=false;
+      drawSetlistOptions();
+      if(currentHistorySetlist())drawSetlistSongs(true);
+    }
+  });
+  get('historySetlistCancel').onclick=()=>{
+    get('historySetlist').value='';get('historySetlistSongs').innerHTML='';get('historySetlistStatus').textContent='';get('historySetlistConfirm').disabled=true;
+    get('historyFromSetlist').open=false;
+  };
+  get('historySetlistForm').onsubmit=event=>{
+    event.preventDefault();
+    const setlist=currentHistorySetlist(),date=get('historySetlistDate').value;
+    if(!setlist || !date || date>historyLocalDate()){get('historySetlistStatus').textContent=historyText('invalid');return;}
+    const rows=[...get('historySetlistSongs').querySelectorAll('[data-history-song-row]')].filter(row=>row.querySelector('[data-history-row-check]').checked && !row.querySelector('[data-history-row-check]').disabled);
+    if(!rows.length){get('historySetlistStatus').textContent=historyText('selectSongs');return;}
+    const next=normalizeWorshipHistory(state.worshipHistory), added=[], chosen=[];
+    for(const row of rows) {
+      const song=state.songs.find(s=>s.id===row.dataset.historySongRow), singer=row.querySelector('[data-history-row-singer]').value.trim();
+      if(!song || !setlist.songIds.includes(song.id)){get('historySetlistStatus').textContent=historyText('changedSetlist');return;}
+      if(!singer){get('historySetlistStatus').textContent=historyText('missingSinger');row.querySelector('[data-history-row-singer]').focus();return;}
+      chosen.push(song);
+      // Recheck against current data immediately before saving; a preview is not a recording.
+      if(next.some(r=>!r.deleted && r.date===date && sameRecordedSong(r,song)))continue;
+      const record={id:window.crypto?.randomUUID?.() || `${makeId()}-${added.length}`,songId:song.id,title:song.title,date,singer,deleted:false,updatedAt:new Date().toISOString()};
+      next.push(record);added.push(record);
+    }
+    if(!added.length){drawSetlistSongs(true);get('historySetlistStatus').textContent=historyText('alreadyRecorded');return;}
+    // Save all selected songs at once. A missing singer or storage error saves none of them.
+    if(!saveRecords(next)){get('historySetlistStatus').textContent=historyText('error');return;}
+    draw();showLast();drawSetlistSongs(true);
+    const skipped=chosen.length-added.length;
+    get('historySetlistStatus').textContent=`${added.length} ${historyText('savedSetlist')}`+(skipped?` · ${skipped} ${historyText('alreadyRecorded')}`:'');
+  };
+  drawSetlistOptions();
   draw();dialog.showModal();
 }
 function renderWorshipHistoryShortcut() {
@@ -8383,4 +8490,4 @@ function renderWorshipHistoryShortcut() {
   button.id='worshipHistoryBtn';button.type='button';button.onclick=openWorshipHistory;
   shortcuts.append(button);renderWorshipHistoryShortcut();
 })();
-/* End ChordBook worship history v1 */
+/* End ChordBook worship history v2 */

@@ -6863,3 +6863,18 @@ body.cb-gated .app-shell { visibility: hidden; }
  .worship-history header button { padding:8px; }
 }
 /* End ChordBook worship history v1 */
+
+
+/* ChordBook worship history setlists v2 */
+.worship-history .history-span { grid-column:1/-1; }
+.worship-history #historyAllSetlistDates { align-self:end; }
+.worship-history .history-import-song { padding:16px 0; border-bottom:1px solid var(--line); }
+.worship-history .history-import-song > label + label { margin-top:12px; font-weight:500; }
+.worship-history .history-import-check { flex-direction:row; align-items:flex-start; gap:12px; cursor:pointer; }
+.worship-history .history-import-check input { width:24px; min-width:24px; min-height:24px; height:24px; margin:0; accent-color:var(--accent); }
+.worship-history .history-import-check small { display:block; font-size:13px; font-weight:400; margin-top:5px; overflow-wrap:anywhere; }
+.worship-history input:disabled { opacity:.65; }
+.worship-history button:disabled { opacity:.55; cursor:default; }
+.worship-history #historySetlistStatus { margin:0; }
+.worship-history .history-actions { flex-wrap:wrap; }
+/* End ChordBook worship history setlists v2 */

@@ -1,4 +1,4 @@
-const CACHE_NAME = "chordbook-historico-20261019-v1";
+const CACHE_NAME = "chordbook-historico-20261019-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,8 +9,8 @@ const ASSETS = [
   "./backup-merge.js",
   "./cantar.html",
   "./cantar.js",
-  "./styles.css?v=historico-20261019-v1",
-  "./app.js?v=historico-20261019-v1",
+  "./styles.css?v=historico-20261019-v2",
+  "./app.js?v=historico-20261019-v2",
   "./chart-core.js?v=141",
   "./share-lyrics.js?v=141",
   "./backup-merge.js?v=141",
